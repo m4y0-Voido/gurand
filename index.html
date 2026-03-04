@@ -2,371 +2,856 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>V0idoooo</title>
-
+<title>パチンコ風 期待値バトル付きスロット</title>
 <style>
+  body{
+    margin:0;
+    background:#050510;
+    color:#fff;
+    font-family:"Yu Gothic","Meiryo",system-ui,sans-serif;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+  }
+  .game-container{
+    position:relative;
+    width:840px;
+    padding:20px 30px 30px;
+    background:radial-gradient(circle at top,#444 0%,#111 50%,#000 100%);
+    border-radius:18px;
+    box-shadow:0 0 40px rgba(0,0,0,0.9);
+    text-align:center;
+    overflow:hidden;
+  }
+  .title{
+    font-size:24px;
+    letter-spacing:0.2em;
+    margin-bottom:6px;
+  }
+  .sub{
+    font-size:12px;
+    color:#aaa;
+    margin-bottom:10px;
+  }
+  .target{
+    font-size:14px;
+    margin-bottom:8px;
+  }
+  .target span.digit{
+    display:inline-block;
+    margin:0 3px;
+    padding:3px 6px;
+    font-weight:bold;
+    font-size:20px;
+    border-radius:6px;
+    background:linear-gradient(135deg,#555,#222);
+    box-shadow:0 0 6px rgba(0,0,0,0.6);
+  }
 
-body{
-margin:0;
-font-family:sans-serif;
-background:#050505;
-color:white;
-}
+  .machine{
+    margin:10px auto 8px;
+    padding:15px 10px 12px;
+    background:linear-gradient(180deg,#262626,#050505);
+    border-radius:16px;
+    box-shadow:inset 0 0 18px rgba(0,0,0,0.9);
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    max-width:620px;
+  }
+  .reel{
+    width:130px;
+    height:130px;
+    border-radius:14px;
+    background:radial-gradient(circle at 30% 0%,#777 0%,#333 35%,#000 100%);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    box-shadow:0 0 20px rgba(0,0,0,0.9);
+    overflow:hidden;
+    position:relative;
+  }
+  .reel span{
+    font-size:68px;
+    font-weight:bold;
+    text-shadow:0 0 10px rgba(0,0,0,0.9);
+  }
+  .reel.stopped{
+    box-shadow:0 0 12px rgba(255,255,255,0.6);
+  }
 
-/* ナビ */
+  .controls{
+    margin-top:8px;
+    display:flex;
+    justify-content:center;
+    gap:10px;
+  }
+  button{
+    padding:8px 16px;
+    font-size:14px;
+    border-radius:8px;
+    border:none;
+    cursor:pointer;
+    background:linear-gradient(180deg,#ffdd55,#ff8800);
+    color:#331000;
+    font-weight:bold;
+    box-shadow:0 4px 0 #aa5500;
+    transition:transform 0.05s,box-shadow 0.05s,opacity 0.15s;
+  }
+  button:active{
+    transform:translateY(2px);
+    box-shadow:0 2px 0 #aa5500;
+  }
+  button:disabled{
+    opacity:0.4;
+    cursor:default;
+    box-shadow:none;
+  }
 
-nav{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:15px;
-background:#0a0a0a;
-border-bottom:1px solid #333;
-position:sticky;
-top:0;
-z-index:10;
-}
+  .info{
+    margin-top:6px;
+    font-size:12px;
+    color:#ccc;
+    line-height:1.4;
+  }
 
-.navlinks span{
-margin:0 10px;
-cursor:pointer;
-}
+  .expect-box{
+    margin-top:8px;
+    font-size:14px;
+  }
+  .expect-value{
+    font-size:22px;
+    font-weight:bold;
+    margin-left:8px;
+  }
 
-/* セクション */
+  .enemy-box{
+    margin-top:6px;
+    font-size:13px;
+  }
 
-.section{
-display:none;
-padding:30px;
-max-width:1000px;
-margin:auto;
-}
+  .log-box{
+    margin-top:8px;
+    font-size:12px;
+    height:120px;
+    overflow-y:auto;
+    background:rgba(0,0,0,0.45);
+    border-radius:8px;
+    padding:6px 10px;
+    text-align:left;
+  }
+  .log-line{
+    margin-bottom:2px;
+    white-space:pre-wrap;
+  }
 
-.section.active{
-display:block;
-}
+  .message{
+    position:absolute;
+    left:50%;
+    top:40%;
+    transform:translate(-50%,-50%);
+    font-size:44px;
+    font-weight:900;
+    pointer-events:none;
+    opacity:0;
+  }
+  .message.show{
+    opacity:1;
+    animation:msg-pop 0.9s ease-out;
+  }
+  @keyframes msg-pop{
+    0%{transform:translate(-50%,-50%) scale(0.2);opacity:0;}
+    40%{transform:translate(-50%,-50%) scale(1.2);opacity:1;}
+    100%{transform:translate(-50%,-50%) scale(1);opacity:0;}
+  }
 
-/* タイトル */
+  /* 激アツ色 */
+  .heat-yellow{color:#ffeb66;text-shadow:0 0 10px #ff8800;}
+  .heat-blue{
+    background:linear-gradient(180deg,#aaf,#33f);
+    -webkit-background-clip:text;
+    color:transparent;
+    text-shadow:0 0 10px #66f;
+  }
+  .heat-red{color:#ff3333;text-shadow:0 0 14px #f00;}
+  .heat-rainbow{
+    background:linear-gradient(90deg,red,orange,yellow,green,cyan,blue,violet);
+    -webkit-background-clip:text;
+    color:transparent;
+    text-shadow:0 0 12px rgba(255,255,255,0.9);
+    animation:rainbow-shift 1.2s linear infinite;
+  }
+  .heat-gold{
+    background:linear-gradient(135deg,#fff5b0,#ffd700,#ffae00);
+    -webkit-background-clip:text;
+    color:transparent;
+    text-shadow:0 0 10px rgba(255,255,200,0.8);
+  }
+  @keyframes rainbow-shift{
+    0%{filter:hue-rotate(0deg);}
+    100%{filter:hue-rotate(360deg);}
+  }
 
-.glitchTitle{
-font-size:60px;
-font-weight:bold;
-position:relative;
-display:inline-block;
-color:white;
-}
+  .shake{
+    animation:shake 0.5s linear 1;
+  }
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    25%{transform:translateX(-6px);}
+    50%{transform:translateX(6px);}
+    75%{transform:translateX(-3px);}
+  }
 
-.glitchTitle::before{
-content:attr(data-text);
-position:absolute;
-left:-3px;
-top:0;
-color:#00ffff;
-opacity:0.8;
-}
+  .screen-overlay{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    opacity:0;
+  }
+  .screen-overlay.show-black{
+    background:#000;
+    animation:fade-in-out 0.8s ease-in-out;
+  }
+  .screen-overlay.show-white{
+    background:#fff;
+    animation:fade-in-out 0.8s ease-in-out;
+  }
+  @keyframes fade-in-out{
+    0%{opacity:0;}
+    30%{opacity:1;}
+    100%{opacity:0;}
+  }
 
-.glitchTitle::after{
-content:attr(data-text);
-position:absolute;
-left:3px;
-top:0;
-color:#ff00c8;
-opacity:0.8;
-}
+  .slash{
+    position:absolute;
+    width:160%;
+    height:6px;
+    background:linear-gradient(90deg,transparent,#fff,transparent);
+    left:-80%;
+    opacity:0;
+  }
+  .slash.horizontal{top:50%;}
+  .slash.diagonal{top:20%;transform:rotate(-35deg);}
+  .slash.active.horizontal{animation:slash-h 0.3s ease-out;}
+  .slash.active.diagonal{animation:slash-d 0.35s ease-out;}
+  @keyframes slash-h{
+    0%{transform:translateX(0);opacity:0;}
+    20%{opacity:1;}
+    100%{transform:translateX(200%);opacity:0;}
+  }
+  @keyframes slash-d{
+    0%{transform:translateX(0) rotate(-35deg);opacity:0;}
+    20%{opacity:1;}
+    100%{transform:translateX(200%) rotate(-35deg);opacity:0;}
+  }
 
-.glitchTitle{
-animation:glitchShift 2s infinite;
-}
+  .digit-destroy{
+    animation:destroy 0.6s ease-out forwards;
+  }
+  @keyframes destroy{
+    0%{transform:scale(1);opacity:1;filter:none;}
+    50%{transform:scale(1.4) rotate(10deg);opacity:0.7;filter:blur(1px);}
+    100%{transform:scale(0.2) rotate(-30deg);opacity:0;filter:blur(4px);}
+  }
 
-@keyframes glitchShift{
-0%{transform:translate(0)}
-20%{transform:translate(-1px,1px)}
-40%{transform:translate(1px,-1px)}
-60%{transform:translate(-1px,-1px)}
-80%{transform:translate(1px,1px)}
-100%{transform:translate(0)}
-}
-
-/* ヒーロー */
-
-.hero{
-text-align:center;
-padding:60px 20px;
-}
-
-/* カード */
-
-.card{
-background:#0a0a0a;
-padding:25px;
-border-radius:10px;
-margin-top:25px;
-border:1px solid #333;
-line-height:1.8;
-}
-
-/* 見出し */
-
-h2{
-margin-top:40px;
-border-left:4px solid #00ffff;
-padding-left:10px;
-}
-
-/* アルバム */
-
-.gallery{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-gap:15px;
-}
-
-.gallery img{
-width:100%;
-border-radius:10px;
-}
-
-/* バグエンド */
-
-.endZone{
-margin-top:120px;
-height:300px;
-position:relative;
-overflow:hidden;
-}
-
-.finalBug{
-position:absolute;
-top:60px;
-left:50%;
-transform:translateX(-50%);
-font-family:monospace;
-color:#00ffff;
-font-size:20px;
-}
-
-.falling{
-position:absolute;
-bottom:0;
-width:100%;
-height:200px;
-overflow:hidden;
-}
-
-.drop{
-position:absolute;
-font-family:monospace;
-color:#00ffff;
-animation:fall 3s linear;
-}
-
-@keyframes fall{
-to{
-transform:translateY(200px);
-opacity:0;
-}
-}
-
-.tag{
-position:fixed;
-bottom:10px;
-right:10px;
-font-size:12px;
-opacity:0.5;
-}
-
+  .battle-area{
+    margin-top:10px;
+    padding-top:4px;
+    border-top:1px solid rgba(255,255,255,0.1);
+  }
+  .prompt{
+    margin-top:6px;
+    font-size:16px;
+    font-weight:bold;
+  }
+  .prompt.hidden{display:none;}
 </style>
 </head>
-
 <body>
+<div class="game-container" id="game">
+  <div class="title">期待値バトル・3桁パチンコ風</div>
+  <div class="sub">PC専用：Spaceでスピン / 1・2・3で各リール停止</div>
 
-<nav>
+  <div class="target">当たり数字（お遊び）：
+    <span class="digit" id="target0">-</span>
+    <span class="digit" id="target1">-</span>
+    <span class="digit" id="target2">-</span>
+  </div>
 
-<div>V0idoooo</div>
+  <div class="machine" id="machine">
+    <div class="reel" data-index="0"><span id="reel0">0</span></div>
+    <div class="reel" data-index="1"><span id="reel1">0</span></div>
+    <div class="reel" data-index="2"><span id="reel2">0</span></div>
+  </div>
 
-<div class="navlinks">
-<span onclick="showTab('home')">Home</span>
-<span onclick="showTab('album')">Album</span>
-<a href="https://x.com/V0idoooo" target="_blank">X</a>
+  <div class="controls">
+    <button id="startBtn">スタート / リセット (Space)</button>
+    <button id="stop1">左停止 (1)</button>
+    <button id="stop2">中停止 (2)</button>
+    <button id="stop3">右停止 (3)</button>
+  </div>
+
+  <div class="info">
+    両脇の数字が揃ったとき、40%で「演出ゾーン」へ。<br>
+    3回の確定演出＋味方バトルで期待値％を育てて、最後に「ボタンを押せ！」で抽選。<br>
+    表示の期待値はあくまで期待度で、実際の最大当選確率は 1/10。<br>
+    当たったときだけ 999% になってド派手「大当たり」！
+  </div>
+
+  <div class="expect-box">
+    現在の期待値：
+    <span class="expect-value" id="expectValue">0</span>%
+  </div>
+  <div class="enemy-box" id="enemyBox">
+    敵HP：<span id="enemyHp">-</span> / 999
+  </div>
+
+  <div class="battle-area">
+    <div class="prompt hidden" id="pushPrompt">ボタンを押せ！</div>
+    <button id="finalBtn" disabled>最終抽選ボタン (Enter)</button>
+    <div class="log-box" id="logBox"></div>
+  </div>
+
+  <div class="message" id="message"></div>
+  <div class="screen-overlay" id="overlay"></div>
+  <div class="slash horizontal" id="slashH"></div>
+  <div class="slash diagonal" id="slashD"></div>
 </div>
-
-</nav>
-
-<!-- HOME -->
-
-<section id="home" class="section active">
-
-<div class="hero">
-
-<h1 class="glitchTitle" data-text="V0idoooo">V0idoooo</h1>
-
-<p>遊び心に振れ幅を。</p>
-<p>この世界のバグとして生きる。</p>
-
-</div>
-
-<div class="card">
-
-<p>
-
-VRChatを中心に様々なゲームや創作活動を行っています。  
-自由気ままのハッピートリガーで動く、遊びを楽しむタイプのプレイヤーです。
-
-ワールド探索やゲーム、コミュニティなど様々な空間を巡りながら、  
-「面白そう」と思ったことにとりあえず飛び込むスタイルで活動しています。
-
-ゲーム制作も個人で行っており、  
-企画やマネジメントなどを担当することが多いプランナー寄りの立ち位置です。
-
-</p>
-
-</div>
-
-<h2>VRChat</h2>
-
-<div class="card">
-
-2025/08/31から開始。  
-2026/03/04で **1400時間突破！**
-
-マヨネーズアバターで様々なワールドを回っています。  
-チルワールド、ゲームワールド、雑談ワールドなどを中心に探索中。
-
-</div>
-
-<h2>League of Legends</h2>
-
-<div class="card">
-
-Dotとヒールの愛好家 ❤  
-
-ミリオOTPのSUP専。  
-まだまだ勉強中ですが、  
-オフメタが超絶大好きな楽しむタイプのプレイヤーです。
-
-</div>
-
-<h2>ウマ娘</h2>
-
-<div class="card">
-
-ツインターボが好きで色々なことをしています。  
-
-大逃げ専門トレーナー。  
-回復因子が超重要で、ほんとに足りない…
-
-</div>
-
-<h2>FGO</h2>
-
-<div class="card">
-
-時々ログインしてガチャを引く程度のログイン率です。  
-
-ですが最低限以上のキャラは揃っており  
-キャストリア、マーリン、オベロン、光コヤンスカヤなどを所持しています。
-
-</div>
-
-<h2>制作</h2>
-
-<div class="card">
-
-現在は個人でゲーム制作などを行っています。  
-チームでの制作経験もあり。
-
-主に
-
-・企画  
-・進行管理  
-・バランス調整  
-
-などを担当する **プランナー的立ち位置** です。
-
-</div>
-
-<div class="endZone">
-
-<div class="finalBug" id="bug"></div>
-
-<div class="falling" id="falling"></div>
-
-</div>
-
-</section>
-
-<!-- ALBUM -->
-
-<section id="album" class="section">
-
-<h1>Album</h1>
-
-<div class="gallery">
-
-<img src="https://picsum.photos/500/300?1">
-<img src="https://picsum.photos/500/300?2">
-<img src="https://picsum.photos/500/300?3">
-<img src="https://picsum.photos/500/300?4">
-
-</div>
-
-</section>
-
-<div class="tag">#えびせんお嬢</div>
 
 <script>
+(function(){
+  // ===== DOM 参照 =====
+  const reelsSpan = [
+    document.getElementById('reel0'),
+    document.getElementById('reel1'),
+    document.getElementById('reel2')
+  ];
+  const reelBoxes = document.querySelectorAll('.reel');
+  const targetEls = [
+    document.getElementById('target0'),
+    document.getElementById('target1'),
+    document.getElementById('target2')
+  ];
+  const startBtn = document.getElementById('startBtn');
+  const stopBtns = [
+    document.getElementById('stop1'),
+    document.getElementById('stop2'),
+    document.getElementById('stop3')
+  ];
+  const msgEl = document.getElementById('message');
+  const overlayEl = document.getElementById('overlay');
+  const gameEl = document.getElementById('game');
+  const slashH = document.getElementById('slashH');
+  const slashD = document.getElementById('slashD');
+  const expectEl = document.getElementById('expectValue');
+  const enemyHpEl = document.getElementById('enemyHp');
+  const logBox = document.getElementById('logBox');
+  const pushPrompt = document.getElementById('pushPrompt');
+  const finalBtn = document.getElementById('finalBtn');
 
-/* ページ切替 */
+  // ===== リール関連 =====
+  let targetDigits = [0,0,0];
+  let currentDigits = [0,0,0];
+  let intervals = [null,null,null];
+  let stopped = [false,false,false];
 
-function showTab(id){
+  // ===== 演出・期待値・状態 =====
+  let gamePhase = 'idle'; // idle, spinning, chance, battle, final, result
+  let displayExpect = 0;  // 表示用期待値％（0〜999）
+  let blueShakeProb = 0.8;
+  let blueShakeBonus = 5;
+  let nearHitUsed = false; // 同じ変動中に何度も発火しないように
 
-document.querySelectorAll(".section")
-.forEach(s=>s.classList.remove("active"))
+  // 基礎の最大当選確率（1/10）
+  const MAX_REAL_HIT = 0.10;
 
-document.getElementById(id)
-.classList.add("active")
+  // ===== 演出テーブル =====
 
+  // 第1段：文字演出（期待値を加算するだけ）
+  const FIRST_STAGE_TABLE = [
+    { id:'gekatsu_yellow',  weight:60,     addExpect:25, label:'ゲキアツ', cls:'heat-yellow' },
+    { id:'gekatsu_blue',    weight:55,     addExpect:50, label:'激アツ',   cls:'heat-blue' },
+    { id:'gekatsu_red',     weight:25,     addExpect:75, label:'激アツ',   cls:'heat-red' },
+    { id:'gekatsu_rainbow', weight:3,      addExpect:95, label:'激アツ',   cls:'heat-rainbow' },
+    { id:'zaako_gold',      weight:5,      addExpect:77, label:'ざぁこざぁこ', cls:'heat-gold' },
+    { id:'zaako_rainbow',   weight:0.0001, addExpect:100,label:'ざぁこざぁこ', cls:'heat-rainbow' },
+    { id:'none',            weight:50,     addExpect:0,  label:'…',        cls:'' }
+  ];
+
+  // 第2段：ブラックアウト / ホワイトアウト / ブルブル / なし
+  const SECOND_STAGE_TABLE = [
+    { id:'blackout',    weight:10, addExpect:90 },
+    { id:'whiteout',    weight:5,  addExpect:150 },
+    { id:'blue_shake',  weight:80, addExpect:0 },   // 期待値は別ロジックで増加
+    { id:'none',        weight:90, addExpect:0 }
+  ];
+
+  // 第3段：仕上げ演出
+  const THIRD_STAGE_TABLE = [
+    { id:'slow_stop',     weight:40, addExpect:20 },
+    { id:'slash_diag',    weight:25, addExpect:45 },
+    { id:'digit_big',     weight:35, addExpect:30 },
+    { id:'reverse_spin',  weight:20, addExpect:55 },
+    { id:'devil_hand',    weight:5,  addExpect:80 },
+    { id:'none',          weight:60, addExpect:0 }
+  ];
+
+  // 味方キャラ
+  const ALLIES = [
+    { id:'red',   name:'赤の味方',   appearProb:1.00 },
+    { id:'blue',  name:'青の味方',   appearProb:0.50 },
+    { id:'green', name:'緑の味方',   appearProb:0.33 },
+    { id:'yellow',name:'黄の味方',   appearProb:0.25 }
+  ];
+
+  // ===== ユーティリティ =====
+  function randDigit(){ return Math.floor(Math.random()*10); }
+
+  function weightedPick(table){
+    let total = 0;
+    for(const item of table) total += item.weight;
+    let r = Math.random()*total;
+    for(const item of table){
+      if(r < item.weight) return item;
+      r -= item.weight;
+    }
+    return table[table.length-1];
+  }
+
+  function clampExpect(){
+    if(displayExpect < 0) displayExpect = 0;
+    if(displayExpect > 999) displayExpect = 999;
+  }
+
+  function updateExpectUI(){
+    clampExpect();
+    expectEl.textContent = Math.floor(displayExpect);
+    const hp = Math.max(0, 999 - Math.floor(displayExpect));
+    enemyHpEl.textContent = hp;
+  }
+
+  function log(text){
+    const div = document.createElement('div');
+    div.className = 'log-line';
+    div.textContent = text;
+    logBox.appendChild(div);
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+
+  function clearLog(){
+    logBox.innerHTML = '';
+  }
+
+  function showMessage(text, cls){
+    msgEl.className = 'message';
+    if(cls) msgEl.classList.add(cls);
+    msgEl.textContent = text;
+    void msgEl.offsetWidth;
+    msgEl.classList.add('show');
+  }
+
+  function shakeGame(){
+    gameEl.classList.add('shake');
+    setTimeout(()=>gameEl.classList.remove('shake'), 600);
+  }
+
+  function blackout(){
+    overlayEl.className = 'screen-overlay show-black';
+    setTimeout(()=>overlayEl.className='screen-overlay',800);
+  }
+  function whiteout(){
+    overlayEl.className = 'screen-overlay show-white';
+    setTimeout(()=>overlayEl.className='screen-overlay',800);
+  }
+
+  function slashHorizontal(){
+    slashH.classList.add('active');
+    setTimeout(()=>slashH.classList.remove('active'),350);
+  }
+  function slashDiagonal(){
+    slashD.classList.add('active');
+    setTimeout(()=>slashD.classList.remove('active'),380);
+  }
+
+  function destroyDigits(){
+    reelsSpan.forEach(s=>s.classList.add('digit-destroy'));
+    setTimeout(()=>reelsSpan.forEach(s=>s.classList.remove('digit-destroy')),650);
+  }
+
+  function setButtonsState(spinning){
+    stopBtns.forEach((btn,i)=>{
+      btn.disabled = !spinning || stopped[i];
+    });
+  }
+
+  // ===== リール制御 =====
+  function setTargetDigits(){
+    for(let i=0;i<3;i++){
+      targetDigits[i] = randDigit();
+      targetEls[i].textContent = targetDigits[i];
+    }
+  }
+  function resetReels(){
+    for(let i=0;i<3;i++){
+      currentDigits[i] = randDigit();
+      reelsSpan[i].textContent = currentDigits[i];
+      reelBoxes[i].classList.remove('stopped');
+    }
+  }
+  function clearIntervals(){
+    for(let i=0;i<3;i++){
+      if(intervals[i]){
+        clearInterval(intervals[i]);
+        intervals[i] = null;
+      }
+    }
+  }
+
+  function startSpin(){
+  if(gamePhase === 'spinning') return;
+  gamePhase = 'spinning';
+  nearHitUsed = false;
+  clearLog();
+  displayExpect = 0;
+  blueShakeProb = 0.8;
+  blueShakeBonus = 5;
+  updateExpectUI();
+  pushPrompt.classList.add('hidden');
+  finalBtn.disabled = true;
+
+  clearIntervals();
+  stopped = [false,false,false];
+  startBtn.disabled = true;
+  setButtonsState(false);
+  setTargetDigits();
+  resetReels();
+
+  // リール回転開始
+  for(let i=0;i<3;i++){
+    (function(idx){
+      intervals[idx] = setInterval(()=>{
+        currentDigits[idx] = (currentDigits[idx] + 1) % 10;
+        reelsSpan[idx].textContent = currentDigits[idx];
+        checkNearHitDuringSpin();
+      }, 60);
+    })(i);
+  }
+
+  // 自動停止順：左 → 右 → 真ん中
+  setTimeout(()=>autoStop(0), 800);
+  setTimeout(()=>autoStop(2), 1600);
+  setTimeout(()=>autoStop(1), 2400);
 }
 
-/* バグ文字 */
+function autoStop(index){
+  if(stopped[index]) return;
+  if(intervals[index]){
+    clearInterval(intervals[index]);
+    intervals[index] = null;
+  }
+  stopped[index] = true;
+  reelBoxes[index].classList.add('stopped');
 
-setInterval(()=>{
-
-let chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-
-let text=""
-
-for(let i=0;i<30;i++){
-
-text+=chars[Math.floor(Math.random()*chars.length)]
-
+  // 全停止チェック
+  if(stopped.every(v=>v)){
+    finishReels();
+  }
 }
 
-document.getElementById("bug").innerText=text
 
-},200)
+  function stopReel(index){
+    if(gamePhase !== 'spinning') return;
+    if(stopped[index]) return;
+    if(intervals[index]){
+      clearInterval(intervals[index]);
+      intervals[index] = null;
+    }
+    stopped[index] = true;
+    reelBoxes[index].classList.add('stopped');
+    setButtonsState(true);
 
-/* 落ちる文字 */
+    if(stopped.every(v=>v)){
+      finishReels();
+    }
+  }
 
-setInterval(()=>{
+  function finishReels(){
+    gamePhase = 'result';
+    setButtonsState(false);
+    startBtn.disabled = false;
 
-let el=document.createElement("div")
+    const [a,b,c] = currentDigits;
+    // 両脇揃い（例:121）パターン
+    if(a === c && a !== b){
+      const r = Math.random();
+      if(r < 0.40){
+        // 演出ゾーン突入
+        log('両脇揃い！ 40%に当選して演出ゾーン突入！');
+        startChanceFlow();
+      }else{
+        log('両脇揃いだが演出ゾーンスルー…。');
+      }
+    }else{
+      log(`通常終了：${a}${b}${c}`);
+    }
+  }
 
-el.className="drop"
+  function checkNearHitDuringSpin(){
+  if(nearHitUsed) return;
+  const [a,b,c] = currentDigits;
+  if(a === c && a !== b){
+    // 40%で発生
+    if(Math.random() < 0.40){
+      nearHitUsed = true;
+      displayExpect += 10;
+      clampExpect();
+      updateExpectUI();
+      showMessage('…お？', 'heat-yellow');
+      shakeGame();
+      log('…お？（期待値 +10%）');
+    }
+  }
+}
 
-let chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-el.innerText=chars[Math.floor(Math.random()*chars.length)]
+  // ===== 演出ゾーン：3回の確定演出 =====
+  function startChanceFlow(){
+    gamePhase = 'chance';
+    startBtn.disabled = true;
+    setButtonsState(false);
+    clearIntervals();
+    shakeGame();
+    showMessage('演出ゾーン突入！', 'heat-yellow');
+    log('--- 演出ゾーン START ---');
 
-el.style.left=Math.random()*100+"%"
+    setTimeout(runFirstStage, 700);
+  }
 
-document.getElementById("falling").appendChild(el)
+  function runFirstStage(){
+    const item = weightedPick(FIRST_STAGE_TABLE);
+    if(item.addExpect > 0){
+      displayExpect += item.addExpect;
+      clampExpect();
+    }
+    updateExpectUI();
+    if(item.id !== 'none'){
+      showMessage(item.label, item.cls);
+      log(`第1段：${item.label}（期待値 +${item.addExpect}%）`);
+    }else{
+      log('第1段：演出ナシ…');
+    }
+    shakeGame();
+    setTimeout(runSecondStage, 800);
+  }
 
-setTimeout(()=>el.remove(),3000)
+  function runSecondStage(){
+    const item = weightedPick(SECOND_STAGE_TABLE);
+    if(item.id === 'blackout'){
+      blackout();
+      displayExpect += item.addExpect;
+      clampExpect();
+      updateExpectUI();
+      log(`第2段：ブラックアウト（期待値 +${item.addExpect}%）`);
+    }else if(item.id === 'whiteout'){
+      whiteout();
+      displayExpect += item.addExpect;
+      clampExpect();
+      updateExpectUI();
+      log(`第2段：ホワイトアウト（期待値 +${item.addExpect}%）`);
+    }else if(item.id === 'blue_shake'){
+      // ブルブル：特殊成長
+      onBlueShake();
+      log('第2段：ブルブル発生！（期待値 +5% & 以降ブルブル成長）');
+    }else{
+      log('第2段：演出ナシ…');
+    }
+    setTimeout(runThirdStage, 900);
+  }
 
-},100)
+  function onBlueShake(){
+    displayExpect += blueShakeBonus;
+    clampExpect();
+    updateExpectUI();
+    blueShakeBonus += 5;
+    blueShakeProb = Math.max(0.01, blueShakeProb - 0.10);
+    shakeGame();
+  }
 
+  function runThirdStage(){
+    const item = weightedPick(THIRD_STAGE_TABLE);
+    if(item.id === 'slow_stop'){
+      showMessage('スロー…', 'heat-blue');
+      log(`第3段：数字スロー演出（期待値 +${item.addExpect}%）`);
+      displayExpect += item.addExpect;
+      clampExpect();
+      updateExpectUI();
+    }else if(item.id === 'slash_diag'){
+      slashDiagonal();
+      log(`第3段：画面斜め切り！（期待値 +${item.addExpect}%）`);
+      displayExpect += item.addExpect;
+      clampExpect();
+      updateExpectUI();
+    }else if(item.id === 'digit_big'){
+      showMessage('ドーン！', 'heat-red');
+      log(`第3段：数字巨大化！（期待値 +${item.addExpect}%）`);
+      displayExpect += item.addExpect;
+      clampExpect();
+      updateExpectUI();
+    }else if(item.id === 'reverse_spin'){
+      showMessage('逆回転！！', 'heat-rainbow');
+      log(`第3段：逆回転演出！（期待値 +${item.addExpect}%）`);
+      displayExpect += item.addExpect;
+      clampExpect();
+      updateExpectUI();
+    }else if(item.id === 'devil_hand'){
+      showMessage('悪魔の手…', 'heat-red');
+      log(`第3段：悪魔の手演出！（期待値 +${item.addExpect}%）`);
+      displayExpect += item.addExpect;
+      clampExpect();
+      updateExpectUI();
+      blackout();
+    }else{
+      log('第3段：演出ナシ…');
+    }
+
+    log(`→ 演出ゾーン終了時 期待値：${Math.floor(displayExpect)}%`);
+    setTimeout(startAllyPhase, 1000);
+  }
+
+  // ===== 味方バトルフェーズ =====
+  function startAllyPhase(){
+    gamePhase = 'battle';
+    log('--- 味方バトル START ---');
+    updateExpectUI();
+    runAllyByIndex(0);
+  }
+
+  function runAllyByIndex(index){
+    if(index >= ALLIES.length){
+      // 全員処理完了
+      log('--- 味方の攻撃終了 ---');
+      showPushPrompt();
+      return;
+    }
+    const ally = ALLIES[index];
+    if(Math.random() > ally.appearProb){
+      log(`${ally.name} は現れなかった…`);
+      setTimeout(()=>runAllyByIndex(index+1), 600);
+      return;
+    }
+    // 出現
+    const hp = randInt(1,4);
+    const atkCount = randInt(1,3);
+    log(`${ally.name} 出現！（HP:${hp} / 攻撃回数:${atkCount}）`);
+
+    let attackDone = 0;
+    function oneAttack(){
+      attackDone++;
+      displayExpect += 30;
+      clampExpect();
+      updateExpectUI();
+      log(`→ ${ally.name} の攻撃！ 期待値 +30%（現在：${Math.floor(displayExpect)}%）`);
+      shakeGame();
+      if(attackDone < atkCount){
+        setTimeout(oneAttack, 650);
+      }else{
+        setTimeout(()=>runAllyByIndex(index+1), 700);
+      }
+    }
+    setTimeout(oneAttack, 700);
+  }
+
+  function randInt(min, maxInclusive){
+    return min + Math.floor(Math.random()*(maxInclusive-min+1));
+  }
+
+  function showPushPrompt(){
+    gamePhase = 'final';
+    pushPrompt.classList.remove('hidden');
+    finalBtn.disabled = false;
+    log('「ボタンを押せ！」で最終抽選だ！');
+  }
+
+  // ===== 最終抽選 =====
+  function doFinalLottery(){
+    if(gamePhase !== 'final') return;
+    gamePhase = 'result';
+    pushPrompt.classList.add('hidden');
+    finalBtn.disabled = true;
+
+    // 実際の当選確率：
+    // 期待値（0〜999）のうち、100%までを実効として扱い、
+    // 最大でも 1/10 （10%）にキャップ。
+    const effectiveExpect = Math.min(100, displayExpect);
+    const hitProb = Math.min(MAX_REAL_HIT, effectiveExpect / 1000); // 100% → 0.1
+
+    const enemyHp = Math.max(0, 999 - Math.floor(displayExpect));
+    log(`最終期待値：${Math.floor(displayExpect)}% / 敵HP:${enemyHp} / 実際の当選確率:${(hitProb*100).toFixed(1)}%`);
+
+    const r = Math.random();
+    if(r <= hitProb){
+      // 当たり！
+      displayExpect = 999;
+      updateExpectUI();
+      log('大当たり！ 期待値は999%！！');
+      showMessage('大当たり!!', 'heat-rainbow');
+      shakeGame();
+      blackout();
+      setTimeout(()=>{
+        whiteout();
+        slashHorizontal();
+        setTimeout(slashDiagonal,150);
+        destroyDigits();
+      },400);
+    }else{
+      log('外れ…。また次のチャンスへ…。');
+      showMessage('ハズレ', 'heat-blue');
+    }
+
+    // 次のラウンド用にスタートボタン解放
+    setTimeout(()=>{ startBtn.disabled = false; }, 800);
+  }
+
+  // ===== イベント設定 =====
+  startBtn.addEventListener('click', ()=>{
+    if(gamePhase === 'chance' || gamePhase === 'battle' || gamePhase === 'final') return;
+    startSpin();
+  });
+  stopBtns[0].addEventListener('click', ()=>stopReel(0));
+  stopBtns[1].addEventListener('click', ()=>stopReel(1));
+  stopBtns[2].addEventListener('click', ()=>stopReel(2));
+  finalBtn.addEventListener('click', doFinalLottery);
+
+  document.addEventListener('keydown', (e)=>{
+    if(e.code === 'Space'){
+      e.preventDefault();
+      if(gamePhase === 'idle' || gamePhase === 'result'){
+        startSpin();
+      }
+    }
+    if(gamePhase === 'spinning'){
+      if(e.code === 'Digit1') stopReel(0);
+      if(e.code === 'Digit2') stopReel(1);
+      if(e.code === 'Digit3') stopReel(2);
+    }
+    if(e.code === 'Enter' && !finalBtn.disabled){
+      doFinalLottery();
+    }
+  });
+
+  // 初期表示
+  function init(){
+    setTargetDigits();
+    resetReels();
+    updateExpectUI();
+    clearLog();
+    gamePhase = 'idle';
+    setButtonsState(false);
+    finalBtn.disabled = true;
+  }
+  init();
+})();
 </script>
-
 </body>
 </html>
