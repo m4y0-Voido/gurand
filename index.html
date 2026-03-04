@@ -1,198 +1,221 @@
-<!DOCTYPE html>
-<html lang="ja">
+<!DOCTYPE html><html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>超次元レース：ツインブラッド</title>
+<title>タグ装備シューター</title>
 <style>
-body{font-family:Arial;background:#0f172a;color:#e5e7eb;text-align:center}
-.container{max-width:900px;margin:auto;padding:20px}
-.card{background:#1e293b;padding:20px;border-radius:12px;margin-top:15px}
-button{padding:10px 16px;margin:5px;border:none;border-radius:8px;background:#38bdf8;color:#021018;font-weight:bold;cursor:pointer}
+body{margin:0;font-family:Arial;background:#0f172a;color:white}
+#topbar{background:#020617;padding:10px}
+button{padding:8px 12px;margin:4px;border:none;border-radius:6px;background:#38bdf8;color:black;font-weight:bold;cursor:pointer}
 button:hover{background:#0ea5e9}
-select{padding:8px;margin:5px}
-.stat{margin:5px}
-.track{background:#020617;border-radius:8px;padding:10px}
-.lane{display:flex;align-items:center;margin:6px 0}
-.name{width:120px;text-align:right;margin-right:8px}
-.barbg{flex:1;background:#1e293b;border-radius:6px;height:18px;overflow:hidden}
-.bar{height:100%;background:#38bdf8;width:0%}
-.log{background:#020617;padding:10px;border-radius:8px;height:120px;overflow:auto;text-align:left;margin-top:10px}
+.panel{padding:15px}
+.grid{display:grid;grid-template-columns:repeat(2,200px);gap:10px}
+.slot{background:#1e293b;padding:10px;border-radius:8px}
+.item{background:#334155;margin:4px;padding:6px;border-radius:6px;cursor:pointer}
+canvas{background:black;border:2px solid #38bdf8}
 </style>
 </head>
-<body>
-<div class="container">
-<h1>超次元レース：ツインブラッド</h1>
+<body><div id="topbar">
+<button onclick="showHome()">ホーム</button>
+<button onclick="showEquip()">装備</button>
+<button onclick="showSkills()">スキル</button>
+<button onclick="startGame()">出撃</button>
+</div><div id="home" class="panel"></div>
+<div id="equip" class="panel" style="display:none"></div>
+<div id="skills" class="panel" style="display:none"></div>
+<div id="game" class="panel" style="display:none">
+<canvas id="gameCanvas" width="600" height="400"></canvas>
+</div><script>
 
-<div class="card" id="setup">
-<h2>種族を2つ選ぶ</h2>
-<select id="race1"></select>
-<select id="race2"></select>
-<br>
-<button onclick="startGame()">融合して育成開始</button>
-</div>
+const baseStats={
+attack:10,
+support:-30,
+stability:30,
+defense:5,
+hp:100,
+speed:100
+}
 
-<div class="card" id="game" style="display:none">
-<h2 id="fusionName"></h2>
-<div id="stats"></div>
-<h3>行動</h3>
-<button onclick="train('speed')">スピード訓練</button>
-<button onclick="train('stamina')">スタミナ訓練</button>
-<button onclick="train('power')">パワー訓練</button>
-<button onclick="train('wisdom')">研究</button>
-<button onclick="rest()">休息</button>
-<p>残りターン: <span id="turn"></span></p>
-</div>
+let equipment={
+head:null,
+body:null,
+legs:null,
+mind:null
+}
 
-<div class="card" id="race" style="display:none">
-<h2>レース</h2>
-<div class="track" id="track"></div>
-<div class="log" id="log"></div>
-<button onclick="location.reload()">もう一度遊ぶ</button>
-</div>
+const items=[
+{name:"戦術ヘルム",slot:"head",tags:["軍"] ,attack:2},
+{name:"軽量ヘルム",slot:"head",tags:["機動"],speed:10},
+{name:"装甲スーツ",slot:"body",tags:["軍"],defense:4},
+{name:"高速スーツ",slot:"body",tags:["機動"],speed:20},
+{name:"強化ブーツ",slot:"legs",tags:["軍"],speed:15},
+{name:"跳躍ブーツ",slot:"legs",tags:["機動"],speed:25},
+{name:"戦闘心得",slot:"mind",tags:["軍"],attack:3},
+{name:"機動心得",slot:"mind",tags:["機動"],speed:15}
+]
 
-</div>
+let skillLimit=5
+let skills=[]
 
-<script>
-const races=["巨人","妖精","人間","魔人","天使","虫人","竜人","魚人","幻影","機械","猛禽","猫又","堕天","悪魔","植人","星人","鉱人"]
+const skillList=[
+"連射","拡散弾","シールド","自動回復","ホーミング",
+"爆発弾","レーザー","ドローン","時間減速","クリティカル"
+]
 
-let stats={speed:0,stamina:0,power:0,wisdom:0,guts:5}
-let turn=10
+function calculateStats(){
+let s={...baseStats}
+let tagCount={}
 
-let racers=[]
-let progress=[]
-let interval
+for(let k in equipment){
+let it=equipment[k]
+if(!it)continue
 
-function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+for(let stat in it){
+if(s[stat]!=undefined)s[stat]+=it[stat]
+}
 
-function populate(){
-const r1=document.getElementById("race1")
-const r2=document.getElementById("race2")
-
-races.forEach(r=>{
-let o=document.createElement("option")
-o.text=r
-r1.add(o.cloneNode(true))
-r2.add(o.cloneNode(true))
+it.tags.forEach(t=>{
+if(!tagCount[t])tagCount[t]=0
+ tagCount[t]++
 })
 }
 
-function startGame(){
-const r1=document.getElementById("race1").value
-const r2=document.getElementById("race2").value
-
-if(r1===r2){alert("違う種族を選んでください");return}
-
-stats.speed=rand(6,10)
-stats.stamina=rand(6,10)
-stats.power=rand(6,10)
-stats.wisdom=rand(6,10)
-
-document.getElementById("fusionName").innerText=`${r1} × ${r2} 融合レーサー`
-
-document.getElementById("setup").style.display="none"
-document.getElementById("game").style.display="block"
-
-update()
+for(let tag in tagCount){
+if(tagCount[tag]>=3){
+ s.attack+=3
+ s.speed+=10
+}
 }
 
-function update(){
-let s=stats
+return s
+}
 
-document.getElementById("stats").innerHTML=`
-<div class='stat'>スピード: ${s.speed}</div>
-<div class='stat'>スタミナ: ${s.stamina}</div>
-<div class='stat'>パワー: ${s.power}</div>
-<div class='stat'>賢さ: ${s.wisdom}</div>
+function showHome(){
+hideAll()
+let s=calculateStats()
+
+home.innerHTML=`
+<h2>ステータス</h2>
+攻撃 ${s.attack}<br>
+補助率 ${s.support}%<br>
+安定率 ${s.stability}%<br>
+防御 ${s.defense}<br>
+体力 ${s.hp}<br>
+速度 ${s.speed}
+
+<h3>装備</h3>
+頭:${equipment.head?.name||"なし"}<br>
+体:${equipment.body?.name||"なし"}<br>
+足:${equipment.legs?.name||"なし"}<br>
+心得:${equipment.mind?.name||"なし"}
+
+<h3>スキル</h3>
+${skills.join(", ")||"なし"}
 `
 
-document.getElementById("turn").innerText=turn
-
-if(turn<=0)startRace()
+home.style.display="block"
 }
 
-function train(type){
-let gain=rand(1,3)
-stats[type]+=gain
-turn--
-update()
+function showEquip(){
+hideAll()
+
+equip.innerHTML="<h2>装備変更</h2>"
+
+items.forEach(it=>{
+let d=document.createElement("div")
+d.className="item"
+d.innerText=`${it.name} (${it.slot}) [${it.tags}]`
+d.onclick=()=>{
+equipment[it.slot]=it
+showEquip()
 }
-
-function rest(){
-stats.guts+=1
-turn--
-update()
-}
-
-function startRace(){
-document.getElementById("game").style.display="none"
-document.getElementById("race").style.display="block"
-
-const track=document.getElementById("track")
-const log=document.getElementById("log")
-
-racers=["あなた","AI-1","AI-2","AI-3","AI-4"]
-progress=[0,0,0,0,0]
-
-track.innerHTML=""
-
-racers.forEach((r,i)=>{
-const lane=document.createElement("div")
-lane.className="lane"
-
-lane.innerHTML=`
-<div class='name'>${r}</div>
-<div class='barbg'>
-<div class='bar' id='bar${i}'></div>
-</div>`
-
-track.appendChild(lane)
+equip.appendChild(d)
 })
 
-log.innerHTML="レース開始！"
-
-interval=setInterval(raceTick,500)
+equip.style.display="block"
 }
 
-function raceTick(){
-const log=document.getElementById("log")
+function showSkills(){
+hideAll()
 
-for(let i=0;i<racers.length;i++){
+skillsDiv.innerHTML="<h2>スキル設定</h2>"
 
-let move
+skillList.forEach(s=>{
+let d=document.createElement("div")
+d.className="item"
+d.innerText=s
 
-if(i===0){
-move = stats.speed*0.6 + stats.stamina*0.3 + stats.power*0.2 + rand(0,3)
+d.onclick=()=>{
+if(skills.includes(s)){
+skills=skills.filter(x=>x!=s)
+}else{
+if(skills.length<skillLimit)skills.push(s)
 }
-else{
-move = rand(4,10)
-}
-
-progress[i]+=move
-
-let percent=Math.min(progress[i],100)
-
-document.getElementById("bar"+i).style.width=percent+"%"
-
-if(progress[i]>=100){
-clearInterval(interval)
-finishRace(i)
-return
-}
-}
+showSkills()
 }
 
-function finishRace(winner){
-const log=document.getElementById("log")
+skillsDiv.appendChild(d)
+})
 
-if(winner===0){
-log.innerHTML+="<br>🏆 あなたの勝利！"
-}
-else{
-log.innerHTML+=`<br>💀 勝者: ${racers[winner]}`
-}
+skillsDiv.style.display="block"
 }
 
-populate()
-</script>
-</body>
+function hideAll(){
+home.style.display="none"
+equip.style.display="none"
+skills.style.display="none"
+game.style.display="none"
+}
+
+let player={x:300,y:350}
+let bullets=[]
+let enemies=[]
+
+function startGame(){
+hideAll()
+game.style.display="block"
+
+const canvas=document.getElementById("gameCanvas")
+const ctx=canvas.getContext("2d")
+
+player={x:300,y:350}
+bullets=[]
+enemies=[]
+
+setInterval(()=>{
+enemies.push({x:Math.random()*600,y:0})
+},1000)
+
+function loop(){
+ctx.clearRect(0,0,600,400)
+
+ctx.fillStyle="cyan"
+ctx.fillRect(player.x-10,player.y-10,20,20)
+
+bullets.forEach(b=>{
+b.y-=6
+ctx.fillStyle="yellow"
+ctx.fillRect(b.x,b.y,4,8)
+})
+
+for(let e of enemies){
+e.y+=2
+ctx.fillStyle="red"
+ctx.fillRect(e.x,e.y,20,20)
+}
+
+requestAnimationFrame(loop)
+}
+
+loop()
+
+window.onkeydown=e=>{
+if(e.key=="ArrowLeft")player.x-=5
+if(e.key=="ArrowRight")player.x+=5
+if(e.key==" ")bullets.push({x:player.x,y:player.y})
+}
+}
+
+showHome()
+
+</script></body>
 </html>
