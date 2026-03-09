@@ -1,131 +1,1203 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>TFT キャラデータ</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Friend TFT Builder</title>
+  <style>
+    :root {
+      --bg: #040814;
+      --panel: #071225;
+      --panel-2: #0b1730;
+      --panel-3: #09111f;
+      --line: #112447;
+      --line-soft: rgba(122, 163, 255, 0.18);
+      --text: #f5f7ff;
+      --sub: #9eb0d7;
+      --muted: #6680b8;
+      --teal: #20e3c2;
+      --teal-soft: rgba(32, 227, 194, 0.16);
+      --blue: #55a3ff;
+      --purple: #b56cff;
+      --gold: #f5b83d;
+      --red: #ff6584;
+      --green: #4ade80;
+      --cost1: #bfc7d8;
+      --cost2: #5ee68d;
+      --cost3: #58a8ff;
+      --cost4: #cb8bff;
+      --cost5: #ffc857;
+      --shadow: 0 16px 40px rgba(0, 0, 0, 0.34);
+      --radius: 16px;
+      --radius-sm: 12px;
+      --tile-size: 104px;
+      --bench-size: 92px;
+    }
 
-<style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: Inter, "Hiragino Sans", "Yu Gothic", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(32, 227, 194, 0.08), transparent 18%),
+        radial-gradient(circle at top right, rgba(181, 108, 255, 0.10), transparent 20%),
+        linear-gradient(180deg, #030712 0%, #030814 100%);
+      overflow: hidden;
+    }
 
-body{
-background:#020617;
-color:white;
-font-family:sans-serif;
-padding:40px;
-}
+    .app {
+      display: grid;
+      grid-template-columns: 250px 1fr 340px;
+      height: 100vh;
+    }
 
-.card{
-background:#0f172a;
-padding:20px;
-width:400px;
-border-radius:10px;
-}
+    .panel {
+      background: linear-gradient(180deg, rgba(7,18,37,0.96), rgba(4,10,21,0.96));
+      border-right: 1px solid var(--line);
+      min-height: 0;
+    }
 
-table{
-width:100%;
-border-collapse:collapse;
-}
+    .left {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: auto;
+    }
 
-td{
-padding:6px;
-border-bottom:1px solid #334155;
-}
+    .center {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      background:
+        linear-gradient(180deg, rgba(22, 9, 18, 0.42) 0 57%, rgba(4, 20, 48, 0.46) 57% 100%),
+        linear-gradient(180deg, #030814 0%, #071225 100%);
+      position: relative;
+    }
 
-.skill{
-margin-top:20px;
-}
+    .right {
+      padding: 14px;
+      border-left: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: auto;
+    }
 
-</style>
+    .block {
+      background: linear-gradient(180deg, rgba(9,17,31,0.98), rgba(5,12,24,0.98));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    .app-title {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      color: #dbf5ff;
+      text-transform: uppercase;
+    }
+
+    .subtext { color: var(--sub); font-size: 12px; line-height: 1.5; }
+    .tiny { color: var(--muted); font-size: 11px; }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(5, 10, 20, 0.55);
+      backdrop-filter: blur(12px);
+    }
+
+    .toolbar-left, .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pill, button, select, input, textarea {
+      font: inherit;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid var(--line-soft);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.03);
+      color: var(--sub);
+      font-size: 12px;
+    }
+
+    .btn {
+      background: #0b1830;
+      color: var(--text);
+      border: 1px solid var(--line-soft);
+      border-radius: 12px;
+      padding: 9px 12px;
+      cursor: pointer;
+      transition: .16s ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); background: #0f1e3c; }
+    .btn.primary { background: linear-gradient(180deg, #11396b, #0a2548); }
+    .btn.danger { background: linear-gradient(180deg, #481522, #300d15); border-color: rgba(255,101,132,0.25); }
+
+    .synergy-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .synergy-item {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 9px 10px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .synergy-item.active {
+      border-color: rgba(32, 227, 194, 0.5);
+      box-shadow: 0 0 0 1px rgba(32,227,194,0.14) inset;
+      background: linear-gradient(180deg, rgba(5,27,33,0.9), rgba(7,22,29,0.9));
+    }
+
+    .synergy-count {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #ffe8a3;
+      background: linear-gradient(180deg, #1b2134, #0d1325);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .synergy-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .synergy-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .progress {
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.07);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #f7cf68, #21e4c2);
+    }
+
+    .board-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      min-height: 0;
+    }
+
+    .board-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+    }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(6, var(--tile-size));
+      grid-template-rows: repeat(3, var(--tile-size));
+      gap: 8px;
+      padding: 10px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(8,14,28,0.7), rgba(5,9,18,0.7));
+      border: 1px solid var(--line);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03), var(--shadow);
+    }
+
+    .tile {
+      width: var(--tile-size);
+      height: var(--tile-size);
+      border-radius: 14px;
+      border: 1px solid rgba(120, 28, 56, 0.35);
+      background:
+        linear-gradient(180deg, rgba(43, 5, 19, 0.42), rgba(16, 6, 13, 0.42)),
+        linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+    }
+
+    .tile:nth-child(n+13) {
+      border-color: rgba(23, 80, 162, 0.35);
+      background:
+        linear-gradient(180deg, rgba(3, 18, 58, 0.38), rgba(4, 13, 33, 0.46)),
+        linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+    }
+
+    .bench-wrap {
+      width: 100%;
+      padding: 0 18px 18px;
+    }
+
+    .bench-panel {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(7,18,37,0.96), rgba(5,10,20,0.96));
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .bench-toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .search {
+      flex: 1;
+      min-width: 180px;
+      background: #071124;
+      color: var(--text);
+      border: 1px solid var(--line-soft);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      border: 1px solid var(--line-soft);
+      background: rgba(255,255,255,0.03);
+      color: var(--sub);
+      padding: 6px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .chip.active {
+      color: white;
+      border-color: rgba(32, 227, 194, 0.45);
+      background: rgba(32,227,194,0.12);
+    }
+
+    .bench-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+      gap: 12px;
+    }
+
+    .unit-btn, .placed-unit {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 2px;
+      cursor: pointer;
+      overflow: hidden;
+      user-select: none;
+      transition: transform .14s ease, filter .14s ease;
+    }
+
+    .unit-btn:hover, .placed-unit:hover { transform: translateY(-2px) scale(1.02); }
+
+    .ring-cost-1 { border: 3px solid var(--cost1); box-shadow: 0 0 18px rgba(191,199,216,0.35), inset 0 0 18px rgba(191,199,216,0.10); }
+    .ring-cost-2 { border: 3px solid var(--cost2); box-shadow: 0 0 18px rgba(94,230,141,0.35), inset 0 0 18px rgba(94,230,141,0.10); }
+    .ring-cost-3 { border: 3px solid var(--cost3); box-shadow: 0 0 18px rgba(88,168,255,0.35), inset 0 0 18px rgba(88,168,255,0.10); }
+    .ring-cost-4 { border: 3px solid var(--cost4); box-shadow: 0 0 18px rgba(203,139,255,0.35), inset 0 0 18px rgba(203,139,255,0.10); }
+    .ring-cost-5 { border: 3px solid var(--cost5); box-shadow: 0 0 18px rgba(255,200,87,0.35), inset 0 0 18px rgba(255,200,87,0.10); }
+
+    .unit-btn {
+      background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.10), rgba(255,255,255,0.02) 45%, rgba(255,255,255,0.01) 55%), #0e1f3c;
+      padding: 10px;
+    }
+
+    .placed-unit {
+      width: 86px;
+      height: 86px;
+      background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.14), rgba(255,255,255,0.02) 45%, rgba(255,255,255,0.01) 60%), #0e1f3c;
+      padding: 8px;
+    }
+
+    .unit-name {
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.1;
+      max-width: 76px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .unit-stars {
+      font-size: 11px;
+      color: #ffd76b;
+      letter-spacing: 0.06em;
+    }
+
+    .unit-role {
+      font-size: 10px;
+      color: var(--sub);
+      line-height: 1;
+    }
+
+    .unit-cost-badge {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 800;
+      background: rgba(2,8,23,0.85);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .empty-note {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+      padding: 24px 0 10px;
+    }
+
+    .stat-card, .detail-card, .editor-card {
+      padding: 14px;
+    }
+
+    .detail-header {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .detail-avatar {
+      width: 80px;
+      height: 80px;
+      flex: 0 0 80px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.14), rgba(255,255,255,0.02) 45%, rgba(255,255,255,0.01) 60%), #0e1f3c;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .tag-row, .star-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .tag {
+      font-size: 11px;
+      padding: 5px 8px;
+      border-radius: 999px;
+      color: #dce8ff;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .star-btn {
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--line-soft);
+      background: #081529;
+      color: var(--sub);
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .star-btn.active {
+      background: rgba(32,227,194,0.14);
+      color: white;
+      border-color: rgba(32,227,194,0.42);
+    }
+
+    .stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    .stats-table th, .stats-table td {
+      padding: 8px 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      text-align: left;
+    }
+
+    .stats-table th { color: var(--sub); font-weight: 600; }
+
+    .skill-box {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .effect-box {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(32,227,194,0.06);
+      border: 1px solid rgba(32,227,194,0.12);
+      color: #d4fff7;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .editor-title { font-size: 14px; font-weight: 800; }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .field label { color: var(--sub); font-size: 12px; }
+
+    .field input, .field textarea, .field select {
+      background: #071124;
+      color: var(--text);
+      border: 1px solid var(--line-soft);
+      border-radius: 10px;
+      padding: 10px 12px;
+      width: 100%;
+    }
+
+    .field textarea { min-height: 96px; resize: vertical; }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .notice {
+      font-size: 12px;
+      color: var(--sub);
+      line-height: 1.55;
+      margin-top: 8px;
+    }
+
+    .list-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .selected-outline {
+      outline: 2px solid rgba(32,227,194,0.55);
+      outline-offset: 2px;
+    }
+
+    .footer-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .slot-indicator {
+      position: absolute;
+      bottom: 6px;
+      right: 8px;
+      font-size: 10px;
+      color: rgba(255,255,255,0.38);
+    }
+
+    .small-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #d7e2ff;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 1360px) {
+      .app { grid-template-columns: 230px 1fr 320px; }
+      :root { --tile-size: 92px; }
+    }
+
+    @media (max-width: 1180px) {
+      body { overflow: auto; }
+      .app { grid-template-columns: 1fr; height: auto; }
+      .panel, .right { border: 0; }
+      .left, .right { max-height: none; }
+      .center { min-height: 760px; }
+    }
+  </style>
 </head>
-
 <body>
+  <div class="app">
+    <aside class="panel left">
+      <div class="title-row">
+        <div>
+          <div class="app-title">Synergies</div>
+          <p class="subtext">配置中のユニットから自動計算</p>
+        </div>
+      </div>
+      <div class="block stat-card">
+        <div class="title-row">
+          <h2 class="small-title">現在の発動状況</h2>
+          <span class="pill"><span id="unitCount">0</span> / 18</span>
+        </div>
+        <div id="synergyList" class="synergy-list"></div>
+      </div>
+      <div class="block stat-card">
+        <div class="title-row">
+          <h2 class="small-title">ビルド操作</h2>
+        </div>
+        <div class="footer-actions">
+          <button class="btn" id="clearBoardBtn">盤面クリア</button>
+          <button class="btn" id="copyBuildBtn">構成コピー</button>
+          <button class="btn primary" id="saveLocalBtn">ブラウザ保存</button>
+        </div>
+        <p class="notice">左クリックで選択、盤面クリックで配置。盤面の駒は右クリックまたはダブルクリックで削除できます。</p>
+      </div>
+      <div class="block editor-card">
+        <div class="editor-title">共有テキスト</div>
+        <div class="field">
+          <label for="buildText">このテキストを保存・共有できます</label>
+          <textarea id="buildText" class="mono" readonly></textarea>
+        </div>
+      </div>
+    </aside>
 
-<div class="card" id="unitCard"></div>
+    <main class="center">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div>
+            <div class="app-title">Friend TFT Builder</div>
+            <p class="subtext">MetaTFT風ビルドツール / 3×6 ボード</p>
+          </div>
+          <span class="pill">選択中: <strong id="selectedUnitLabel">なし</strong></span>
+        </div>
+        <div class="toolbar-right">
+          <button class="btn" id="importBtn">保存データ読込</button>
+          <button class="btn danger" id="resetStorageBtn">保存削除</button>
+        </div>
+      </div>
 
-<script>
+      <div class="board-wrap">
+        <div class="board-area">
+          <div id="board" class="board-grid"></div>
+        </div>
+      </div>
 
-fetch("gameData.json")
-.then(r=>r.json())
-.then(data=>{
+      <div class="bench-wrap">
+        <div class="bench-panel">
+          <div class="bench-toolbar">
+            <input id="searchInput" class="search" placeholder="キャラ名・シナジー・役割で検索" />
+            <select id="costFilter" class="btn">
+              <option value="all">全コスト</option>
+              <option value="1">1コスト</option>
+              <option value="2">2コスト</option>
+              <option value="3">3コスト</option>
+              <option value="4">4コスト</option>
+              <option value="5">5コスト</option>
+            </select>
+          </div>
+          <div id="synergyFilterChips" class="chips"></div>
+          <div id="bench" class="bench-grid"></div>
+        </div>
+      </div>
+    </main>
 
-const unit=data.units["いる"]
+    <aside class="panel right">
+      <div class="block detail-card" id="detailCard"></div>
+      <div class="block editor-card">
+        <div class="title-row">
+          <div>
+            <div class="editor-title">追記・修正しやすいデータ編集</div>
+            <div class="subtext">下のJSONを編集して差し替えれば追加可能</div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="dataEditor">選択中キャラのJSON</label>
+          <textarea id="dataEditor" class="mono"></textarea>
+        </div>
+        <div class="footer-actions">
+          <button class="btn primary" id="applyJsonBtn">このキャラに反映</button>
+          <button class="btn" id="downloadJsonBtn">全データをJSON保存</button>
+        </div>
+        <p class="notice">stats は <span class="mono">[★1, ★2, ★3]</span> の順です。例: <span class="mono">"hp": [400, 600, 800]</span></p>
+      </div>
+    </aside>
+  </div>
 
-let html=`
-<h2>いる</h2>
+  <script>
+    const gameData = {
+      synergies: {
+        "星を追う者": { levels: [2, 4, 6, 7], values: [2, 3, 4, 5], effectLabel: "SP効率" },
+        "サモナー": { levels: [5], values: [300], effectLabel: "体力" },
+        "F.P.S": { levels: [2, 4, 6, 7], values: [15, 30, 45, 50], effectLabel: "会心率", suffix: "%" },
+        "100万クレジット": { levels: [2, 3, 4, 5], values: [0.1, 0.2, 0.3, 0.4], effectLabel: "攻撃速度" },
+        "聞き専": { levels: [3], values: [40], effectLabel: "魔法力" },
+        "ドレッドノート": { levels: [2, 3, 4, 5, 6], values: [20, 30, 40, 50, 60], effectLabel: "物理防御" },
+        "ユーフォリア": { levels: [3, 6, 9], values: [15, 30, 45], effectLabel: "回復力", suffix: "%" },
+        "アルカナム": { levels: [2, 3, 5, 6], values: [10, 20, 30, 40], effectLabel: "攻撃力" }
+      },
+      units: {
+        "いる": { cost: 1, role: "タンク", synergy: ["サモナー", "ドレッドノート", "アルカナム"], stats: { hp: [400,600,800], attack: [16,24,32], magic: [23,35,50], armor: [4,6,8], magicRes: [6,9,12], speed: [0.70,0.70,0.70], crit: [5,5,5], penetration: [0,0,0] }, skill: { name: "サモンブレード", description: "敵1体に魔法ダメージを与える。", values: [120,180,260], label: "ダメージ", sp: 40 } },
+        "巻巻": { cost: 1, role: "タンク", synergy: ["サモナー", "ドレッドノート"], stats: { hp: [420,630,840], attack: [15,23,31], magic: [18,27,38], armor: [5,7,9], magicRes: [5,8,10], speed: [0.65,0.65,0.65], crit: [5,5,5], penetration: [0,0,0] }, skill: { name: "ガードコール", description: "自身にシールドを付与し、短時間狙われやすくなる。", values: [150,240,360], label: "シールド", sp: 35 } },
+        "ばーれい": { cost: 1, role: "アッパー", synergy: ["F.P.S", "ユーフォリア"], stats: { hp: [360,540,760], attack: [14,21,29], magic: [28,42,60], armor: [3,5,7], magicRes: [5,7,10], speed: [0.72,0.72,0.72], crit: [5,5,5], penetration: [0,0,0] }, skill: { name: "テンションバースト", description: "味方の回復力を上げ、敵1体に魔法ダメージ。", values: [100,160,240], label: "ダメージ", sp: 45 } },
+        "彼岸桜": { cost: 1, role: "ヒーラー", synergy: ["ユーフォリア", "聞き専"], stats: { hp: [350,530,740], attack: [10,15,21], magic: [32,48,70], armor: [3,5,7], magicRes: [6,9,12], speed: [0.68,0.68,0.68], crit: [5,5,5], penetration: [0,0,0] }, skill: { name: "ヒールノート", description: "最も減っている味方を回復する。", values: [140,220,340], label: "回復", sp: 35 } },
+        "雫唯": { cost: 1, role: "ダウナー", synergy: ["サモナー", "アルカナム", "100万クレジット"], stats: { hp: [370,560,780], attack: [12,18,26], magic: [30,45,66], armor: [3,5,7], magicRes: [5,8,11], speed: [0.71,0.71,0.71], crit: [5,5,5], penetration: [0,0,0] }, skill: { name: "クレジットレイン", description: "範囲に魔法ダメージを与え、攻撃速度を上げる。", values: [115,175,260], label: "ダメージ", sp: 40 } },
+        "うた": { cost: 1, role: "アタッカー", synergy: ["星を追う者", "リーサルウェポン"], stats: { hp: [365,550,770], attack: [20,30,42], magic: [14,21,30], armor: [3,5,7], magicRes: [4,6,8], speed: [0.75,0.75,0.75], crit: [5,5,5], penetration: [2,4,6] }, skill: { name: "シューティングボイス", description: "遠くの敵1体を狙撃する。", values: [140,220,340], label: "物理ダメージ", sp: 45 } },
+        "ユート": { cost: 1, role: "アタッカー", synergy: ["F.P.S", "星を追う者", "リーサルウェポン"], stats: { hp: [360,540,760], attack: [19,29,40], magic: [12,18,27], armor: [3,5,7], magicRes: [4,6,8], speed: [0.76,0.76,0.76], crit: [5,5,5], penetration: [3,5,8] }, skill: { name: "クイックショット", description: "素早く連続攻撃を行う。", values: [2,3,5], label: "攻撃回数", sp: 35 } },
 
-<p>コスト ★${unit.cost}</p>
+        "タクラ": { cost: 2, role: "アッパー", synergy: ["ユーフォリア", "100万クレジット"], stats: { hp: [520,780,1090], attack: [18,27,38], magic: [22,33,48], armor: [6,9,13], magicRes: [6,9,13], speed: [0.70,0.70,0.70], crit: [5,5,5], penetration: [0,0,0] }, skill: { name: "リズムアップ", description: "周囲の味方のSP効率を上げる。", values: [2,3,4], label: "SP効率", sp: 40 } },
+        "いまはる": { cost: 2, role: "ヒーラー", synergy: ["ユーフォリア", "星を追う者", "100万クレジット"], stats: { hp: [500,750,1050], attack: [14,21,29], magic: [31,47,68], armor: [5,8,11], magicRes: [7,10,14], speed: [0.69,0.69,0.69], crit: [5,5,5], penetration: [0,0,0] }, skill: { name: "スプリングケア", description: "味方2体を回復し、速度を少し上げる。", values: [125,200,315], label: "回復", sp: 35 } },
+        "ヒロ": { cost: 2, role: "アタッカー", synergy: ["F.P.S", "リーサルウェポン"], stats: { hp: [510,765,1070], attack: [24,36,50], magic: [15,22,31], armor: [5,8,11], magicRes: [4,6,8], speed: [0.77,0.77,0.77], crit: [10,10,10], penetration: [4,6,9] }, skill: { name: "ヘッドショット", description: "会心率が上がった強力な一撃を放つ。", values: [160,245,370], label: "物理ダメージ", sp: 45 } },
+        "ぶろ": { cost: 2, role: "アタッカー", synergy: ["F.P.S", "サモナー", "リーサルウェポン"], stats: { hp: [520,780,1090], attack: [22,33,46], magic: [18,27,39], armor: [5,8,11], magicRes: [5,8,11], speed: [0.74,0.74,0.74], crit: [5,5,5], penetration: [3,5,8] }, skill: { name: "ブローアウト", description: "前方直線に物理ダメージを与える。", values: [155,235,350], label: "物理ダメージ", sp: 40 } },
+        "ボイド": { cost: 2, role: "ヒーラー", synergy: ["サモナー", "ユーフォリア"], stats: { hp: [530,795,1110], attack: [13,19,27], magic: [30,46,67], armor: [6,9,13], magicRes: [8,12,16], speed: [0.67,0.67,0.67], crit: [5,5,5], penetration: [0,0,0] }, skill: { name: "ヴォイドヒール", description: "味方全体を小回復する。", values: [80,130,210], label: "全体回復", sp: 45 } },
+        "卵": { cost: 2, role: "ダウナー", synergy: ["アルカナム", "聞き専"], stats: { hp: [540,810,1130], attack: [17,26,36], magic: [27,41,60], armor: [6,9,13], magicRes: [7,10,14], speed: [0.69,0.69,0.69], crit: [5,5,5], penetration: [0,0,0] }, skill: { name: "スロウエッグ", description: "敵の攻撃速度を下げる。", values: [15,22,30], label: "減少%", sp: 40 } },
+        "ましゅ": { cost: 2, role: "ダウナー", synergy: ["ドレッドノート", "星を追う者"], stats: { hp: [555,830,1160], attack: [18,27,38], magic: [23,35,50], armor: [7,11,15], magicRes: [6,9,13], speed: [0.68,0.68,0.68], crit: [5,5,5], penetration: [0,0,0] }, skill: { name: "グラビティメモ", description: "範囲内の敵を少し引き寄せる。", values: [1.0,1.5,2.0], label: "拘束秒数", sp: 45 } },
+        "きり": { cost: 2, role: "ダウナー", synergy: ["アルカナム", "ドレッドノート"], stats: { hp: [560,840,1175], attack: [17,25,35], magic: [26,39,56], armor: [8,12,16], magicRes: [7,10,14], speed: [0.68,0.68,0.68], crit: [5,5,5], penetration: [0,0,0] }, skill: { name: "ミストクラッシュ", description: "敵の防御を下げる霧を発生させる。", values: [10,15,22], label: "防御減少", sp: 40 } },
 
-<p>
-シナジー :
-${unit.synergy.join(" / ")}
-</p>
+        "あかつき": { cost: 3, role: "アッパー", synergy: ["F.P.S", "星を追う者", "ユーフォリア"], stats: { hp: [720,1080,1510], attack: [24,36,50], magic: [28,42,61], armor: [9,13,18], magicRes: [9,13,18], speed: [0.72,0.72,0.72], crit: [10,10,10], penetration: [0,0,0] }, skill: { name: "サンライズコール", description: "味方の会心率を上げる。", values: [10,15,22], label: "会心率%", sp: 45 } },
+        "えびふらい": { cost: 3, role: "ダウナー", synergy: ["アルカナム", "星を追う者"], stats: { hp: [730,1095,1530], attack: [23,34,48], magic: [31,47,68], armor: [8,12,17], magicRes: [9,13,18], speed: [0.71,0.71,0.71], crit: [5,5,5], penetration: [2,4,6] }, skill: { name: "フライウェーブ", description: "敵後衛に魔法ダメージを飛ばす。", values: [190,285,430], label: "魔法ダメージ", sp: 50 } },
+        "ひでぼう": { cost: 3, role: "アッパー", synergy: ["サモナー", "星を追う者", "F.P.S"], stats: { hp: [740,1110,1555], attack: [22,33,46], magic: [30,45,66], armor: [9,13,18], magicRes: [9,13,18], speed: [0.72,0.72,0.72], crit: [5,5,5], penetration: [0,0,0] }, skill: { name: "メテオチャージ", description: "味方全体のSPを回復する。", values: [8,12,18], label: "SP回復", sp: 55 } },
+        "グリム": { cost: 3, role: "ヒーラー", synergy: ["サモナー", "ユーフォリア"], stats: { hp: [760,1140,1600], attack: [16,24,34], magic: [36,54,78], armor: [9,13,18], magicRes: [11,16,22], speed: [0.67,0.67,0.67], crit: [5,5,5], penetration: [0,0,0] }, skill: { name: "リグレイス", description: "味方複数を継続回復状態にする。", values: [90,145,225], label: "毎秒回復", sp: 45 } },
+        "うみ": { cost: 3, role: "アッパー", synergy: ["サモナー", "ユーフォリア"], stats: { hp: [735,1105,1545], attack: [19,28,39], magic: [32,48,70], armor: [8,12,17], magicRes: [10,15,21], speed: [0.70,0.70,0.70], crit: [5,5,5], penetration: [0,0,0] }, skill: { name: "シーブルーム", description: "味方全体の回復力を高める。", values: [12,18,26], label: "回復力%", sp: 45 } },
+        "さと": { cost: 3, role: "アタッカー", synergy: ["サモナー", "リーサルウェポン"], stats: { hp: [750,1125,1575], attack: [30,45,63], magic: [14,21,30], armor: [8,12,17], magicRes: [8,12,17], speed: [0.78,0.78,0.78], crit: [10,10,10], penetration: [5,8,12] }, skill: { name: "ファントムライン", description: "前方の敵を貫く物理攻撃。", values: [210,320,480], label: "物理ダメージ", sp: 50 } },
 
-<table>
+        "ブルーサンダー": { cost: 4, role: "ダウナー", synergy: ["アルカナム", "星を追う者"], stats: { hp: [920,1380,1930], attack: [28,42,59], magic: [40,60,88], armor: [12,18,25], magicRes: [12,18,25], speed: [0.73,0.73,0.73], crit: [5,5,5], penetration: [4,6,10] }, skill: { name: "サンダークラップ", description: "敵複数に高威力の魔法ダメージ。", values: [260,390,590], label: "魔法ダメージ", sp: 60 } },
+        "Rio": { cost: 4, role: "ダウナー", synergy: ["F.P.S", "サモナー", "100万クレジット"], stats: { hp: [910,1365,1910], attack: [29,44,61], magic: [35,53,77], armor: [11,17,24], magicRes: [11,17,24], speed: [0.77,0.77,0.77], crit: [12,12,12], penetration: [4,7,10] }, skill: { name: "ラピッドデュオ", description: "攻撃速度を大きく高めて連射する。", values: [25,40,60], label: "攻撃速度%", sp: 55 } },
+        "まふぃ": { cost: 4, role: "アタッカー", synergy: ["サモナー", "100万クレジット", "リーサルウェポン"], stats: { hp: [900,1350,1890], attack: [34,51,71], magic: [22,33,48], armor: [11,17,24], magicRes: [10,15,21], speed: [0.80,0.80,0.80], crit: [15,15,15], penetration: [6,9,13] }, skill: { name: "フィニッシュエッジ", description: "瀕死の敵に追加ダメージを与える。", values: [280,420,640], label: "物理ダメージ", sp: 55 } },
+        "yukitani": { cost: 4, role: "アッパー", synergy: ["サモナー", "ドレッドノート"], stats: { hp: [980,1470,2060], attack: [24,36,50], magic: [38,57,84], armor: [14,21,29], magicRes: [13,19,26], speed: [0.72,0.72,0.72], crit: [5,5,5], penetration: [0,0,0] }, skill: { name: "アイスウォール", description: "味方前衛に強力なシールドを付与。", values: [240,370,560], label: "シールド", sp: 50 } },
+        "未完成": { cost: 4, role: "タンク", synergy: ["サモナー", "F.P.S"], stats: { hp: [1020,1530,2140], attack: [25,37,52], magic: [26,39,56], armor: [16,24,33], magicRes: [14,21,29], speed: [0.70,0.70,0.70], crit: [5,5,5], penetration: [0,0,0] }, skill: { name: "プロトガード", description: "被ダメージを一時的に軽減する。", values: [20,30,45], label: "軽減%", sp: 45 } },
 
-<tr>
-<td>HP</td>
-<td>${unit.stats.hp.join(" / ")}</td>
-</tr>
+        "ふうり": { cost: 5, role: "アタッカー", synergy: ["サモナー", "リーサルウェポン"], stats: { hp: [1200,1800,2520], attack: [38,57,80], magic: [26,39,56], armor: [14,21,29], magicRes: [14,21,29], speed: [0.84,0.84,0.84], crit: [20,20,20], penetration: [10,14,20] }, skill: { name: "ストームブレイク", description: "範囲内に大ダメージを与える連撃。", values: [360,540,820], label: "物理ダメージ", sp: 65 } },
+        "サム": { cost: 5, role: "アタッカー", synergy: ["最後の刺客"], stats: { hp: [1160,1740,2440], attack: [42,63,88], magic: [18,27,39], armor: [13,20,28], magicRes: [12,18,25], speed: [0.86,0.86,0.86], crit: [25,25,25], penetration: [12,17,24] }, skill: { name: "ラストアサシネイト", description: "最も遠い敵の背後に飛び、大ダメージを与える。", values: [420,630,950], label: "物理ダメージ", sp: 60 } },
+        "shovel": { cost: 5, role: "タンク", synergy: ["ドレッドノート", "聞き専"], stats: { hp: [1300,1950,2730], attack: [30,45,63], magic: [24,36,52], armor: [18,27,38], magicRes: [16,24,34], speed: [0.72,0.72,0.72], crit: [5,5,5], penetration: [0,0,0] }, skill: { name: "アースシェイク", description: "広範囲をスタンさせる。", values: [1.25,1.75,2.5], label: "スタン秒数", sp: 70 } }
+      }
+    };
 
-<tr>
-<td>攻撃</td>
-<td>${unit.stats.attack.join(" / ")}</td>
-</tr>
+    const state = {
+      selectedUnit: null,
+      selectedTileIndex: null,
+      selectedDetailUnit: null,
+      detailStar: 1,
+      search: "",
+      costFilter: "all",
+      synergyFilter: "all",
+      board: Array(18).fill(null)
+    };
 
-<tr>
-<td>魔法</td>
-<td>${unit.stats.magic.join(" / ")}</td>
-</tr>
+    const statLabels = {
+      hp: "HP",
+      attack: "攻撃",
+      magic: "魔法",
+      armor: "物防",
+      magicRes: "魔防",
+      speed: "速度",
+      crit: "会心率",
+      penetration: "貫通"
+    };
 
-<tr>
-<td>物防</td>
-<td>${unit.stats.armor.join(" / ")}</td>
-</tr>
+    const storageKey = "friend-tft-builder-save";
 
-<tr>
-<td>魔防</td>
-<td>${unit.stats.magicRes.join(" / ")}</td>
-</tr>
+    const el = {
+      board: document.getElementById("board"),
+      bench: document.getElementById("bench"),
+      synergyList: document.getElementById("synergyList"),
+      detailCard: document.getElementById("detailCard"),
+      selectedUnitLabel: document.getElementById("selectedUnitLabel"),
+      unitCount: document.getElementById("unitCount"),
+      searchInput: document.getElementById("searchInput"),
+      costFilter: document.getElementById("costFilter"),
+      synergyFilterChips: document.getElementById("synergyFilterChips"),
+      clearBoardBtn: document.getElementById("clearBoardBtn"),
+      copyBuildBtn: document.getElementById("copyBuildBtn"),
+      buildText: document.getElementById("buildText"),
+      saveLocalBtn: document.getElementById("saveLocalBtn"),
+      importBtn: document.getElementById("importBtn"),
+      resetStorageBtn: document.getElementById("resetStorageBtn"),
+      dataEditor: document.getElementById("dataEditor"),
+      applyJsonBtn: document.getElementById("applyJsonBtn"),
+      downloadJsonBtn: document.getElementById("downloadJsonBtn")
+    };
 
-<tr>
-<td>速度</td>
-<td>${unit.stats.speed.join(" / ")}</td>
-</tr>
+    function createUnitElement(name, mode = "bench") {
+      const unit = gameData.units[name];
+      const div = document.createElement("div");
+      div.className = `${mode === "bench" ? "unit-btn" : "placed-unit"} ring-cost-${unit.cost}`;
+      if (state.selectedUnit === name && mode === "bench") div.classList.add("selected-outline");
+      div.innerHTML = `
+        <div class="unit-cost-badge">${unit.cost}</div>
+        <div class="unit-name">${name}</div>
+        <div class="unit-stars">★</div>
+        <div class="unit-role">${unit.role}</div>
+      `;
+      return div;
+    }
 
-<tr>
-<td>会心率</td>
-<td>${unit.stats.crit.join("% / ")}%</td>
-</tr>
+    function getAllSynergyNames() {
+      const set = new Set(Object.keys(gameData.synergies));
+      Object.values(gameData.units).forEach(u => u.synergy.forEach(s => set.add(s)));
+      return Array.from(set);
+    }
 
-<tr>
-<td>貫通</td>
-<td>${unit.stats.penetration.join(" / ")}</td>
-</tr>
+    function renderSynergyChips() {
+      const names = ["all", ...getAllSynergyNames()];
+      el.synergyFilterChips.innerHTML = "";
+      names.forEach(name => {
+        const chip = document.createElement("button");
+        chip.className = `chip ${state.synergyFilter === name ? "active" : ""}`;
+        chip.textContent = name === "all" ? "全シナジー" : name;
+        chip.addEventListener("click", () => {
+          state.synergyFilter = name;
+          renderBench();
+          renderSynergyChips();
+        });
+        el.synergyFilterChips.appendChild(chip);
+      });
+    }
 
-</table>
+    function renderBench() {
+      const query = state.search.trim().toLowerCase();
+      const units = Object.entries(gameData.units)
+        .filter(([name, unit]) => {
+          const matchesSearch = !query || name.toLowerCase().includes(query) || unit.role.toLowerCase().includes(query) || unit.synergy.some(s => s.toLowerCase().includes(query));
+          const matchesCost = state.costFilter === "all" || String(unit.cost) === state.costFilter;
+          const matchesSynergy = state.synergyFilter === "all" || unit.synergy.includes(state.synergyFilter);
+          return matchesSearch && matchesCost && matchesSynergy;
+        })
+        .sort((a, b) => a[1].cost - b[1].cost || a[0].localeCompare(b[0], "ja"));
 
-<div class="skill">
+      el.bench.innerHTML = "";
+      if (!units.length) {
+        el.bench.innerHTML = `<div class="empty-note">該当キャラがいません</div>`;
+        return;
+      }
 
-<h3>${unit.skill.name}</h3>
+      units.forEach(([name]) => {
+        const card = createUnitElement(name, "bench");
+        card.title = `${name} / ${gameData.units[name].synergy.join(" / ")}`;
+        card.addEventListener("click", () => {
+          state.selectedUnit = name;
+          state.selectedDetailUnit = name;
+          state.detailStar = 1;
+          el.selectedUnitLabel.textContent = name;
+          syncEditor();
+          renderBench();
+          renderDetail();
+        });
+        card.addEventListener("dblclick", () => placeInFirstEmpty(name));
+        el.bench.appendChild(card);
+      });
+    }
 
-<p>${unit.skill.description}</p>
+    function renderBoard() {
+      el.board.innerHTML = "";
+      state.board.forEach((slot, index) => {
+        const tile = document.createElement("div");
+        tile.className = "tile";
+        if (state.selectedTileIndex === index) tile.classList.add("selected-outline");
+        tile.innerHTML = `<div class="slot-indicator">${index + 1}</div>`;
+        tile.addEventListener("click", () => {
+          state.selectedTileIndex = index;
+          if (state.selectedUnit) {
+            state.board[index] = { name: state.selectedUnit, star: 1 };
+            state.selectedDetailUnit = state.selectedUnit;
+            state.detailStar = 1;
+            syncEditor();
+          } else if (slot) {
+            state.selectedDetailUnit = slot.name;
+            state.detailStar = slot.star;
+          }
+          renderAll();
+        });
+        tile.addEventListener("dblclick", () => {
+          state.board[index] = null;
+          renderAll();
+        });
+        tile.addEventListener("contextmenu", (e) => {
+          e.preventDefault();
+          state.board[index] = null;
+          renderAll();
+        });
 
-<p>
-ダメージ
-${unit.skill.damage.join(" / ")}
-</p>
+        if (slot) {
+          const unitNode = createUnitElement(slot.name, "placed");
+          unitNode.querySelector(".unit-stars").textContent = "★".repeat(slot.star);
+          unitNode.addEventListener("click", (e) => {
+            e.stopPropagation();
+            state.selectedTileIndex = index;
+            state.selectedDetailUnit = slot.name;
+            state.detailStar = slot.star;
+            renderAll();
+          });
+          unitNode.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            state.board[index] = null;
+            renderAll();
+          });
+          tile.appendChild(unitNode);
+        }
+        el.board.appendChild(tile);
+      });
+    }
 
-<p>
-SP ${unit.skill.sp}
-</p>
+    function countSynergies() {
+      const counts = {};
 
-</div>
-`
+      // 同キャラは1回だけシナジー計算する
+      const uniqueUnits = new Set();
 
-document.getElementById("unitCard").innerHTML=html
+      state.board.filter(Boolean).forEach(slot => {
+        if (uniqueUnits.has(slot.name)) return;
+        uniqueUnits.add(slot.name);
 
-})
+        const unit = gameData.units[slot.name];
+        unit.synergy.forEach(s => {
+          counts[s] = (counts[s] || 0) + 1;
+        });
+      });
 
-</script>
+      return counts;
+    }
 
+    function getActiveBreakpoint(name, count) {
+      const info = gameData.synergies[name];
+      if (!info) return null;
+      let activeIndex = -1;
+      info.levels.forEach((lv, i) => { if (count >= lv) activeIndex = i; });
+      if (activeIndex === -1) return null;
+      return {
+        threshold: info.levels[activeIndex],
+        value: info.values[activeIndex],
+        label: info.effectLabel,
+        suffix: info.suffix || ""
+      };
+    }
+
+    function nextBreakpoint(name, count) {
+      const info = gameData.synergies[name];
+      if (!info) return null;
+      return info.levels.find(lv => lv > count) || null;
+    }
+
+    function renderSynergies() {
+      const counts = countSynergies();
+      const names = getAllSynergyNames().sort((a, b) => {
+        const aCount = counts[a] || 0;
+        const bCount = counts[b] || 0;
+        return bCount - aCount || a.localeCompare(b, "ja");
+      });
+
+      el.synergyList.innerHTML = "";
+      names.forEach(name => {
+        const count = counts[name] || 0;
+        const info = gameData.synergies[name];
+        const active = getActiveBreakpoint(name, count);
+        const next = nextBreakpoint(name, count);
+        const maxLevel = info?.levels?.[info.levels.length - 1] || Math.max(count, 1);
+        const fillPercent = Math.min((count / maxLevel) * 100, 100);
+        const item = document.createElement("div");
+        item.className = `synergy-item ${active ? "active" : ""}`;
+        item.innerHTML = `
+          <div class="synergy-count">${count}</div>
+          <div class="synergy-meta">
+            <div class="synergy-top">
+              <span>${name}</span>
+              <span class="tiny">${info ? info.levels.join("/") : "-"}</span>
+            </div>
+            <div class="progress"><div class="progress-fill" style="width:${fillPercent}%"></div></div>
+            <div class="tiny">${active ? `発動: ${active.label} +${active.value}${active.suffix}` : next ? `あと ${next - count} 体で発動` : "未設定シナジー"}</div>
+          </div>
+        `;
+        el.synergyList.appendChild(item);
+      });
+      el.unitCount.textContent = state.board.filter(Boolean).length;
+    }
+
+    function applySynergyBonusToStats(unitName, star) {
+      const unit = gameData.units[unitName];
+      const index = star - 1;
+      const stats = {};
+      Object.entries(unit.stats).forEach(([k, arr]) => { stats[k] = arr[index]; });
+
+      const counts = countSynergies();
+      unit.synergy.forEach(sName => {
+        const active = getActiveBreakpoint(sName, counts[sName] || 0);
+        if (!active) return;
+        switch (sName) {
+          case "アルカナム": stats.attack += active.value; break;
+          case "サモナー": stats.hp += active.value; break;
+          case "F.P.S": stats.crit += active.value; break;
+          case "100万クレジット": stats.speed = +(stats.speed + active.value).toFixed(2); break;
+          case "聞き専": stats.magic += active.value; break;
+          case "ドレッドノート": stats.armor += active.value; break;
+        }
+      });
+      return stats;
+    }
+
+    function renderDetail() {
+      const name = state.selectedDetailUnit || Object.keys(gameData.units)[0];
+      const unit = gameData.units[name];
+      if (!unit) {
+        el.detailCard.innerHTML = `<div class="detail-card">ユニットが見つかりません</div>`;
+        return;
+      }
+
+      const stats = unit.stats;
+      const starStats = applySynergyBonusToStats(name, state.detailStar);
+      const countInfo = countSynergies();
+      const activeSynergyNotes = unit.synergy
+        .map(s => {
+          const active = getActiveBreakpoint(s, countInfo[s] || 0);
+          return active ? `${s}: ${active.effectLabel || active.label} +${active.value}${active.suffix || ""}` : null;
+        })
+        .filter(Boolean);
+
+      const rows = Object.keys(statLabels).map(key => {
+        const values = stats[key] || ["-", "-", "-"];
+        const formatted = values.map((v, i) => {
+          const suffix = key === "crit" ? "%" : "";
+          const highlight = i + 1 === state.detailStar ? ` <strong style="color:#fff">(${(key in starStats ? starStats[key] : v)}${suffix})</strong>` : "";
+          return `${v}${suffix}${highlight}`;
+        }).join(" / ");
+        return `<tr><th>${statLabels[key]}</th><td>${formatted}</td></tr>`;
+      }).join("");
+
+      const costClass = `ring-cost-${unit.cost}`;
+      el.detailCard.innerHTML = `
+        <div class="detail-header">
+          <div class="detail-avatar ${costClass}">${name.slice(0, 2)}</div>
+          <div>
+            <h2>${name}</h2>
+            <p class="subtext">${unit.role} / ${unit.cost}コスト</p>
+            <div class="tag-row">${unit.synergy.map(s => `<span class="tag">${s}</span>`).join("")}</div>
+          </div>
+        </div>
+        <div class="star-selector">
+          ${[1,2,3].map(star => `<button class="star-btn ${state.detailStar === star ? "active" : ""}" data-star="${star}">★${star}</button>`).join("")}
+        </div>
+        <table class="stats-table">
+          <thead><tr><th>ステータス</th><th>★1 / ★2 / ★3</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div class="skill-box">
+          <div class="small-title">スキル</div>
+          <div style="margin-top:8px; font-weight:800;">${unit.skill?.name || "未設定"}</div>
+          <div class="subtext" style="margin-top:6px;">${unit.skill?.description || "説明なし"}</div>
+          <div class="list-inline">
+            ${unit.skill?.values ? [`<span class="tag">${unit.skill.label || "値"}: ${unit.skill.values.join(" / ")}</span>`].join("") : ""}
+            ${unit.skill?.sp != null ? `<span class="tag">SP ${unit.skill.sp}</span>` : ""}
+          </div>
+        </div>
+        <div class="effect-box">
+          <strong>現在のシナジー反映（★${state.detailStar}）</strong><br>
+          ${activeSynergyNotes.length ? activeSynergyNotes.join(" / ") : "このユニットに反映中のシナジーはありません。"}
+        </div>
+      `;
+
+      el.detailCard.querySelectorAll(".star-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          state.detailStar = Number(btn.dataset.star);
+          if (state.selectedTileIndex != null && state.board[state.selectedTileIndex]?.name === name) {
+            state.board[state.selectedTileIndex].star = state.detailStar;
+          }
+          renderAll();
+        });
+      });
+
+      syncEditor();
+    }
+
+    function syncEditor() {
+      const name = state.selectedDetailUnit || Object.keys(gameData.units)[0];
+      if (!gameData.units[name]) return;
+      el.dataEditor.value = JSON.stringify({ [name]: gameData.units[name] }, null, 2);
+    }
+
+    function placeInFirstEmpty(name) {
+      const idx = state.board.findIndex(slot => !slot);
+      if (idx === -1) return;
+      state.board[idx] = { name, star: 1 };
+      state.selectedDetailUnit = name;
+      state.detailStar = 1;
+      state.selectedTileIndex = idx;
+      renderAll();
+    }
+
+    function renderBuildText() {
+      const text = state.board.map((slot, i) => slot ? `${i + 1}:${slot.name}(★${slot.star})` : `${i + 1}:空`).join("\n");
+      el.buildText.value = text;
+    }
+
+    function renderAll() {
+      renderBoard();
+      renderBench();
+      renderSynergies();
+      renderDetail();
+      renderBuildText();
+      el.selectedUnitLabel.textContent = state.selectedUnit || "なし";
+    }
+
+    function saveLocal() {
+      const payload = { board: state.board, selectedDetailUnit: state.selectedDetailUnit, detailStar: state.detailStar };
+      localStorage.setItem(storageKey, JSON.stringify(payload));
+      alert("ブラウザに保存しました。");
+    }
+
+    function loadLocal() {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) {
+        alert("保存データがありません。");
+        return;
+      }
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed.board) && parsed.board.length === 18) state.board = parsed.board;
+        state.selectedDetailUnit = parsed.selectedDetailUnit || state.selectedDetailUnit;
+        state.detailStar = parsed.detailStar || 1;
+        renderAll();
+      } catch {
+        alert("保存データの読み込みに失敗しました。");
+      }
+    }
+
+    function resetStorage() {
+      localStorage.removeItem(storageKey);
+      alert("保存データを削除しました。");
+    }
+
+    function copyBuild() {
+      navigator.clipboard.writeText(el.buildText.value).then(() => alert("構成テキストをコピーしました。"));
+    }
+
+    function applyJsonEdit() {
+      try {
+        const parsed = JSON.parse(el.dataEditor.value);
+        const entries = Object.entries(parsed);
+        if (!entries.length) throw new Error("データが空です。");
+        const [name, unit] = entries[0];
+        gameData.units[name] = unit;
+        state.selectedDetailUnit = name;
+        state.selectedUnit = name;
+        renderSynergyChips();
+        renderAll();
+        alert("キャラデータを反映しました。");
+      } catch (err) {
+        alert(`JSONの反映に失敗しました: ${err.message}`);
+      }
+    }
+
+    function downloadJson() {
+      const blob = new Blob([JSON.stringify(gameData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "gameData.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function bindEvents() {
+      el.searchInput.addEventListener("input", e => { state.search = e.target.value; renderBench(); });
+      el.costFilter.addEventListener("change", e => { state.costFilter = e.target.value; renderBench(); });
+      el.clearBoardBtn.addEventListener("click", () => { state.board = Array(18).fill(null); state.selectedTileIndex = null; renderAll(); });
+      el.copyBuildBtn.addEventListener("click", copyBuild);
+      el.saveLocalBtn.addEventListener("click", saveLocal);
+      el.importBtn.addEventListener("click", loadLocal);
+      el.resetStorageBtn.addEventListener("click", resetStorage);
+      el.applyJsonBtn.addEventListener("click", applyJsonEdit);
+      el.downloadJsonBtn.addEventListener("click", downloadJson);
+
+      window.addEventListener("keydown", e => {
+        if (e.key === "Escape") {
+          state.selectedUnit = null;
+          state.selectedTileIndex = null;
+          renderAll();
+        }
+        if ((e.key === "Delete" || e.key === "Backspace") && state.selectedTileIndex != null) {
+          state.board[state.selectedTileIndex] = null;
+          renderAll();
+        }
+      });
+    }
+
+    function init() {
+      state.selectedDetailUnit = Object.keys(gameData.units)[0];
+      renderSynergyChips();
+      bindEvents();
+      renderAll();
+    }
+
+    init();
+  </script>
 </body>
 </html>
