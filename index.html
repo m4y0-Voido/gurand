@@ -241,15 +241,15 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    const COINS = [
-      { id:'red', icon:'🔴', name:'赤', rarity:1, start:1, end:10 },
-      { id:'orange', icon:'🟠', name:'橙', rarity:2, start:6, end:18 },
-      { id:'yellow', icon:'🟡', name:'黄', rarity:3, start:9, end:21 },
-      { id:'green', icon:'🟢', name:'緑', rarity:4, start:13, end:24 },
-      { id:'blue', icon:'🔵', name:'青', rarity:5, start:19, end:Infinity },
-      { id:'purple', icon:'🟣', name:'紫', rarity:6, start:22, end:Infinity },
-      { id:'brown', icon:'🟤', name:'茶', rarity:7, start:1, end:Infinity },
-    ];
+    const EXCHANGES = [
+  { from:'red', cost:110, to:'orange', gain:1 },
+  { from:'orange', cost:121, to:'yellow', gain:1 },
+  { from:'yellow', cost:242, to:'green', gain:1 },
+  { from:'green', cost:266, to:'blue', gain:1 },
+  { from:'blue', cost:739, to:'purple', gain:1 },
+  { from:'purple', cost:854, to:'brown', gain:1 },
+  { from:'brown', cost:1, to:'red', gain:777777 }
+];
 
     const EXCHANGES = [
       { from:'red', cost:110, to:'orange', gain:1 },
