@@ -8,8 +8,10 @@
     :root{
       --bg:#0b1020;
       --bg2:#121a31;
+      --bg3:#0f1730;
       --panel:rgba(25,29,49,.88);
       --line:rgba(255,255,255,.09);
+      --line2:rgba(255,255,255,.14);
       --text:#eef2ff;
       --muted:#a5b4fc;
       --accent:#38bdf8;
@@ -17,9 +19,15 @@
       --ok:#4ade80;
       --warn:#fda4af;
       --gold:#fbbf24;
+      --danger:#fb7185;
       --shadow:0 18px 40px rgba(0,0,0,.32);
+      --shadow2:0 10px 30px rgba(0,0,0,.25);
+      --tabw:116px;
+      --leftw:320px;
+      --rightw:380px;
     }
     *{box-sizing:border-box}
+    html,body{height:100%}
     body{
       margin:0;
       color:var(--text);
@@ -28,14 +36,84 @@
         radial-gradient(circle at 20% 0%, rgba(56,189,248,.12), transparent 28%),
         radial-gradient(circle at 80% 10%, rgba(99,102,241,.14), transparent 30%),
         linear-gradient(180deg, #131b35 0%, var(--bg) 48%, #090d18 100%);
+      overflow-x:hidden;
+    }
+
+    .app{
+      min-height:100vh;
+      display:grid;
+      grid-template-columns:var(--tabw) 1fr;
+    }
+
+    /* 左タブ */
+    .side-tabs{
+      position:sticky;
+      top:0;
+      height:100vh;
+      padding:18px 0 18px 14px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      align-items:flex-start;
+      z-index:30;
+    }
+    .tab-btn{
+      width:96px;
+      min-height:62px;
+      border:1px solid var(--line2);
+      border-left:none;
+      border-radius:0 18px 18px 0;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      color:#eaf2ff;
+      font-weight:900;
+      letter-spacing:.04em;
+      padding:10px 12px 10px 14px;
+      cursor:pointer;
+      box-shadow:var(--shadow2);
+      position:relative;
+      transform:translateX(0);
+      transition:.16s ease;
+      text-align:left;
+    }
+    .tab-btn::before{
+      content:"";
+      position:absolute;
+      left:-8px;
+      top:10px;
+      width:12px;
+      height:calc(100% - 20px);
+      border-radius:12px 0 0 12px;
+      background:rgba(255,255,255,.10);
+      box-shadow:inset -1px 0 0 rgba(255,255,255,.08);
+    }
+    .tab-btn:hover{transform:translateX(4px);filter:brightness(1.05)}
+    .tab-btn.active{
+      background:linear-gradient(180deg, rgba(56,189,248,.30), rgba(34,211,238,.12));
+      border-color:rgba(125,211,252,.35);
+      color:#fff;
+    }
+    .tab-btn .tab-sub{
+      display:block;
+      font-size:11px;
+      color:#b9c7ff;
+      font-weight:700;
+      margin-top:4px;
+      opacity:.95;
+    }
+
+    /* メイン */
+    .main{
+      padding:16px 16px 18px 0;
+      min-width:0;
     }
     .layout{
       display:grid;
-      grid-template-columns:320px minmax(640px,1fr) 360px;
+      grid-template-columns:var(--leftw) minmax(680px,1fr) var(--rightw);
       gap:16px;
-      padding:16px;
-      min-height:100vh;
+      min-height:calc(100vh - 32px);
     }
+
     .panel{
       background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
       border:1px solid var(--line);
@@ -43,203 +121,649 @@
       box-shadow:var(--shadow);
       overflow:hidden;
       backdrop-filter:blur(10px);
+      min-width:0;
     }
     .panel-header{
       padding:14px 16px;
       border-bottom:1px solid var(--line);
       background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
     }
-    .panel-header h2{margin:0;font-size:15px;letter-spacing:.06em}
+    .panel-header h2{
+      margin:0;
+      font-size:15px;
+      letter-spacing:.06em;
+    }
     .panel-body{padding:14px 16px}
     .stack{display:grid;gap:12px}
     .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .row.wrap{flex-wrap:wrap}
     .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
     .small{font-size:12px;color:var(--muted);line-height:1.55}
+    .tiny{font-size:11px;color:#bfd0ff;line-height:1.4}
     .title-big{font-size:22px;font-weight:900;letter-spacing:.03em}
-    .pill,.chip{
-      display:inline-flex;align-items:center;gap:8px;
-      border-radius:999px;padding:7px 10px;font-size:12px;
+    .mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+    .hidden{display:none !important}
+
+    .pill,.chip,.mini-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border-radius:999px;
+      padding:7px 10px;
+      font-size:12px;
       border:1px solid rgba(125,211,252,.18);
       background:rgba(125,211,252,.08);
       color:#d9f3ff;
+      white-space:nowrap;
     }
     .chip{padding:4px 8px}
-    .bar{width:100%;height:12px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
-    .bar-fill{height:100%;width:50%;background:linear-gradient(90deg,#22c55e,#10b981)}
-    .stat{display:flex;justify-content:space-between;gap:12px;padding-bottom:6px;border-bottom:1px dashed rgba(255,255,255,.07)}
-    .stat:last-child{border-bottom:0;padding-bottom:0}
-    .mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+    .mini-chip{padding:3px 8px;font-size:11px}
+
+    .bar{
+      width:100%;
+      height:12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      overflow:hidden;
+    }
+    .bar-fill{
+      height:100%;
+      width:50%;
+      background:linear-gradient(90deg,#22c55e,#10b981);
+    }
+
+    .stat{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      padding-bottom:6px;
+      border-bottom:1px dashed rgba(255,255,255,.07);
+    }
+    .stat:last-child{
+      border-bottom:0;
+      padding-bottom:0;
+    }
+
     .coin-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-    .coin-card,.skill-slot,.skill-item,.shop-row,.upgrade-card,details{
+    .coin-card,.skill-slot,.skill-item,.shop-row,.upgrade-card,.soft-card,details{
       background:rgba(255,255,255,.035);
       border:1px solid var(--line);
       border-radius:14px;
     }
-    .coin-card,.skill-slot,.skill-item,.shop-row,.upgrade-card{padding:10px}
-    .badge{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 8px;border-radius:999px;background:rgba(255,255,255,.08);font-size:12px}
+    .coin-card,.skill-slot,.skill-item,.shop-row,.upgrade-card,.soft-card{padding:10px}
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:24px;
+      height:24px;
+      padding:0 8px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      font-size:12px;
+    }
+
     button{
-      border:0;border-radius:12px;cursor:pointer;padding:10px 12px;color:#fff;
+      border:0;
+      border-radius:12px;
+      cursor:pointer;
+      padding:10px 12px;
+      color:#fff;
       background:linear-gradient(180deg, #38bdf8, #0284c7);
-      font-size:13px;font-weight:800;box-shadow:0 8px 18px rgba(2,132,199,.28);
+      font-size:13px;
+      font-weight:800;
+      box-shadow:0 8px 18px rgba(2,132,199,.28);
       transition:.15s ease;
     }
     button:hover{transform:translateY(-1px);filter:brightness(1.04)}
-    button:disabled{cursor:not-allowed;opacity:.45;transform:none;filter:none;box-shadow:none}
-    .ghost{background:rgba(255,255,255,.06);box-shadow:none;border:1px solid var(--line)}
-    .ok{background:linear-gradient(180deg,var(--ok),#16a34a);box-shadow:0 8px 18px rgba(22,163,74,.28)}
-    .danger{background:linear-gradient(180deg,#fb7185,#e11d48);box-shadow:0 8px 18px rgba(225,29,72,.28)}
+    button:disabled{
+      cursor:not-allowed;
+      opacity:.45;
+      transform:none;
+      filter:none;
+      box-shadow:none;
+    }
+    .ghost{
+      background:rgba(255,255,255,.06);
+      box-shadow:none;
+      border:1px solid var(--line);
+    }
+    .ok{
+      background:linear-gradient(180deg,var(--ok),#16a34a);
+      box-shadow:0 8px 18px rgba(22,163,74,.28);
+    }
+    .danger{
+      background:linear-gradient(180deg,#fb7185,#e11d48);
+      box-shadow:0 8px 18px rgba(225,29,72,.28);
+    }
+    .gold{
+      background:linear-gradient(180deg,#facc15,#d97706);
+      box-shadow:0 8px 18px rgba(217,119,6,.24);
+    }
+
     details{padding:10px 12px}
     details summary{cursor:pointer;font-weight:800}
-    select{
-      width:100%;padding:10px 12px;border-radius:12px;
-      border:1px solid rgba(255,255,255,.2);background:#0c1328;color:#fff;font-weight:700;
+
+    select,input{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.2);
+      background:#0c1328;
+      color:#fff;
+      font-weight:700;
     }
     select option{background:#111827;color:#e5e7eb}
-    select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(56,189,248,.28)}
-    .shop-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+    select:focus,input:focus{
+      outline:none;
+      border-color:var(--accent);
+      box-shadow:0 0 0 2px rgba(56,189,248,.28);
+    }
+
+    .shop-row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:8px;
+      align-items:center;
+    }
     .upgrade-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .upgrade-card{display:grid;gap:8px;background:linear-gradient(180deg, rgba(56,189,248,.1), rgba(255,255,255,.03))}
+    .upgrade-card{
+      display:grid;
+      gap:8px;
+      background:linear-gradient(180deg, rgba(56,189,248,.1), rgba(255,255,255,.03));
+    }
     .warn{font-size:12px;color:var(--warn)}
+
     #gameWrap{
-      position:relative;aspect-ratio:1/1;min-height:640px;display:grid;place-items:center;
+      position:relative;
+      aspect-ratio:1/1;
+      min-height:690px;
+      display:grid;
+      place-items:center;
       background:radial-gradient(circle, rgba(125,211,252,.06), transparent 40%), #0b1020;
+      overflow:hidden;
     }
     canvas{width:100%;height:100%;display:block}
-    .hud{position:absolute;left:12px;right:12px;top:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;pointer-events:none}
-    .hud-card{pointer-events:auto;min-width:190px;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:rgba(8,12,26,.7);backdrop-filter:blur(8px)}
-    .footer-note{font-size:12px;color:#c7d2fe;opacity:.76;line-height:1.6}
-    @media (max-width:1180px){.layout{grid-template-columns:1fr}#gameWrap{min-height:560px}}
+
+    .hud{
+      position:absolute;
+      left:12px;
+      right:12px;
+      top:62px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      pointer-events:none;
+      z-index:4;
+    }
+    .hud-card{
+      pointer-events:auto;
+      min-width:190px;
+      max-width:280px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(8,12,26,.7);
+      backdrop-filter:blur(8px);
+    }
+
+    .floating-wave{
+      position:absolute;
+      top:18px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:6;
+      min-width:220px;
+      text-align:center;
+      padding:10px 14px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(7,10,22,.78);
+      backdrop-filter:blur(8px);
+      box-shadow:var(--shadow2);
+      pointer-events:none;
+    }
+    .floating-wave .big{
+      font-size:20px;
+      font-weight:900;
+      letter-spacing:.05em;
+    }
+
+    .floating-controls{
+      position:absolute;
+      top:72px;
+      left:50%;
+      transform:translateX(-50%);
+      display:flex;
+      gap:10px;
+      z-index:7;
+      pointer-events:auto;
+    }
+
+    .battle-side{
+      position:absolute;
+      top:152px;
+      bottom:18px;
+      width:220px;
+      display:grid;
+      align-content:start;
+      gap:10px;
+      z-index:5;
+      pointer-events:auto;
+    }
+    .battle-side.left{left:18px}
+    .battle-side.right{right:18px}
+
+    .battle-side-card{
+      padding:10px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:rgba(6,10,24,.72);
+      backdrop-filter:blur(8px);
+      box-shadow:var(--shadow2);
+    }
+
+    .footer-note{
+      font-size:12px;
+      color:#c7d2fe;
+      opacity:.76;
+      line-height:1.6;
+    }
+
+    .top-wallet{
+      position:fixed;
+      top:12px;
+      right:16px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      z-index:100;
+      max-width:calc(100vw - 24px);
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .wallet-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(7,10,22,.84);
+      box-shadow:var(--shadow2);
+      font-size:13px;
+      font-weight:900;
+    }
+
+    .code-box{
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      width:320px;
+      max-width:calc(100vw - 24px);
+      z-index:120;
+      border-radius:18px;
+      border:1px solid var(--line2);
+      background:rgba(8,12,26,.88);
+      backdrop-filter:blur(12px);
+      box-shadow:0 18px 40px rgba(0,0,0,.38);
+      overflow:hidden;
+    }
+    .code-box-header{
+      padding:12px 14px;
+      border-bottom:1px solid var(--line);
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
+    }
+    .code-box-body{
+      padding:12px;
+      display:grid;
+      gap:10px;
+    }
+    .code-actions{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:8px;
+      align-items:center;
+    }
+    .code-log{
+      min-height:36px;
+      border-radius:12px;
+      padding:8px 10px;
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--line);
+      font-size:12px;
+      color:#dbe8ff;
+      line-height:1.45;
+    }
+
+    .lang-mini{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+
+    @media (max-width:1440px){
+      .layout{grid-template-columns:290px minmax(620px,1fr) 350px}
+      .battle-side{width:200px}
+    }
+    @media (max-width:1240px){
+      .app{grid-template-columns:1fr}
+      .side-tabs{
+        position:static;
+        height:auto;
+        flex-direction:row;
+        padding:14px 14px 0;
+        flex-wrap:wrap;
+      }
+      .tab-btn{
+        width:auto;
+        min-width:120px;
+        border-radius:16px;
+        border-left:1px solid var(--line2);
+      }
+      .tab-btn::before{display:none}
+      .main{padding:14px}
+      .layout{grid-template-columns:1fr}
+      #gameWrap{min-height:580px}
+      .battle-side{display:none}
+    }
+    @media (max-width:720px){
+      .grid-2,.grid-3,.upgrade-grid,.coin-grid{grid-template-columns:1fr}
+      .hud{
+        top:112px;
+        flex-direction:column;
+        align-items:stretch;
+      }
+      .floating-controls{
+        top:72px;
+        width:calc(100% - 32px);
+        display:grid;
+        grid-template-columns:1fr 1fr;
+      }
+      .code-box{width:auto;left:12px;right:12px}
+      .top-wallet{left:12px}
+    }
   </style>
 </head>
 <body>
-  <div class="layout">
-    <section class="panel">
-      <div class="panel-header"><h2>コア / ウェーブ</h2></div>
-      <div class="panel-body stack">
-        <div>
-          <div class="title-big">Idle Core Defense</div>
-          <div class="small">コア = 唯一の攻撃装置。スキルはセットしたものだけ発動。</div>
-        </div>
+  <div class="top-wallet" id="topWallet"></div>
 
-        <div class="stack">
-          <div class="stat"><span>ウェーブ</span><strong id="waveLabel">1</strong></div>
-          <div class="stat"><span>進行</span><strong id="waveProgress">0 / 20</strong></div>
-          <div class="stat"><span>敵残数</span><strong id="aliveLabel">0</strong></div>
-          <div class="stat"><span>討伐数</span><strong id="killLabel">0</strong></div>
-          <div class="stat"><span>DPS</span><strong id="dpsLabel">0</strong></div>
-        </div>
+  <div class="app">
+    <aside class="side-tabs">
+      <button class="tab-btn active" data-tab="battleTab">
+        戦闘
+        <span class="tab-sub" id="tabBattleSub">Battle</span>
+      </button>
+      <button class="tab-btn" data-tab="skillTab">
+        スキル
+        <span class="tab-sub" id="tabSkillSub">Skills</span>
+      </button>
+      <button class="tab-btn" data-tab="coreTab">
+        コア
+        <span class="tab-sub" id="tabCoreSub">Core</span>
+      </button>
+      <button class="tab-btn" data-tab="shopTab">
+        換金
+        <span class="tab-sub" id="tabShopSub">Exchange</span>
+      </button>
+      <button class="tab-btn" data-tab="infoTab">
+        情報
+        <span class="tab-sub" id="tabInfoSub">Info</span>
+      </button>
+    </aside>
 
-        <div>
-          <div class="small">コアHP</div>
-          <div class="bar"><div class="bar-fill" id="coreHpBar"></div></div>
-          <div class="row" style="margin-top:8px"><span id="coreHpText" class="mono">1000 / 1000</span><span id="battleState" class="pill">待機中</span></div>
-        </div>
+    <main class="main">
+      <div class="layout">
+        <!-- 左 -->
+        <section class="panel">
+          <div class="panel-header"><h2 id="leftPanelTitle">コア / ウェーブ</h2></div>
+          <div class="panel-body stack">
+            <div>
+              <div class="title-big">Idle Core Defense</div>
+              <div class="small" id="gameSubtitle">コア = 唯一の攻撃装置。スキルはセットしたものだけ発動。</div>
+            </div>
 
-        <div class="grid-2">
-          <button id="startWaveBtn">ウェーブ開始</button>
-          <button id="nextWaveBtn" class="ok" disabled>次のウェーブ</button>
-        </div>
-        <div class="grid-2">
-          <button id="autoBtn" class="ghost">オート: OFF</button>
-          <button id="speedBtn" class="ghost">×1</button>
-        </div>
-        <div class="grid-2">
-          <button id="resetBtn" class="danger">リスタート</button>
-        </div>
+            <div class="tab-panel active" id="battleTab">
+              <div class="stack">
+                <div class="stat"><span id="labelWave">ウェーブ</span><strong id="waveLabel">1</strong></div>
+                <div class="stat"><span id="labelProgress">進行</span><strong id="waveProgress">0 / 20</strong></div>
+                <div class="stat"><span id="labelAlive">敵残数</span><strong id="aliveLabel">0</strong></div>
+                <div class="stat"><span id="labelKill">討伐数</span><strong id="killLabel">0</strong></div>
+                <div class="stat"><span id="labelDps">DPS</span><strong id="dpsLabel">0</strong></div>
+              </div>
 
-        <details open>
-          <summary>攻撃システム</summary>
-          <div class="stack" style="margin-top:10px">
-            <div class="row"><span>現在の表示システム</span><strong id="currentSystemName">単発攻撃</strong></div>
-            <div class="row"><span>レベル</span><strong id="systemLevelLabel">1</strong></div>
-            <div class="small">解放済みシステムは同時に攻撃します。ここでは表示対象だけ切り替えます。</div>
-            <button id="upgradeSystemBtn">単発攻撃を強化</button>
-            <div id="systemCostBox" class="small"></div>
-          </div>
-        </details>
+              <div>
+                <div class="small" id="labelCoreHp">コアHP</div>
+                <div class="bar"><div class="bar-fill" id="coreHpBar"></div></div>
+                <div class="row" style="margin-top:8px">
+                  <span id="coreHpText" class="mono">1000 / 1000</span>
+                  <span id="battleState" class="pill">待機中</span>
+                </div>
+              </div>
 
-        <details open>
-          <summary>コア強化</summary>
-          <div class="stack" style="margin-top:10px">
-            <div id="coreUpgradeInfo" class="small"></div>
-            <div id="coreMinWarn" class="warn"></div>
-            <div class="upgrade-grid">
-              <div class="upgrade-card"><div class="row"><strong>最小攻撃力</strong><span id="coreMinLv" class="chip">Lv0</span></div><button id="coreMinBtn">強化</button></div>
-              <div class="upgrade-card"><div class="row"><strong>最大攻撃力</strong><span id="coreMaxLv" class="chip">Lv0</span></div><button id="coreMaxBtn">強化</button></div>
-              <div class="upgrade-card"><div class="row"><strong>攻撃速度</strong><span id="coreAtkSpdLv" class="chip">Lv0</span></div><button id="coreAtkSpdBtn">強化</button></div>
-              <div class="upgrade-card"><div class="row"><strong>球数</strong><span id="coreProjLv" class="chip">Lv0</span></div><button id="coreProjBtn">強化</button></div>
-              <div class="upgrade-card"><div class="row"><strong>射程</strong><span id="coreRangeLv" class="chip">Lv0</span></div><button id="coreRangeBtn">強化</button></div>
+              <details open>
+                <summary id="summarySystem">攻撃システム</summary>
+                <div class="stack" style="margin-top:10px">
+                  <div class="row"><span id="labelCurrentSystem">現在の表示システム</span><strong id="currentSystemName">単発攻撃</strong></div>
+                  <div class="row"><span id="labelSystemLevel">レベル</span><strong id="systemLevelLabel">1</strong></div>
+                  <div class="small" id="systemGuideText">解放済みシステムは同時に攻撃します。ここでは表示対象だけ切り替えます。</div>
+                  <button id="upgradeSystemBtn">単発攻撃を強化</button>
+                  <div id="systemCostBox" class="small"></div>
+                </div>
+              </details>
+
+              <details open>
+                <summary id="summaryCoreStatus">コアステータス</summary>
+                <div class="stack" style="margin-top:10px">
+                  <div class="stat"><span id="labelMinAtk">最小攻撃力</span><strong id="statMinAtk"></strong></div>
+                  <div class="stat"><span id="labelMaxAtk">最大攻撃力</span><strong id="statMaxAtk"></strong></div>
+                  <div class="stat"><span id="labelAvgAtk">平均攻撃力</span><strong id="statAvgAtk"></strong></div>
+                  <div class="stat"><span id="labelAtkSpeed">攻撃速度/秒</span><strong id="statAtkSpeed"></strong></div>
+                  <div class="stat"><span id="labelProjectiles">球数</span><strong id="statProjectiles"></strong></div>
+                  <div class="stat"><span id="labelRange">射程</span><strong id="statRange"></strong></div>
+                </div>
+              </details>
+            </div>
+
+            <div class="tab-panel" id="skillTab">
+              <details open>
+                <summary id="summarySkillSlots">スキルセット</summary>
+                <div class="stack" style="margin-top:10px">
+                  <div class="row"><span id="labelSlotCount">解放済み枠</span><strong id="slotCountLabel">5</strong></div>
+                  <div id="slotList" class="stack"></div>
+                  <button id="unlockSlotBtn">スキル枠を解放/強化</button>
+                  <div id="slotCostBox" class="small"></div>
+                </div>
+              </details>
+
+              <details open>
+                <summary id="summarySkillSort">スキルソート</summary>
+                <div class="stack" style="margin-top:10px">
+                  <select id="skillSortSelect">
+                    <option value="default">標準</option>
+                    <option value="chanceDesc">発動率が高い順</option>
+                    <option value="cooldownAsc">クール短い順</option>
+                    <option value="nameAsc">名前順</option>
+                    <option value="typeAsc">タイプ順</option>
+                  </select>
+                  <div class="small" id="skillSortGuide">スキル効果はセット時のプルダウン内で確認できます。</div>
+                </div>
+              </details>
+
+              <details open>
+                <summary id="summarySkillMemo">スキルメモ</summary>
+                <div id="skillMemoArea" class="stack" style="margin-top:10px"></div>
+              </details>
+            </div>
+
+            <div class="tab-panel" id="coreTab">
+              <details open>
+                <summary id="summaryCoreUpgrade">コア強化</summary>
+                <div class="stack" style="margin-top:10px">
+                  <div id="coreUpgradeInfo" class="small"></div>
+                  <div id="coreMinWarn" class="warn"></div>
+                  <div class="upgrade-grid">
+                    <div class="upgrade-card">
+                      <div class="row"><strong id="coreMinLabel">最小攻撃力</strong><span id="coreMinLv" class="chip">Lv0</span></div>
+                      <button id="coreMinBtn">強化</button>
+                    </div>
+                    <div class="upgrade-card">
+                      <div class="row"><strong id="coreMaxLabel">最大攻撃力</strong><span id="coreMaxLv" class="chip">Lv0</span></div>
+                      <button id="coreMaxBtn">強化</button>
+                    </div>
+                    <div class="upgrade-card">
+                      <div class="row"><strong id="coreAtkSpdLabel">攻撃速度</strong><span id="coreAtkSpdLv" class="chip">Lv0</span></div>
+                      <button id="coreAtkSpdBtn">強化</button>
+                    </div>
+                    <div class="upgrade-card">
+                      <div class="row"><strong id="coreProjLabel">球数</strong><span id="coreProjLv" class="chip">Lv0</span></div>
+                      <button id="coreProjBtn">強化</button>
+                    </div>
+                    <div class="upgrade-card">
+                      <div class="row"><strong id="coreRangeLabel">射程</strong><span id="coreRangeLv" class="chip">Lv0</span></div>
+                      <button id="coreRangeBtn">強化</button>
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <details open>
+                <summary id="summaryCoreMemo">攻撃システム参照メモ</summary>
+                <div id="systemMemoArea" class="stack" style="margin-top:10px"></div>
+              </details>
+            </div>
+
+            <div class="tab-panel" id="shopTab">
+              <details open>
+                <summary id="summaryExchange">換金所</summary>
+                <div id="exchangeList" class="stack" style="margin-top:10px"></div>
+              </details>
+            </div>
+
+            <div class="tab-panel" id="infoTab">
+              <details open>
+                <summary id="summaryInfo">ゲーム情報</summary>
+                <div class="stack" style="margin-top:10px">
+                  <div class="soft-card">
+                    <div class="small" id="infoText1">敵は画面外からランダム出現し、コアへ直進します。</div>
+                  </div>
+                  <div class="soft-card">
+                    <div class="small" id="infoText2">コインは敵撃破時に1枚だけ獲得します。</div>
+                  </div>
+                  <div class="soft-card">
+                    <div class="small" id="infoText3">コード報酬は通常コードのみ1回、言語コードは何回でも使えます。</div>
+                  </div>
+                </div>
+              </details>
             </div>
           </div>
-        </details>
+        </section>
 
-        <details open>
-          <summary>コアステータス</summary>
-          <div class="stack" style="margin-top:10px">
-            <div class="stat"><span>最小攻撃力</span><strong id="statMinAtk"></strong></div>
-            <div class="stat"><span>最大攻撃力</span><strong id="statMaxAtk"></strong></div>
-            <div class="stat"><span>平均攻撃力</span><strong id="statAvgAtk"></strong></div>
-            <div class="stat"><span>攻撃速度/秒</span><strong id="statAtkSpeed"></strong></div>
-            <div class="stat"><span>球数</span><strong id="statProjectiles"></strong></div>
-            <div class="stat"><span>射程</span><strong id="statRange"></strong></div>
+        <!-- 中央 -->
+        <section class="panel">
+          <div class="panel-header"><h2 id="battleFieldTitle">バトルフィールド</h2></div>
+          <div id="gameWrap">
+            <canvas id="gameCanvas" width="900" height="900"></canvas>
+
+            <div class="floating-wave">
+              <div class="small" id="floatingWaveLabel">現在ウェーブ</div>
+              <div class="big mono" id="floatingWaveValue">WAVE 1</div>
+            </div>
+
+            <div class="floating-controls">
+              <button id="startWaveBtn">ウェーブ開始</button>
+              <button id="nextWaveBtn" class="ok" disabled>次のウェーブ</button>
+              <button id="autoBtn" class="ghost">オート: OFF</button>
+              <button id="speedBtn" class="ghost">×1</button>
+              <button id="resetBtn" class="danger">リスタート</button>
+            </div>
+
+            <div class="battle-side left" id="battleLeftPanel">
+              <div class="battle-side-card">
+                <div class="small" id="sideSystemTitle">攻撃システム</div>
+                <div class="stack" id="battleSystemList"></div>
+              </div>
+            </div>
+
+            <div class="battle-side right" id="battleRightPanel">
+              <div class="battle-side-card">
+                <div class="small" id="sideCoreTitle">コア強化</div>
+                <div class="stack" id="battleCoreUpgradeList"></div>
+              </div>
+            </div>
+
+            <div class="hud">
+              <div class="hud-card">
+                <div class="small" id="hudSystemLabel">表示中システム</div>
+                <div><strong id="hudSystemTitle">単発攻撃 Lv1</strong></div>
+                <div class="small" id="hudSystemDesc">1発を自動発射</div>
+              </div>
+              <div class="hud-card">
+                <div class="small" id="hudSkillsLabel">セットスキル</div>
+                <div id="hudSkills" class="small">未設定</div>
+              </div>
+            </div>
           </div>
-        </details>
+        </section>
+
+        <!-- 右 -->
+        <section class="panel">
+          <div class="panel-header"><h2 id="rightPanelTitle">コイン / システム / メモ</h2></div>
+          <div class="panel-body stack">
+            <div class="coin-grid" id="coinGrid"></div>
+
+            <details open>
+              <summary id="summarySystemUnlock">システム切替</summary>
+              <div id="systemSwitchList" class="stack" style="margin-top:10px"></div>
+            </details>
+
+            <details open>
+              <summary id="summaryAttackMemo">攻撃システム可視化</summary>
+              <div id="attackVisibleMemo" class="stack" style="margin-top:10px"></div>
+            </details>
+
+            <div class="footer-note" id="footerNote">
+              敵は画面外からランダム出現し、コアへ直進します。コインは敵撃破時に必ず1枚だけ落ちます。
+            </div>
+          </div>
+        </section>
       </div>
-    </section>
+    </main>
+  </div>
 
-    <section class="panel">
-      <div class="panel-header"><h2>バトルフィールド</h2></div>
-      <div id="gameWrap">
-        <canvas id="gameCanvas" width="900" height="900"></canvas>
-        <div class="hud">
-          <div class="hud-card">
-            <div class="small">表示中システム</div>
-            <div><strong id="hudSystemTitle">単発攻撃 Lv1</strong></div>
-            <div class="small" id="hudSystemDesc">1発を自動発射</div>
-          </div>
-          <div class="hud-card">
-            <div class="small">セットスキル</div>
-            <div id="hudSkills" class="small">未設定</div>
-          </div>
+  <section class="code-box">
+    <div class="code-box-header">
+      <span id="codeBoxTitle">コード入力</span>
+      <span class="mini-chip" id="codeBoxState">1回報酬 / 言語は何度でも</span>
+    </div>
+    <div class="code-box-body">
+      <input id="codeInput" type="text" placeholder="コードを入力" />
+      <div class="code-actions">
+        <button id="codeSubmitBtn" class="gold">適用</button>
+        <div class="lang-mini">
+          <button id="langJPBtn" class="ghost" type="button">JP</button>
+          <button id="langENBtn" class="ghost" type="button">EN</button>
+          <button id="langKRBtn" class="ghost" type="button">KR</button>
         </div>
       </div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-header"><h2>コイン / スキル / 換金所</h2></div>
-      <div class="panel-body stack">
-        <div class="coin-grid" id="coinGrid"></div>
-
-        <details open>
-          <summary>スキル枠</summary>
-          <div class="stack" style="margin-top:10px">
-            <div class="row"><span>解放済み枠</span><strong id="slotCountLabel">5</strong></div>
-            <div id="slotList" class="stack"></div>
-            <button id="unlockSlotBtn">スキル枠を解放/強化</button>
-            <div id="slotCostBox" class="small"></div>
-          </div>
-        </details>
-
-        <details open>
-          <summary>スキル一覧</summary>
-          <div class="small" style="margin-top:10px">発動するのはスキル枠にセットしたものだけです。</div>
-          <div id="skillList" class="stack" style="margin-top:10px"></div>
-        </details>
-
-        <details open>
-          <summary>換金所 / システム切替</summary>
-          <div id="exchangeList" class="stack" style="margin-top:10px"></div>
-        </details>
-
-        <div class="footer-note">敵は画面外からランダム出現し、コアへ直進します。コインは敵撃破時に必ず1枚だけ落ちます。複数候補があるときは低レアほど出やすい順番抽選です。</div>
-      </div>
-    </section>
-  </div>
+      <div class="code-log" id="codeLog">Ready.</div>
+    </div>
+  </section>
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha:false });
 
     const COINS = [
       { id:'red', icon:'🔴', name:'赤', rarity:1, start:1, end:10 },
@@ -258,12 +782,19 @@
       { from:'green', cost:266, to:'blue', gain:1 },
       { from:'blue', cost:739, to:'purple', gain:1 },
       { from:'purple', cost:854, to:'brown', gain:1 },
+      { from:'brown', cost:1, to:'red', gain:777777 },
     ];
 
     const SLOT_PROGRESS = [
-      { coin:'red', cost:10, type:'slot' }, { coin:'red', cost:25, type:'slot' }, { coin:'red', cost:45, type:'slot' }, { coin:'red', cost:70, type:'slot' }, { coin:'red', cost:100, type:'slot' },
-      { coin:'orange', cost:15, type:'bonus', bonus:{ chance:0.01 } }, { coin:'orange', cost:35, type:'bonus', bonus:{ duration:0.02 } },
-      { coin:'orange', cost:55, type:'bonus', bonus:{ cooldown:0.01 } }, { coin:'orange', cost:80, type:'bonus', bonus:{ hitReduce:0.01 } },
+      { coin:'red', cost:10, type:'slot' },
+      { coin:'red', cost:25, type:'slot' },
+      { coin:'red', cost:45, type:'slot' },
+      { coin:'red', cost:70, type:'slot' },
+      { coin:'red', cost:100, type:'slot' },
+      { coin:'orange', cost:15, type:'bonus', bonus:{ chance:0.01 } },
+      { coin:'orange', cost:35, type:'bonus', bonus:{ duration:0.02 } },
+      { coin:'orange', cost:55, type:'bonus', bonus:{ cooldown:0.01 } },
+      { coin:'orange', cost:80, type:'bonus', bonus:{ hitReduce:0.01 } },
       { coin:'orange', cost:110, type:'bonus', bonus:{ chance:0.01 } },
     ];
 
@@ -281,17 +812,66 @@
     function buildSystemDefinitions(){
       const slotCosts = [{red:10},{red:25},{red:45},{red:70},{red:100},{orange:15}];
       return {
-        single:{ id:'single', name:'単発攻撃', unlocked:true, level:1, unlockCost:null, levelCosts:COMMON_LEVEL_COSTS, describe(lv){ return `安定した単発射撃 Lv${lv}`; } },
-        infection:{ id:'infection', name:'感染', unlocked:false, level:0, unlockCost:slotCosts[0], levelCosts:COMMON_LEVEL_COSTS, describe(lv){ return `感染付与 Lv${lv}`; } },
-        shotgun:{ id:'shotgun', name:'ショットガン', unlocked:false, level:0, unlockCost:slotCosts[1], levelCosts:COMMON_LEVEL_COSTS, describe(lv){ return `拡散弾幕 Lv${lv}`; } },
-        beam:{ id:'beam', name:'ビーム', unlocked:false, level:0, unlockCost:slotCosts[2], levelCosts:COMMON_LEVEL_COSTS, describe(lv){ return `照射ビーム Lv${lv}`; } },
-        bounce:{ id:'bounce', name:'跳弾', unlocked:false, level:0, unlockCost:slotCosts[3], levelCosts:COMMON_LEVEL_COSTS, describe(lv){ return `反射弾 Lv${lv}`; } },
-        orbit:{ id:'orbit', name:'天動説', unlocked:false, level:0, unlockCost:slotCosts[4], levelCosts:COMMON_LEVEL_COSTS, describe(lv){ return `惑星召喚 Lv${lv}`; } },
+        single:{
+          id:'single',
+          name:'単発攻撃',
+          unlocked:true,
+          level:1,
+          unlockCost:null,
+          levelCosts:COMMON_LEVEL_COSTS,
+          describe(lv){ return `安定した単発射撃 Lv${lv}`; }
+        },
+        infection:{
+          id:'infection',
+          name:'感染',
+          unlocked:false,
+          level:0,
+          unlockCost:slotCosts[0],
+          levelCosts:COMMON_LEVEL_COSTS,
+          describe(lv){ return `感染付与 Lv${lv}`; }
+        },
+        shotgun:{
+          id:'shotgun',
+          name:'ショットガン',
+          unlocked:false,
+          level:0,
+          unlockCost:slotCosts[1],
+          levelCosts:COMMON_LEVEL_COSTS,
+          describe(lv){ return `拡散弾幕 Lv${lv}`; }
+        },
+        beam:{
+          id:'beam',
+          name:'ビーム',
+          unlocked:false,
+          level:0,
+          unlockCost:slotCosts[2],
+          levelCosts:COMMON_LEVEL_COSTS,
+          describe(lv){ return `照射ビーム Lv${lv}`; }
+        },
+        bounce:{
+          id:'bounce',
+          name:'跳弾',
+          unlocked:false,
+          level:0,
+          unlockCost:slotCosts[3],
+          levelCosts:COMMON_LEVEL_COSTS,
+          describe(lv){ return `反射弾 Lv${lv}`; }
+        },
+        orbit:{
+          id:'orbit',
+          name:'天動説',
+          unlocked:false,
+          level:0,
+          unlockCost:slotCosts[4],
+          levelCosts:COMMON_LEVEL_COSTS,
+          describe(lv){ return `惑星召喚 Lv${lv}`; }
+        },
       };
     }
 
     const ORBIT_NAMES = ['太陽','月','水星','火星','木星','土星','金星','天王星','海王星'];
     const ORBIT_COLORS = ['#f59e0b','#e5e7eb','#60a5fa','#fb7185','#f97316','#c4b5fd','#fde68a','#67e8f9','#2563eb'];
+
     const damageTexts = [];
     const skillTexts = [];
 
@@ -338,24 +918,175 @@
       { id:'battle_trance',name:'バトルトランス',chance:44,cooldown:63,duration:6,type:'berserker',minAtk:0.18,maxAtk:0.18,avgAtk:0.06 },
     ];
 
+    const I18N = {
+      jp: {
+        ready: 'Ready.',
+        codeInput: 'コードを入力',
+        codeTitle: 'コード入力',
+        codeState: '1回報酬 / 言語は何度でも',
+        rewardDone: 'このコードは既に使用済みです。',
+        invalidCode: '無効なコードです。',
+        rewardGet: '報酬を獲得しました。',
+        langChangedJP: '日本語に変更しました。',
+        langChangedEN: 'Changed to English.',
+        langChangedKR: '한국어로 변경했습니다.'
+      },
+      en: {
+        ready: 'Ready.',
+        codeInput: 'Enter code',
+        codeTitle: 'Code Input',
+        codeState: 'One-time rewards / language reusable',
+        rewardDone: 'This code has already been used.',
+        invalidCode: 'Invalid code.',
+        rewardGet: 'Reward acquired.',
+        langChangedJP: '日本語に変更しました。',
+        langChangedEN: 'Changed to English.',
+        langChangedKR: '한국어로 변경했습니다.'
+      },
+      kr: {
+        ready: '준비 완료.',
+        codeInput: '코드를 입력하세요',
+        codeTitle: '코드 입력',
+        codeState: '보상 코드는 1회 / 언어 코드는 반복 가능',
+        rewardDone: '이미 사용한 코드입니다.',
+        invalidCode: '유효하지 않은 코드입니다.',
+        rewardGet: '보상을 획득했습니다.',
+        langChangedJP: '日本語に変更しました。',
+        langChangedEN: 'Changed to English.',
+        langChangedKR: '한국어로 변경했습니다.'
+      }
+    };
+
+    const CODE_REWARDS = {
+      'Voido=evelans': { once:true, reward:{ red:777 } },
+      '20050225': { once:true, reward:{ orange:225 } },
+      'ツインターボ愛好家': { once:true, reward:{ blue:707 } },
+      '明るくいこう！': { once:true, reward:{ green:324 } },
+      '下り坂直滑降': { once:true, reward:{ yellow:444 } },
+      'JP': { once:false, lang:'jp' },
+      'EN': { once:false, lang:'en' },
+      'KR': { once:false, lang:'kr' },
+    };
+
     const ui = {
-      waveLabel:document.getElementById('waveLabel'), waveProgress:document.getElementById('waveProgress'), aliveLabel:document.getElementById('aliveLabel'), killLabel:document.getElementById('killLabel'), dpsLabel:document.getElementById('dpsLabel'),
-      coreHpBar:document.getElementById('coreHpBar'), coreHpText:document.getElementById('coreHpText'), battleState:document.getElementById('battleState'),
-      systemLevelLabel:document.getElementById('systemLevelLabel'), systemCostBox:document.getElementById('systemCostBox'), slotCostBox:document.getElementById('slotCostBox'), slotCountLabel:document.getElementById('slotCountLabel'), slotList:document.getElementById('slotList'),
-      coinGrid:document.getElementById('coinGrid'), skillList:document.getElementById('skillList'), exchangeList:document.getElementById('exchangeList'),
-      statMinAtk:document.getElementById('statMinAtk'), statMaxAtk:document.getElementById('statMaxAtk'), statAvgAtk:document.getElementById('statAvgAtk'), statAtkSpeed:document.getElementById('statAtkSpeed'), statProjectiles:document.getElementById('statProjectiles'), statRange:document.getElementById('statRange'),
-      startWaveBtn:document.getElementById('startWaveBtn'), nextWaveBtn:document.getElementById('nextWaveBtn'), upgradeSystemBtn:document.getElementById('upgradeSystemBtn'), unlockSlotBtn:document.getElementById('unlockSlotBtn'), autoBtn:document.getElementById('autoBtn'), speedBtn:document.getElementById('speedBtn'), resetBtn:document.getElementById('resetBtn'),
-      currentSystemName:document.getElementById('currentSystemName'), hudSystemTitle:document.getElementById('hudSystemTitle'), hudSystemDesc:document.getElementById('hudSystemDesc'), hudSkills:document.getElementById('hudSkills'),
-      coreUpgradeInfo:document.getElementById('coreUpgradeInfo'), coreMinWarn:document.getElementById('coreMinWarn'), coreMinLv:document.getElementById('coreMinLv'), coreMaxLv:document.getElementById('coreMaxLv'), coreAtkSpdLv:document.getElementById('coreAtkSpdLv'), coreProjLv:document.getElementById('coreProjLv'), coreRangeLv:document.getElementById('coreRangeLv'), coreMinBtn:document.getElementById('coreMinBtn'), coreMaxBtn:document.getElementById('coreMaxBtn'), coreAtkSpdBtn:document.getElementById('coreAtkSpdBtn'), coreProjBtn:document.getElementById('coreProjBtn'), coreRangeBtn:document.getElementById('coreRangeBtn'),
+      tabs:[...document.querySelectorAll('.tab-btn')],
+      panels:[...document.querySelectorAll('.tab-panel')],
+      topWallet:document.getElementById('topWallet'),
+      coinGrid:document.getElementById('coinGrid'),
+      exchangeList:document.getElementById('exchangeList'),
+      systemSwitchList:document.getElementById('systemSwitchList'),
+      attackVisibleMemo:document.getElementById('attackVisibleMemo'),
+      battleSystemList:document.getElementById('battleSystemList'),
+      battleCoreUpgradeList:document.getElementById('battleCoreUpgradeList'),
+      skillMemoArea:document.getElementById('skillMemoArea'),
+      systemMemoArea:document.getElementById('systemMemoArea'),
+
+      waveLabel:document.getElementById('waveLabel'),
+      waveProgress:document.getElementById('waveProgress'),
+      aliveLabel:document.getElementById('aliveLabel'),
+      killLabel:document.getElementById('killLabel'),
+      dpsLabel:document.getElementById('dpsLabel'),
+      coreHpBar:document.getElementById('coreHpBar'),
+      coreHpText:document.getElementById('coreHpText'),
+      battleState:document.getElementById('battleState'),
+      systemLevelLabel:document.getElementById('systemLevelLabel'),
+      systemCostBox:document.getElementById('systemCostBox'),
+      slotCostBox:document.getElementById('slotCostBox'),
+      slotCountLabel:document.getElementById('slotCountLabel'),
+      slotList:document.getElementById('slotList'),
+      statMinAtk:document.getElementById('statMinAtk'),
+      statMaxAtk:document.getElementById('statMaxAtk'),
+      statAvgAtk:document.getElementById('statAvgAtk'),
+      statAtkSpeed:document.getElementById('statAtkSpeed'),
+      statProjectiles:document.getElementById('statProjectiles'),
+      statRange:document.getElementById('statRange'),
+      startWaveBtn:document.getElementById('startWaveBtn'),
+      nextWaveBtn:document.getElementById('nextWaveBtn'),
+      upgradeSystemBtn:document.getElementById('upgradeSystemBtn'),
+      unlockSlotBtn:document.getElementById('unlockSlotBtn'),
+      autoBtn:document.getElementById('autoBtn'),
+      speedBtn:document.getElementById('speedBtn'),
+      resetBtn:document.getElementById('resetBtn'),
+      currentSystemName:document.getElementById('currentSystemName'),
+      hudSystemTitle:document.getElementById('hudSystemTitle'),
+      hudSystemDesc:document.getElementById('hudSystemDesc'),
+      hudSkills:document.getElementById('hudSkills'),
+      coreUpgradeInfo:document.getElementById('coreUpgradeInfo'),
+      coreMinWarn:document.getElementById('coreMinWarn'),
+      coreMinLv:document.getElementById('coreMinLv'),
+      coreMaxLv:document.getElementById('coreMaxLv'),
+      coreAtkSpdLv:document.getElementById('coreAtkSpdLv'),
+      coreProjLv:document.getElementById('coreProjLv'),
+      coreRangeLv:document.getElementById('coreRangeLv'),
+      coreMinBtn:document.getElementById('coreMinBtn'),
+      coreMaxBtn:document.getElementById('coreMaxBtn'),
+      coreAtkSpdBtn:document.getElementById('coreAtkSpdBtn'),
+      coreProjBtn:document.getElementById('coreProjBtn'),
+      coreRangeBtn:document.getElementById('coreRangeBtn'),
+      floatingWaveValue:document.getElementById('floatingWaveValue'),
+      codeInput:document.getElementById('codeInput'),
+      codeSubmitBtn:document.getElementById('codeSubmitBtn'),
+      codeLog:document.getElementById('codeLog'),
+      codeBoxTitle:document.getElementById('codeBoxTitle'),
+      codeBoxState:document.getElementById('codeBoxState'),
+      langJPBtn:document.getElementById('langJPBtn'),
+      langENBtn:document.getElementById('langENBtn'),
+      langKRBtn:document.getElementById('langKRBtn'),
+      skillSortSelect:document.getElementById('skillSortSelect'),
     };
 
     const game = {
-      autoMode:false, timeScale:1, width:canvas.width, height:canvas.height, lastTime:0, uiTimer:0, dirtyUI:true, running:false, waveActive:false, waveCleared:false, globalSkillLock:0,
-      stats:{ damageThisSecond:0, lastSecondDamage:0, secondTick:0 }, cachedStats:null, wave:1, killCount:0, totalSpawned:0, totalToSpawn:20, spawnInterval:5, dynamicSpawnInterval:5, enemySpeedMultiplier:1, spawnTimer:0, maxAliveEnemies:300,
-      enemies:[], bullets:[], beams:[], orbits:[], particles:[],
-      coinWallet:{ red:0, orange:0, yellow:0, green:0, blue:0, purple:0, brown:0 }, slotProgressIndex:0, skillSlots:5, equippedSkills:[null,null,null,null,null], skillBonuses:{ chance:0, duration:0, cooldown:0, hitReduce:0 }, currentSystem:'single', systems:buildSystemDefinitions(),
+      lang:'jp',
+      autoMode:false,
+      timeScale:1,
+      width:canvas.width,
+      height:canvas.height,
+      lastTime:0,
+      uiTimer:0,
+      dirtyUI:true,
+      running:false,
+      waveActive:false,
+      waveCleared:false,
+      globalSkillLock:0,
+      stats:{ damageThisSecond:0, lastSecondDamage:0, secondTick:0 },
+      cachedStats:null,
+      wave:1,
+      killCount:0,
+      totalSpawned:0,
+      totalToSpawn:20,
+      spawnInterval:5,
+      dynamicSpawnInterval:5,
+      enemySpeedMultiplier:1,
+      spawnTimer:0,
+      maxAliveEnemies:300,
+      enemies:[],
+      bullets:[],
+      beams:[],
+      orbits:[],
+      particles:[],
+      coinWallet:{ red:0, orange:0, yellow:0, green:0, blue:0, purple:0, brown:0 },
+      slotProgressIndex:0,
+      skillSlots:5,
+      equippedSkills:[null,null,null,null,null],
+      skillBonuses:{ chance:0, duration:0, cooldown:0, hitReduce:0 },
+      currentSystem:'single',
+      systems:buildSystemDefinitions(),
       coreUpgrades:{ min:0, max:0, atkSpeed:0, projectiles:0, range:0 },
-      core:{ x:canvas.width/2, y:canvas.height/2, radius:28, rotation:0, rotationSpeed:1.4, maxHp:1000, hp:1000, sharedCooldown:0, baseBulletSpeed:420, baseBulletSize:5, missingHp(){ return Math.max(0, this.maxHp - this.hp); } }
+      usedRewardCodes:new Set(),
+      skillSortMode:'default',
+      core:{
+        x:canvas.width/2,
+        y:canvas.height/2,
+        radius:28,
+        rotation:0,
+        rotationSpeed:1.4,
+        maxHp:1000,
+        hp:1000,
+        sharedCooldown:0,
+        baseBulletSpeed:420,
+        baseBulletSize:5,
+        missingHp(){ return Math.max(0, this.maxHp - this.hp); }
+      }
     };
 
     function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
@@ -363,9 +1094,28 @@
     function distSq(ax,ay,bx,by){ const dx=ax-bx, dy=ay-by; return dx*dx+dy*dy; }
     function dist(ax,ay,bx,by){ return Math.hypot(ax-bx, ay-by); }
     function ln(x){ return Math.log(x); }
-    function getCoinMeta(id){ return COINS.find(c => c.id===id); }
-    function setDirtyUI(){ game.dirtyUI = true; game.cachedStats = null; }
+    function floor(v){ return Math.floor(v); }
     function safeEnemy(enemy){ return !!enemy && typeof enemy === 'object'; }
+    function setDirtyUI(){ game.dirtyUI = true; game.cachedStats = null; }
+    function getCoinMeta(id){ return COINS.find(c => c.id === id); }
+    function currentSystemObj(){ return game.systems[game.currentSystem]; }
+    function systemLevelCost(id,nextLevel){ return game.systems[id].levelCosts[nextLevel]; }
+    function canAfford(cost){ return !!cost && Object.entries(cost).every(([k,v]) => game.coinWallet[k] >= v); }
+    function payCost(cost){
+      if(!canAfford(cost)) return false;
+      for(const [k,v] of Object.entries(cost)) game.coinWallet[k] -= v;
+      setDirtyUI();
+      return true;
+    }
+    function addCoins(reward){
+      for(const [k,v] of Object.entries(reward)){
+        if(game.coinWallet[k] !== undefined) game.coinWallet[k] += v;
+      }
+      setDirtyUI();
+    }
+    function costToText(cost){
+      return Object.entries(cost).map(([k,v]) => `${getCoinMeta(k).icon}${Number(v).toLocaleString('ja-JP')}`).join(' / ');
+    }
 
     function getCoreBaseMin(){ return 80 * Math.pow(1.02, game.coreUpgrades.min); }
     function getCoreBaseMax(){ return 150 * Math.pow(1.041, game.coreUpgrades.max); }
@@ -374,23 +1124,10 @@
     function getCoreBaseProjectileCount(){ return 1 + game.coreUpgrades.projectiles; }
     function getCoreBaseRange(){ return 250 + (250 * 0.1 * game.coreUpgrades.range); }
 
-    function getAvailableCoins(wave){ return COINS.filter(c => wave >= c.start && wave <= c.end).sort((a,b)=>a.rarity-b.rarity); }
-    function getBrownBonusChance(wave){ return wave < 30 ? 0 : 0.5 + Math.floor((wave - 30) / 3) * 0.1; }
-    function rollCoin(wave){
-      const coins = getAvailableCoins(wave);
-      const baseRates = [76,33,12,4,1.5,0.5,0.1];
-      for(let i=0;i<coins.length;i++){
-        let rate = baseRates[i] ?? 0.1;
-        if(coins[i].id === 'brown') rate += getBrownBonusChance(wave);
-        if(Math.random()*100 < rate) return coins[i].id;
-      }
-      return coins[0]?.id || 'red';
+    function getCoreUpgradeCost(type){
+      const lv = game.coreUpgrades[type];
+      return { red: 8 + lv*6 + Math.floor(lv*lv*1.5) };
     }
-
-    function canAfford(cost){ return !!cost && Object.entries(cost).every(([k,v]) => game.coinWallet[k] >= v); }
-    function payCost(cost){ if(!canAfford(cost)) return false; for(const [k,v] of Object.entries(cost)) game.coinWallet[k] -= v; setDirtyUI(); return true; }
-    function costToText(cost){ return Object.entries(cost).map(([k,v]) => `${getCoinMeta(k).icon}${v}`).join(' / '); }
-    function getCoreUpgradeCost(type){ const lv = game.coreUpgrades[type]; return { red: 8 + lv*6 + Math.floor(lv*lv*1.5) }; }
     function canUpgradeCoreStat(type){
       if(type === 'min'){
         const nextMin = 80 * Math.pow(1.02, game.coreUpgrades.min + 1);
@@ -429,10 +1166,22 @@
       }
     }
 
-    function systemLevelCost(id,nextLevel){ return game.systems[id].levelCosts[nextLevel]; }
-    function currentSystemObj(){ return game.systems[game.currentSystem]; }
-    function getEquippedSkillObjects(){ return game.equippedSkills.map(id => SKILL_LIBRARY.find(s => s.id === id)).filter(Boolean); }
-    function resetSkillRuntime(){ for(const skill of SKILL_LIBRARY){ skill.runtime = { active:false, phase:null, activeTimer:0, cooldownTimer:0, unlockTimer:skill.cooldown*0.1, rollTimer:0 }; } }
+    function getEquippedSkillObjects(){
+      return game.equippedSkills.map(id => SKILL_LIBRARY.find(s => s.id === id)).filter(Boolean);
+    }
+
+    function resetSkillRuntime(){
+      for(const skill of SKILL_LIBRARY){
+        skill.runtime = {
+          active:false,
+          phase:null,
+          activeTimer:0,
+          cooldownTimer:0,
+          unlockTimer:skill.cooldown*0.1,
+          rollTimer:0
+        };
+      }
+    }
 
     function getActiveSkillModifiers(){
       const mods = { maxAtk:0, minAtk:0, avgAtk:0, atkSpeed:0, reduction:0, range:0, projectileMult:1, damageMul:1, invincible:false };
@@ -452,60 +1201,21 @@
         else if(skill.type === 'rsf'){ mods.minAtk += skill.minAtk || 0; mods.maxAtk += skill.maxAtk || 0; }
         else if(skill.type === 'gambler') mods.atkSpeed += after ? (skill.afterAtkSpeed || 0) : (skill.atkSpeed || 0);
         else if(skill.type === 'hack'){
-          if(after){ mods.minAtk += skill.afterMinAtk || 0; mods.maxAtk += skill.afterMaxAtk || 0; mods.avgAtk += skill.afterAvgAtk || 0; mods.atkSpeed += skill.afterAtkSpeed || 0; }
-          else { mods.minAtk += skill.minAtk || 0; mods.maxAtk += skill.maxAtk || 0; mods.avgAtk += skill.avgAtk || 0; mods.atkSpeed += skill.atkSpeed || 0; if(skill.invincible) mods.invincible = true; }
+          if(after){
+            mods.minAtk += skill.afterMinAtk || 0;
+            mods.maxAtk += skill.afterMaxAtk || 0;
+            mods.avgAtk += skill.afterAvgAtk || 0;
+            mods.atkSpeed += skill.afterAtkSpeed || 0;
+          } else {
+            mods.minAtk += skill.minAtk || 0;
+            mods.maxAtk += skill.maxAtk || 0;
+            mods.avgAtk += skill.avgAtk || 0;
+            mods.atkSpeed += skill.atkSpeed || 0;
+            if(skill.invincible) mods.invincible = true;
+          }
         }
       }
       return mods;
-    }
-
-    function healCoreByMissingHp(percent){ game.core.hp = clamp(game.core.hp + game.core.missingHp()*percent, 0, game.core.maxHp); setDirtyUI(); }
-    function spawnDamageText(x,y,d){ damageTexts.push({ x,y,text:Math.floor(d),life:1 }); }
-    function spawnSkillText(name){ skillTexts.push({ x:game.core.x, y:game.core.y-80, text:`SKILL: ${name}`, life:2 }); }
-
-    function activateSkill(skill){
-      for(const other of getEquippedSkillObjects()) if(other !== skill && other.runtime) other.runtime.cooldownTimer *= 0.97;
-      spawnSkillText(skill.name);
-      skill.runtime.active = true;
-      skill.runtime.phase = 'active';
-      skill.runtime.activeTimer = skill.duration * (1 + game.skillBonuses.duration);
-      skill.runtime.cooldownTimer = 0;
-      skill.runtime.unlockTimer = 0;
-      game.globalSkillLock = 3;
-      if(skill.type === 'healShield' || skill.type === 'dreamheal') healCoreByMissingHp(skill.heal || 0);
-    }
-
-    function reduceSkillCooldownOnHit(){
-      const reduce = 0.1 + game.skillBonuses.hitReduce;
-      for(const skill of getEquippedSkillObjects()){
-        const rt = skill.runtime;
-        if(rt && !rt.active) rt.cooldownTimer = Math.max(0, rt.cooldownTimer - reduce);
-      }
-    }
-
-    function updateSkills(dt){
-      if(!game.waveActive) return;
-      if(game.globalSkillLock > 0) game.globalSkillLock -= dt;
-      for(const skill of getEquippedSkillObjects()){
-        const rt = skill.runtime;
-        if(!rt) continue;
-        if(rt.active){
-          rt.activeTimer -= dt;
-          if(rt.activeTimer <= 0){
-            if(rt.phase === 'active' && skill.afterDuration){ rt.phase = 'after'; rt.active = true; rt.activeTimer = skill.afterDuration; }
-            else { rt.phase = null; rt.active = false; rt.cooldownTimer = skill.cooldown * (1 - game.skillBonuses.cooldown); rt.unlockTimer = skill.cooldown*0.1; }
-          }
-          continue;
-        }
-        if(rt.cooldownTimer > 0){ rt.cooldownTimer = Math.max(0, rt.cooldownTimer - dt); continue; }
-        if(rt.unlockTimer > 0){ rt.unlockTimer -= dt; continue; }
-        rt.rollTimer += dt;
-        if(rt.rollTimer >= 0.5){
-          rt.rollTimer -= 0.5;
-          const chance = skill.chance * (1 + game.skillBonuses.chance);
-          if(game.globalSkillLock <= 0 && Math.random()*100 < chance) activateSkill(skill);
-        }
-      }
     }
 
     function getBaseStatsForSystem(systemId){
@@ -532,332 +1242,189 @@
       return value;
     }
 
-    function rollDamage(systemId){ const s = getBaseStatsForSystem(systemId); return rand(s.minAtk, s.maxAtk); }
-    function getEnemiesInRange(range){ const list=[]; const r2=range*range; for(const e of game.enemies){ if(!safeEnemy(e) || e.dead) continue; if(distSq(e.x,e.y,game.core.x,game.core.y) <= r2) list.push(e); } return list; }
-    function findNearestEnemy(range){ const rangeSq=range*range; let best=null; let bestSq=Infinity; for(const e of game.enemies){ if(!safeEnemy(e) || e.dead) continue; const d2=distSq(e.x,e.y,game.core.x,game.core.y); if(d2 <= rangeSq && d2 < bestSq){ bestSq = d2; best = e; } } return best; }
-
-    function spawnEnemy(type){
-      const angle = Math.random()*Math.PI*2;
-      const spawnRadius = 520;
-      const x = game.core.x + Math.cos(angle)*spawnRadius;
-      const y = game.core.y + Math.sin(angle)*spawnRadius;
-      const w = game.wave;
-      let enemy;
-      if(type === 'normal') enemy = { kind:'normal', x,y, radius:12, spd:120 + ln(w+1)*50, atk:100 + (100*w/5 - 80), maxHp:500 + (w*0.1 + w/(100+w)), hp:500 + (w*0.1 + w/(100+w)), color:'#d1d5db', hpStep:0, hitCount:0, dmgTakenBonus:0, infections:[], dead:false, infectionFxTimer:0 };
-      else if(type === 'fast') enemy = { kind:'fast', x,y, radius:10, spd:260 + ln(w+1)*50, atk:200 + (100*w/5 - 80), maxHp:350 + (w*0.1 + w/(100+w)), hp:350 + (w*0.1 + w/(100+w)), color:'#f59e0b', hpStep:0, hitCount:0, dmgTakenBonus:0, infections:[], dead:false, infectionFxTimer:0 };
-      else if(type === 'tank') enemy = { kind:'tank', x,y, radius:18, spd:77 + ln(w+1)*50, atk:500 + (100*w/5 - 80), maxHp:1200 + (w*0.11 + w/(80+w)), hp:1200 + (w*0.11 + w/(80+w)), color:'#22c55e', skillCd:3, slowFreeze:0, slowResist:0, hitCount:0, dmgTakenBonus:0, infections:[], dead:false, infectionFxTimer:0 };
-      else enemy = { kind:'highspec', x,y, radius:16, spd:150 + ln(w+1)*50, atk:1000 + (100*w/4 - 120), maxHp:2000 + (w*0.11 + w/(80+w)), hp:2000 + (w*0.11 + w/(80+w)), color:'#a855f7', eliteAura:120, skillCd:3, atkMul:1, hitCount:0, dmgTakenBonus:0, infections:[], dead:false, infectionFxTimer:0 };
-      game.enemies.push(enemy);
-    }
-    function chooseEnemyType(){ const r=Math.random(); return r < 0.55 ? 'normal' : r < 0.80 ? 'fast' : r < 0.95 ? 'tank' : 'highspec'; }
-
-    function createImpact(x,y,color,count){
-      const maxAdd = Math.min(count, 800 - game.particles.length);
-      for(let i=0;i<maxAdd;i++){
-        const a = Math.random()*Math.PI*2;
-        const speed = rand(25,110);
-        game.particles.push({ x,y,vx:Math.cos(a)*speed, vy:Math.sin(a)*speed, life:rand(0.18,0.55), maxLife:0.55, color, size:rand(1.1,3.2) });
-      }
+    function rollDamage(systemId){
+      const s = getBaseStatsForSystem(systemId);
+      return rand(s.minAtk, s.maxAtk);
     }
 
-    function applyDamage(enemy, amount, hitColor='#7dd3fc'){
-      if(!safeEnemy(enemy) || enemy.dead) return false;
-      const final = amount * (1 + (enemy.dmgTakenBonus || 0));
-      spawnDamageText(enemy.x, enemy.y, final);
-      enemy.hp -= final;
-      enemy.hitCount += 1;
-      game.stats.damageThisSecond += final;
-      createImpact(enemy.x, enemy.y, hitColor, 3);
-      if(enemy.kind === 'tank' && enemy.skillCd !== undefined) enemy.skillCd = Math.max(0, enemy.skillCd - 0.1);
-      if(enemy.kind === 'highspec' && enemy.skillCd !== undefined) enemy.skillCd = Math.max(0, enemy.skillCd - 0.1);
-      if(enemy.hp <= 0){ enemy.dead = true; game.killCount += 1; const coin = rollCoin(game.wave); game.coinWallet[coin] += 1; createImpact(enemy.x, enemy.y, '#fbbf24', 10); setDirtyUI(); return true; }
-      return false;
+    function logCodeMessage(msg){
+      ui.codeLog.textContent = msg;
     }
 
-    function spawnSingleAttack(){
-      const s = getBaseStatsForSystem('single');
-      const inRange = getEnemiesInRange(s.range);
-      if(inRange.length === 0) return;
-      const target = findNearestEnemy(s.range);
-      const lv = game.systems.single.level;
-      const systemExtra = (lv >= 9 ? 1 : 0) + (lv >= 14 ? 1 : 0) + (lv >= 18 ? 1 : 0) + (lv >= 20 ? 2 : 0);
-      const count = Math.max(1, Math.round((s.projectiles + systemExtra) * s.projectileMult));
-      for(let i=0;i<count;i++){
-        const chosen = i === 0 ? target : inRange[Math.floor(Math.random()*inRange.length)];
-        if(!chosen) continue;
-        const angle = Math.atan2(chosen.y - game.core.y, chosen.x - game.core.x);
-        game.bullets.push({ type:'single', x:game.core.x, y:game.core.y, vx:Math.cos(angle)*s.bulletSpeed, vy:Math.sin(angle)*s.bulletSpeed, radius:s.bulletSize, damage:rollDamage('single') * s.damageMul, age:0, maxAge:1.6, alive:true, color:'#e0f2fe' });
-      }
-    }
-
-    function spawnInfectionAttack(){
-      const lv = game.systems.infection.level;
-      const s = getBaseStatsForSystem('infection');
-      const candidates = getEnemiesInRange(s.range + 120).sort((a,b)=>distSq(a.x,a.y,game.core.x,game.core.y)-distSq(b.x,b.y,game.core.x,game.core.y));
-      const targetCount = Math.min(candidates.length, 1 + Math.floor(Math.max(0, lv - 1) / 3));
-      for(let i=0;i<targetCount;i++){
-        const target = candidates[i];
-        if(!target) continue;
-        target.infectionFxTimer = 0;
-        target.infections.push({ dps:1 + (lv/5), duration:5 + (lv/2), tick:0, bonusApplied:false, dmgBonus:(1 + Math.sqrt(lv))/100 });
-        createImpact(target.x, target.y, '#34d399', 8);
-      }
-    }
-
-    function spawnShotgunAttack(){
-      const lv = game.systems.shotgun.level;
-      const s = getBaseStatsForSystem('shotgun');
-      const target = findNearestEnemy(s.range);
-      if(!target) return;
-      const pellets = Math.max(1, Math.round((4 + lv) * s.projectileMult));
-      const baseAngle = Math.atan2(target.y - game.core.y, target.x - game.core.x);
-      for(let i=0;i<pellets;i++){
-        const angle = baseAngle + rand(-0.5,0.5);
-        game.bullets.push({ type:'shotgun', x:game.core.x, y:game.core.y, vx:Math.cos(angle)*s.bulletSpeed*1.1, vy:Math.sin(angle)*s.bulletSpeed*1.1, radius:3.3, damage:rollDamage('shotgun') * 0.45 * s.damageMul, age:0, maxAge:0.7, alive:true, color:'#fde68a' });
-      }
-    }
-
-    function spawnBeamAttack(){
-      const lv = game.systems.beam.level;
-      const s = getBaseStatsForSystem('beam');
-      game.beams.length = 0;
-      for(let i=0;i<lv;i++) game.beams.push({ angle:Math.random()*Math.PI*2, time:3, length:s.range + 180, dps:rollDamage('beam') * 0.65 * s.damageMul, width:5 + lv*0.6 });
-    }
-
-    function spawnBounceAttack(){
-      const lv = game.systems.bounce.level;
-      const s = getBaseStatsForSystem('bounce');
-      let existing = 0;
-      for(const b of game.bullets) if(b && b.type === 'bounce' && b.alive) existing++;
-      if(existing >= 1 + Math.floor(lv/2)) return;
-      const target = findNearestEnemy(s.range + 150);
-      if(!target) return;
-      const angle = Math.atan2(target.y - game.core.y, target.x - game.core.x);
-      game.bullets.push({ type:'bounce', x:game.core.x, y:game.core.y, vx:Math.cos(angle)*s.bulletSpeed*0.95, vy:Math.sin(angle)*s.bulletSpeed*0.95, radius:6, damage:rollDamage('bounce')*0.85*s.damageMul, bouncesLeft:lv, bounceGain:(lv+5)/200, age:0, maxAge:4.2, alive:true, color:'#c4b5fd', hitIds:new Set() });
-    }
-
-    function syncOrbits(){
-      const lv = game.systems.orbit.level;
-      const count = Math.min(ORBIT_NAMES.length, lv);
-      while(game.orbits.length < count){
-        const idx = game.orbits.length;
-        game.orbits.push({ name:ORBIT_NAMES[idx], color:ORBIT_COLORS[idx], angle:idx*0.55, dist:50+idx*28, radius:6+idx*1.8, speed:1.4-idx*0.08, damage:40+idx*22+lv*8, hitCd:0, x:game.core.x, y:game.core.y });
-      }
-      if(game.orbits.length > count) game.orbits.length = count;
-    }
-
-    function fireCurrentSystems(){
-      for(const id in game.systems){
-        const sys = game.systems[id];
-        if(!sys || !sys.unlocked || sys.level <= 0) continue;
-        switch(id){
-          case 'single': spawnSingleAttack(); break;
-          case 'infection': spawnInfectionAttack(); break;
-          case 'shotgun': spawnShotgunAttack(); break;
-          case 'beam': if(game.beams.length === 0) spawnBeamAttack(); break;
-          case 'bounce': spawnBounceAttack(); break;
-          case 'orbit': syncOrbits(); break;
-        }
-      }
-    }
-
-    function updateSystemAttack(dt){ game.core.sharedCooldown -= dt; if(game.core.sharedCooldown <= 0){ fireCurrentSystems(); const s = getBaseStatsForSystem('single'); game.core.sharedCooldown = 1 / Math.max(0.2, s.atkPerSec); } }
-
-    function updateInfections(dt){
-      for(const enemy of game.enemies){
-        if(!safeEnemy(enemy) || !enemy.infections || enemy.infections.length === 0) continue;
-        for(let j=enemy.infections.length-1;j>=0;j--){
-          const inf = enemy.infections[j];
-          if(!inf){ enemy.infections.splice(j,1); continue; }
-          if(!inf.bonusApplied){ enemy.dmgTakenBonus = (enemy.dmgTakenBonus || 0) + inf.dmgBonus; inf.bonusApplied = true; }
-          enemy.infectionFxTimer = (enemy.infectionFxTimer || 0) - dt;
-          if(enemy.infectionFxTimer <= 0){ enemy.infectionFxTimer = 0.08; createImpact(enemy.x + rand(-enemy.radius, enemy.radius), enemy.y + rand(-enemy.radius, enemy.radius), '#34d399', 2); }
-          inf.tick += dt;
-          inf.duration -= dt;
-          if(inf.tick >= 1){ inf.tick -= 1; applyDamage(enemy, inf.dps, '#34d399'); }
-          if(inf.duration <= 0 || enemy.dead) enemy.infections.splice(j,1);
-        }
-      }
-    }
-
-    function updateBeams(dt){
-      if(game.beams.length === 0) return;
-      const cx = game.core.x, cy = game.core.y;
-      for(let bi=game.beams.length-1; bi>=0; bi--){
-        const beam = game.beams[bi];
-        if(!beam){ game.beams.splice(bi,1); continue; }
-        beam.time -= dt;
-        const ex = cx + Math.cos(beam.angle)*beam.length;
-        const ey = cy + Math.sin(beam.angle)*beam.length;
-        const dx = ex-cx, dy = ey-cy;
-        const len2 = dx*dx + dy*dy || 1;
-        for(const enemy of game.enemies){
-          if(!safeEnemy(enemy) || enemy.dead) continue;
-          let t = ((enemy.x-cx)*dx + (enemy.y-cy)*dy) / len2;
-          t = clamp(t, 0, 1);
-          const px = cx + dx*t, py = cy + dy*t;
-          if(dist(px, py, enemy.x, enemy.y) <= enemy.radius + beam.width){ applyDamage(enemy, beam.dps*dt, '#38bdf8'); break; }
-        }
-        if(beam.time <= 0) game.beams.splice(bi,1);
-      }
-    }
-
-    function updateOrbits(dt){
-      for(const o of game.orbits){
-        if(!o) continue;
-        o.angle += o.speed*dt;
-        o.hitCd -= dt;
-        o.x = game.core.x + Math.cos(o.angle)*o.dist;
-        o.y = game.core.y + Math.sin(o.angle)*o.dist;
-        for(const enemy of game.enemies){
-          if(!safeEnemy(enemy) || enemy.dead) continue;
-          const r = o.radius + enemy.radius;
-          if(distSq(o.x,o.y,enemy.x,enemy.y) <= r*r && o.hitCd <= 0){ applyDamage(enemy, o.damage*dt*24, o.color); o.hitCd = 0.08; }
-        }
-      }
-    }
-
-    function updateBullets(dt){
-      for(let i=game.bullets.length-1;i>=0;i--){
-        const bullet = game.bullets[i];
-        if(!bullet || !bullet.alive){ game.bullets.splice(i,1); continue; }
-        bullet.age += dt;
-        bullet.x += bullet.vx*dt;
-        bullet.y += bullet.vy*dt;
-        if(bullet.age > bullet.maxAge || bullet.x < -40 || bullet.x > game.width+40 || bullet.y < -40 || bullet.y > game.height+40){ game.bullets.splice(i,1); continue; }
-        let removed = false;
-        for(const enemy of game.enemies){
-          if(!safeEnemy(enemy) || enemy.dead) continue;
-          const r = bullet.radius + enemy.radius;
-          if(distSq(bullet.x, bullet.y, enemy.x, enemy.y) <= r*r){
-            if(bullet.type === 'bounce' && bullet.hitIds.has(enemy)) continue;
-            if(bullet.type === 'bounce') bullet.hitIds.add(enemy);
-            applyDamage(enemy, bullet.damage, bullet.color);
-            if(bullet.type === 'bounce' && bullet.bouncesLeft > 0){
-              bullet.bouncesLeft -= 1;
-              bullet.damage *= 1 + bullet.bounceGain;
-              let next = null, bestSq = Infinity;
-              for(const cand of game.enemies){ if(!safeEnemy(cand) || cand.dead || cand === enemy) continue; const d2 = distSq(cand.x,cand.y,enemy.x,enemy.y); if(d2 < bestSq){ bestSq = d2; next = cand; } }
-              if(next){ const speed = Math.hypot(bullet.vx, bullet.vy); const angle = Math.atan2(next.y - enemy.y, next.x - enemy.x); bullet.x = enemy.x; bullet.y = enemy.y; bullet.vx = Math.cos(angle)*speed; bullet.vy = Math.sin(angle)*speed; break; }
-            }
-            game.bullets.splice(i,1); removed = true; break;
-          }
-        }
-        if(removed) continue;
-      }
-    }
-
-    function takeCoreDamage(amount){
-      const active = getActiveSkillModifiers();
-      if(active.invincible) return;
-      const final = amount * (1 - active.reduction);
-      game.core.hp = Math.max(0, game.core.hp - final);
-      reduceSkillCooldownOnHit();
+    function applyLanguage(lang){
+      if(!I18N[lang]) return;
+      game.lang = lang;
+      ui.codeInput.placeholder = I18N[lang].codeInput;
+      ui.codeBoxTitle.textContent = I18N[lang].codeTitle;
+      ui.codeBoxState.textContent = I18N[lang].codeState;
+      if(lang === 'jp') logCodeMessage(I18N[lang].langChangedJP);
+      else if(lang === 'en') logCodeMessage(I18N[lang].langChangedEN);
+      else if(lang === 'kr') logCodeMessage(I18N[lang].langChangedKR);
       setDirtyUI();
-      if(game.core.hp <= 0){ if(game.autoMode){ restartRun(); startWave(); return; } game.waveActive = false; game.running = false; ui.battleState.textContent = '敗北'; ui.startWaveBtn.disabled = true; ui.nextWaveBtn.disabled = true; }
     }
 
-    function getMaxActiveRange(){ let attackRange = 0; for(const id in game.systems){ const sys = game.systems[id]; if(sys && sys.unlocked && sys.level > 0){ const r = getBaseStatsForSystem(id).range; if(r > attackRange) attackRange = r; } } return attackRange; }
-
-    function updateEnemies(dt){
-      const w = game.wave;
-      const attackRange = getMaxActiveRange();
-      for(let i=game.enemies.length-1;i>=0;i--){
-        const enemy = game.enemies[i];
-        if(!safeEnemy(enemy)){ game.enemies.splice(i,1); continue; }
-        if(enemy.dead){ game.enemies.splice(i,1); continue; }
-        if(enemy.kind === 'highspec' && enemy.skillCd !== undefined){
-          enemy.skillCd -= dt;
-          if(enemy.skillCd <= 0){
-            enemy.skillCd = 3;
-            const spdBonus = 0.05 * (w/(w+100));
-            const healBonus = 0.03 * (w/(w+100));
-            const atkBonus = 0.02 * (w/(w+100));
-            enemy.atkMul = (enemy.atkMul || 1) + atkBonus;
-            for(const other of game.enemies){ if(!safeEnemy(other) || other === enemy || other.dead) continue; if(distSq(enemy.x, enemy.y, other.x, other.y) <= enemy.eliteAura*enemy.eliteAura){ other.spd *= 1 + spdBonus; other.hp = Math.min(other.maxHp, other.hp + other.maxHp*healBonus); } }
-          }
-        }
-        if(enemy.kind === 'tank' && enemy.skillCd !== undefined){ enemy.skillCd -= dt; if(enemy.skillCd <= 0){ enemy.skillCd = 3; enemy.slowFreeze = 0.3; enemy.slowResist = 4; enemy.hp = Math.min(enemy.maxHp, enemy.hp + (enemy.maxHp - enemy.hp)*0.05); } if(enemy.slowFreeze > 0) enemy.slowFreeze -= dt; if(enemy.slowResist > 0) enemy.slowResist -= dt; }
-        if(enemy.kind === 'fast'){ const lostRatio = (enemy.maxHp - enemy.hp) / enemy.maxHp; const threshold = (10 + 5*(1/Math.max(1,w))) / 100; const steps = Math.floor(lostRatio / threshold); if(steps > enemy.hpStep){ enemy.spd *= Math.pow(1 + ((5 + w*0.01 - 0.01)/100), steps - enemy.hpStep); enemy.hpStep = steps; } }
-        const dx = game.core.x - enemy.x, dy = game.core.y - enemy.y;
-        const d = Math.hypot(dx, dy) || 1;
-        if(d <= game.core.radius + enemy.radius){ let damage = enemy.atk * (enemy.atkMul || 1); if(enemy.kind === 'normal') damage += enemy.hp * ((100 + w*1.2)/100); takeCoreDamage(damage); createImpact(enemy.x, enemy.y, '#fb7185', 12); game.enemies.splice(i,1); continue; }
-        let speedMultiplier = 1;
-        if(d > attackRange && attackRange > 0){ const extra = clamp((d - attackRange)/attackRange, 0, 1); speedMultiplier = 2 + extra; }
-        const moveSpd = (enemy.slowFreeze > 0 ? 0 : enemy.spd) * game.enemySpeedMultiplier * 0.42 * speedMultiplier;
-        enemy.x += (dx/d) * moveSpd * dt;
-        enemy.y += (dy/d) * moveSpd * dt;
+    function applyCode(raw){
+      const code = String(raw || '').trim();
+      if(!code) return;
+      const entry = CODE_REWARDS[code];
+      if(!entry){
+        logCodeMessage(I18N[game.lang].invalidCode);
+        return;
       }
-    }
-
-    function spawnEnemyTick(dt){
-      if(!game.waveActive) return;
-      const maxWaveEnemies = game.totalToSpawn;
-      const alive = game.enemies.length;
-      const ratio = alive / Math.max(1, maxWaveEnemies);
-      const spawnBatch = Math.max(1, Math.ceil(maxWaveEnemies * 0.10));
-      if(ratio >= 0.20){ game.enemySpeedMultiplier *= 0.94; game.dynamicSpawnInterval *= 1.04; }
-      if(ratio <= 0.07){ const steps = Math.floor((0.07 - ratio) / 0.01) + 1; game.dynamicSpawnInterval *= Math.pow(0.90, steps); }
-      game.dynamicSpawnInterval = clamp(game.dynamicSpawnInterval, 0.5, 30);
-      game.enemySpeedMultiplier = clamp(game.enemySpeedMultiplier, 0.15, 1);
-      game.spawnTimer += dt;
-      if(game.spawnTimer >= game.dynamicSpawnInterval){
-        game.spawnTimer = 0;
-        for(let i=0;i<spawnBatch;i++){ if(game.totalSpawned >= game.totalToSpawn || game.enemies.length >= game.maxAliveEnemies) break; spawnEnemy(chooseEnemyType()); game.totalSpawned += 1; }
-        setDirtyUI();
+      if(entry.lang){
+        applyLanguage(entry.lang);
+        return;
       }
+      if(entry.once && game.usedRewardCodes.has(code)){
+        logCodeMessage(I18N[game.lang].rewardDone);
+        return;
+      }
+      if(entry.reward) addCoins(entry.reward);
+      if(entry.once) game.usedRewardCodes.add(code);
+      logCodeMessage(`${I18N[game.lang].rewardGet} ${Object.entries(entry.reward).map(([k,v]) => `${getCoinMeta(k).icon}${Number(v).toLocaleString('ja-JP')}`).join(' / ')}`);
     }
 
-    function maybeClearWave(){ if(game.waveActive && game.totalSpawned >= game.totalToSpawn && game.enemies.length === 0){ game.waveActive = false; game.waveCleared = true; ui.battleState.textContent = 'クリア'; ui.startWaveBtn.disabled = false; ui.nextWaveBtn.disabled = false; if(game.autoMode){ nextWave(); startWave(); } setDirtyUI(); } }
-    function updateParticles(dt){ for(let i=game.particles.length-1;i>=0;i--){ const p = game.particles[i]; if(!p){ game.particles.splice(i,1); continue; } p.life -= dt; if(p.life <= 0){ game.particles.splice(i,1); continue; } p.x += p.vx*dt; p.y += p.vy*dt; p.vx *= 0.96; p.vy *= 0.96; } }
-    function updateTextEffects(dt){ for(let i=damageTexts.length-1;i>=0;i--){ const t=damageTexts[i]; if(!t){ damageTexts.splice(i,1); continue; } t.y -= 20*dt; t.life -= dt; if(t.life <= 0) damageTexts.splice(i,1); } for(let i=skillTexts.length-1;i>=0;i--){ const t=skillTexts[i]; if(!t){ skillTexts.splice(i,1); continue; } t.life -= dt; if(t.life <= 0) skillTexts.splice(i,1); } }
-    function updateStatsTick(dt){ game.stats.secondTick += dt; if(game.stats.secondTick >= 1){ game.stats.secondTick -= 1; game.stats.lastSecondDamage = game.stats.damageThisSecond; game.stats.damageThisSecond = 0; setDirtyUI(); } }
-
-    function update(dt){
-      dt *= game.timeScale;
-      if(game.running || game.waveActive){ spawnEnemyTick(dt); updateSkills(dt); updateSystemAttack(dt); updateInfections(dt); updateBeams(dt); updateBullets(dt); updateOrbits(dt); updateEnemies(dt); maybeClearWave(); }
-      updateParticles(dt); updateTextEffects(dt);
-      game.core.rotation += game.core.rotationSpeed*dt;
-      updateStatsTick(dt);
-      game.uiTimer += dt;
-      if(game.dirtyUI || game.uiTimer >= 0.25){ game.uiTimer = 0; renderUI(); game.dirtyUI = false; }
-      renderCanvas();
+    function getAvailableCoins(wave){
+      return COINS.filter(c => wave >= c.start && wave <= c.end).sort((a,b)=>a.rarity-b.rarity);
+    }
+    function getBrownBonusChance(wave){
+      return wave < 30 ? 0 : 0.5 + Math.floor((wave - 30) / 3) * 0.1;
+    }
+    function rollCoin(wave){
+      const coins = getAvailableCoins(wave);
+      const baseRates = [76,33,12,4,1.5,0.5,0.1];
+      for(let i=0;i<coins.length;i++){
+        let rate = baseRates[i] ?? 0.1;
+        if(coins[i].id === 'brown') rate += getBrownBonusChance(wave);
+        if(Math.random()*100 < rate) return coins[i].id;
+      }
+      return coins[0]?.id || 'red';
     }
 
-    function drawBackground(){
-      ctx.clearRect(0,0,game.width,game.height);
-      const grad = ctx.createRadialGradient(game.core.x, game.core.y, 20, game.core.x, game.core.y, 520);
-      grad.addColorStop(0, 'rgba(56,189,248,.05)');
-      grad.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0,0,game.width,game.height);
-      ctx.save();
-      ctx.translate(game.core.x, game.core.y);
-      for(let r=80;r<=360;r+=70){ ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.strokeStyle='rgba(255,255,255,.05)'; ctx.lineWidth=1; ctx.stroke(); }
-      ctx.restore();
-    }
-    function drawRangePreview(){ const maxRange=getMaxActiveRange(); if(maxRange <= 0) return; ctx.beginPath(); ctx.arc(game.core.x,game.core.y,maxRange,0,Math.PI*2); ctx.strokeStyle='rgba(125,211,252,.08)'; ctx.lineWidth=2; ctx.stroke(); }
-    function drawCore(){ ctx.save(); ctx.translate(game.core.x, game.core.y); ctx.rotate(game.core.rotation); ctx.fillStyle='#38bdf8'; ctx.shadowColor='rgba(56,189,248,.75)'; ctx.shadowBlur=26; ctx.fillRect(-28,-28,56,56); ctx.fillStyle='#e0f2fe'; ctx.fillRect(-12,-12,24,24); ctx.restore(); }
-    function drawEnemies(){ for(const e of game.enemies){ if(!safeEnemy(e)) continue; ctx.beginPath(); ctx.arc(e.x,e.y,e.radius,0,Math.PI*2); ctx.fillStyle=e.color; ctx.fill(); if(e.infections && e.infections.length > 0){ ctx.strokeStyle='#34d399'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(e.x,e.y,e.radius+4,0,Math.PI*2); ctx.stroke(); } const hpRatio = clamp(e.hp/e.maxHp,0,1); ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(e.x-e.radius, e.y-e.radius-10, e.radius*2, 4); ctx.fillStyle='#4ade80'; ctx.fillRect(e.x-e.radius, e.y-e.radius-10, e.radius*2*hpRatio, 4); } }
-    function drawBullets(){ for(const b of game.bullets){ if(!b) continue; ctx.beginPath(); ctx.arc(b.x,b.y,b.radius,0,Math.PI*2); ctx.fillStyle=b.color || '#e0f2fe'; ctx.fill(); } }
-    function drawBeams(){ for(const beam of game.beams){ if(!beam) continue; const ex=game.core.x + Math.cos(beam.angle)*beam.length, ey=game.core.y + Math.sin(beam.angle)*beam.length; ctx.strokeStyle='rgba(56,189,248,0.55)'; ctx.lineWidth=beam.width; ctx.beginPath(); ctx.moveTo(game.core.x,game.core.y); ctx.lineTo(ex,ey); ctx.stroke(); } }
-    function drawOrbits(){ for(const o of game.orbits){ if(!o) continue; ctx.beginPath(); ctx.arc(o.x,o.y,o.radius,0,Math.PI*2); ctx.fillStyle=o.color; ctx.fill(); } }
-    function drawParticles(){ for(const p of game.particles){ if(!p) continue; ctx.globalAlpha = clamp(p.life/p.maxLife,0,1); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill(); } ctx.globalAlpha = 1; }
-    function drawFloatingTexts(){ ctx.font='14px sans-serif'; ctx.fillStyle='#fca5a5'; for(const t of damageTexts){ if(!t) continue; ctx.fillText(String(t.text), t.x, t.y); } ctx.font='18px sans-serif'; ctx.fillStyle='#86efac'; for(const t of skillTexts){ if(!t) continue; ctx.fillText(t.text, t.x, t.y); } }
-    function renderCanvas(){ drawBackground(); drawRangePreview(); drawBeams(); drawBullets(); drawEnemies(); drawOrbits(); drawParticles(); drawCore(); drawFloatingTexts(); }
+    function spawnDamageText(x,y,d){ damageTexts.push({ x,y,text:Math.floor(d),life:1 }); }
+    function spawnSkillText(name){ skillTexts.push({ x:game.core.x, y:game.core.y-80, text:`SKILL: ${name}`, life:2 }); }
 
-    function renderCoins(){ ui.coinGrid.innerHTML = COINS.map(c => `<div class="coin-card"><div class="row"><strong>${c.icon} ${c.name}</strong><span class="badge mono">${game.coinWallet[c.id]}</span></div><div class="small">レア度 ${c.rarity}</div></div>`).join(''); }
-    function renderSystemPanel(){ const current=currentSystemObj(); const desc = typeof current.describe === 'function' ? current.describe(current.level) : `${current.name} Lv${current.level}`; ui.hudSystemTitle.textContent = `${current.name} Lv${current.level}`; ui.hudSystemDesc.textContent = desc; ui.currentSystemName.textContent = current.name; ui.systemLevelLabel.textContent = current.level; const nextLevel = current.level + 1; const cost = systemLevelCost(current.id, nextLevel); ui.systemCostBox.innerHTML = `<div class="small">現在: ${current.name}</div><div class="small" style="margin-top:6px">${Object.values(game.systems).map(s => `${s.name}${s.unlocked ? ` Lv${s.level}` : ' 未解放'}`).join(' / ')}</div><div class="small" style="margin-top:8px">${cost ? `次の強化コスト: ${costToText(cost)}` : '最大レベル到達'}</div>`; ui.upgradeSystemBtn.textContent = `${current.name} を強化`; ui.upgradeSystemBtn.disabled = !cost || !canAfford(cost); }
+    /* ========= Part2以降で中身を本実装 ========= */
+    function startWave(){
+      if(game.waveActive || game.core.hp <= 0) return;
+      game.waveActive = true;
+      game.waveCleared = false;
+      game.running = true;
+      game.totalSpawned = 0;
+      game.totalToSpawn = game.wave * 20;
+      game.killCount = 0;
+      game.spawnTimer = 0;
+      game.globalSkillLock = 0;
+      game.dynamicSpawnInterval = game.spawnInterval;
+      game.enemySpeedMultiplier = 1;
+      game.bullets.length = 0;
+      game.beams.length = 0;
+      game.core.sharedCooldown = 0;
+      resetSkillRuntime();
+      ui.battleState.textContent = '戦闘中';
+      ui.nextWaveBtn.disabled = true;
+      ui.startWaveBtn.disabled = true;
+      setDirtyUI();
+    }
+
+    function nextWave(){
+      if(!game.waveCleared) return;
+      game.wave += 1;
+      game.waveCleared = false;
+      ui.nextWaveBtn.disabled = true;
+      ui.battleState.textContent = '待機中';
+      setDirtyUI();
+    }
+
+    function restartRun(){
+      game.running = false;
+      game.waveActive = false;
+      game.waveCleared = false;
+      game.wave = 1;
+      game.killCount = 0;
+      game.totalSpawned = 0;
+      game.totalToSpawn = 20;
+      game.dynamicSpawnInterval = game.spawnInterval;
+      game.enemySpeedMultiplier = 1;
+      game.spawnTimer = 0;
+      game.enemies.length = 0;
+      game.bullets.length = 0;
+      game.beams.length = 0;
+      game.orbits.length = 0;
+      game.particles.length = 0;
+      damageTexts.length = 0;
+      skillTexts.length = 0;
+      game.core.hp = game.core.maxHp;
+      game.core.sharedCooldown = 0;
+      game.lastTime = 0;
+      resetSkillRuntime();
+      ui.battleState.textContent = '待機中';
+      ui.startWaveBtn.disabled = false;
+      ui.nextWaveBtn.disabled = true;
+      setDirtyUI();
+      renderUI();
+    }
+
+    function renderTopWallet(){
+      const visible = COINS.filter(c => game.coinWallet[c.id] > 0);
+      ui.topWallet.innerHTML = visible.map(c => `
+        <div class="wallet-chip mono">${c.icon}${Number(game.coinWallet[c.id]).toLocaleString('ja-JP')}</div>
+      `).join('');
+    }
+
+    function renderCoins(){
+      ui.coinGrid.innerHTML = COINS.map(c => `
+        <div class="coin-card">
+          <div class="row">
+            <strong>${c.icon} ${c.name}</strong>
+            <span class="badge mono">${Number(game.coinWallet[c.id]).toLocaleString('ja-JP')}</span>
+          </div>
+          <div class="small">レア度 ${c.rarity}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderSystemPanel(){
+      const current = currentSystemObj();
+      const desc = typeof current.describe === 'function' ? current.describe(current.level) : `${current.name} Lv${current.level}`;
+      ui.hudSystemTitle.textContent = `${current.name} Lv${current.level}`;
+      ui.hudSystemDesc.textContent = desc;
+      ui.currentSystemName.textContent = current.name;
+      ui.systemLevelLabel.textContent = current.level;
+      const nextLevel = current.level + 1;
+      const cost = systemLevelCost(current.id, nextLevel);
+      ui.systemCostBox.innerHTML = `
+        <div class="small">現在: ${current.name}</div>
+        <div class="small" style="margin-top:6px">
+          ${Object.values(game.systems).map(s => `${s.name}${s.unlocked ? ` Lv${s.level}` : ' 未解放'}`).join(' / ')}
+        </div>
+        <div class="small" style="margin-top:8px">
+          ${cost ? `次の強化コスト: ${costToText(cost)}` : '最大レベル到達'}
+        </div>
+      `;
+      ui.upgradeSystemBtn.textContent = `${current.name} を強化`;
+      ui.upgradeSystemBtn.disabled = !cost || !canAfford(cost);
+    }
+
     function renderStats(){
       const s = getBaseStatsForSystem(game.currentSystem);
-      const systemExtra = game.currentSystem === 'single' ? ((game.systems.single.level >= 9 ? 1 : 0) + (game.systems.single.level >= 14 ? 1 : 0) + (game.systems.single.level >= 18 ? 1 : 0) + (game.systems.single.level >= 20 ? 2 : 0)) : 0;
+      const systemExtra = game.currentSystem === 'single'
+        ? ((game.systems.single.level >= 9 ? 1 : 0) + (game.systems.single.level >= 14 ? 1 : 0) + (game.systems.single.level >= 18 ? 1 : 0) + (game.systems.single.level >= 20 ? 2 : 0))
+        : 0;
+
       ui.statMinAtk.textContent = s.minAtk.toFixed(1);
       ui.statMaxAtk.textContent = s.maxAtk.toFixed(1);
       ui.statAvgAtk.textContent = s.avgAtk.toFixed(1);
       ui.statAtkSpeed.textContent = s.atkPerSec.toFixed(2);
-      ui.statProjectiles.textContent = game.currentSystem === 'shotgun' ? Math.round((4 + game.systems.shotgun.level) * s.projectileMult) : game.currentSystem === 'beam' ? `${game.systems.beam.level}本` : game.currentSystem === 'bounce' ? 1 + Math.floor(game.systems.bounce.level / 2) : game.currentSystem === 'orbit' ? Math.min(ORBIT_NAMES.length, game.systems.orbit.level) : Math.round((s.projectiles + systemExtra) * s.projectileMult);
+      ui.statProjectiles.textContent =
+        game.currentSystem === 'shotgun' ? Math.round((4 + game.systems.shotgun.level) * s.projectileMult)
+        : game.currentSystem === 'beam' ? `${game.systems.beam.level}本`
+        : game.currentSystem === 'bounce' ? 1 + Math.floor(game.systems.bounce.level / 2)
+        : game.currentSystem === 'orbit' ? Math.min(ORBIT_NAMES.length, game.systems.orbit.level)
+        : Math.round((s.projectiles + systemExtra) * s.projectileMult);
       ui.statRange.textContent = s.range.toFixed(0);
     }
+
     function renderWave(){
       ui.waveLabel.textContent = game.wave;
       ui.waveProgress.textContent = `${game.totalSpawned} / ${game.totalToSpawn}`;
@@ -876,7 +1443,10 @@
       ui.coreAtkSpdLv.textContent = `Lv${game.coreUpgrades.atkSpeed}`;
       ui.coreProjLv.textContent = `Lv${game.coreUpgrades.projectiles}`;
       ui.coreRangeLv.textContent = `Lv${game.coreUpgrades.range}`;
-      ui.coreUpgradeInfo.innerHTML = `最小: ${getCoreBaseMin().toFixed(1)} / 最大: ${getCoreBaseMax().toFixed(1)} / 平均: ${getCoreBaseAvg().toFixed(1)}<br>攻撃速度: ${getCoreBaseAtkPerSec().toFixed(2)} / 球数: ${getCoreBaseProjectileCount()} / 射程: ${getCoreBaseRange().toFixed(0)}`;
+      ui.coreUpgradeInfo.innerHTML =
+        `最小: ${getCoreBaseMin().toFixed(1)} / 最大: ${getCoreBaseMax().toFixed(1)} / 平均: ${getCoreBaseAvg().toFixed(1)}<br>` +
+        `攻撃速度: ${getCoreBaseAtkPerSec().toFixed(2)} / 球数: ${getCoreBaseProjectileCount()} / 射程: ${getCoreBaseRange().toFixed(0)}`;
+      ui.floatingWaveValue.textContent = `WAVE ${game.wave}`;
       const minCheck = canUpgradeCoreStat('min');
       ui.coreMinWarn.textContent = minCheck.ok ? '' : minCheck.reason;
       ui.coreMinBtn.disabled = !minCheck.ok;
@@ -890,29 +1460,391 @@
       ui.coreProjBtn.textContent = `強化 ${costToText(getCoreUpgradeCost('projectiles'))}`;
       ui.coreRangeBtn.textContent = `強化 ${costToText(getCoreUpgradeCost('range'))}`;
     }
+
+    function getSortedSkills(){
+      const arr = [...SKILL_LIBRARY];
+      switch(game.skillSortMode){
+        case 'chanceDesc': arr.sort((a,b)=>b.chance-a.chance); break;
+        case 'cooldownAsc': arr.sort((a,b)=>a.cooldown-b.cooldown); break;
+        case 'nameAsc': arr.sort((a,b)=>a.name.localeCompare(b.name,'ja')); break;
+        case 'typeAsc': arr.sort((a,b)=>String(a.type).localeCompare(String(b.type),'ja')); break;
+      }
+      return arr;
+    }
+
     function renderSlots(){
       ui.slotList.innerHTML = '';
+      const skills = getSortedSkills();
       for(let i=0;i<game.skillSlots;i++){
         const wrap = document.createElement('div');
         wrap.className = 'skill-slot';
         const selected = game.equippedSkills[i] || '';
-        const options = ['<option value="">-- 未設定 --</option>'].concat(SKILL_LIBRARY.map(s => { const dup = game.equippedSkills.includes(s.id) && selected !== s.id; return `<option value="${s.id}" ${selected===s.id?'selected':''} ${dup?'disabled':''}>${s.name} - ${buildStatDesc(s)}</option>`; })).join('');
-        wrap.innerHTML = `<div class="row"><strong>スロット ${i+1}</strong><span class="small">${selected ? 'セット済み' : '空き'}</span></div><select data-slot-index="${i}">${options}</select>`;
+        const options = ['<option value="">-- 未設定 --</option>']
+          .concat(skills.map(s => {
+            const dup = game.equippedSkills.includes(s.id) && selected !== s.id;
+            return `<option value="${s.id}" ${selected===s.id?'selected':''} ${dup?'disabled':''}>${s.name} | ${s.chance}% | CT ${s.cooldown}s | ${buildStatDesc(s)}</option>`;
+          })).join('');
+        wrap.innerHTML = `
+          <div class="row">
+            <strong>スロット ${i+1}</strong>
+            <span class="small">${selected ? 'セット済み' : '空き'}</span>
+          </div>
+          <select data-slot-index="${i}">${options}</select>
+        `;
         ui.slotList.appendChild(wrap);
       }
       const next = SLOT_PROGRESS[game.slotProgressIndex];
-      if(!next){ ui.slotCostBox.textContent = 'スキル枠強化は最大です。'; ui.unlockSlotBtn.disabled = true; }
-      else { const coin = getCoinMeta(next.coin); ui.slotCostBox.textContent = next.type === 'slot' ? `次はスキル枠+1: ${coin.icon}${next.cost}` : `次はスキル枠ボーナス: ${coin.icon}${next.cost}`; ui.unlockSlotBtn.disabled = game.coinWallet[next.coin] < next.cost; }
+      if(!next){
+        ui.slotCostBox.textContent = 'スキル枠強化は最大です。';
+        ui.unlockSlotBtn.disabled = true;
+      } else {
+        const coin = getCoinMeta(next.coin);
+        ui.slotCostBox.textContent = next.type === 'slot'
+          ? `次はスキル枠+1: ${coin.icon}${next.cost}`
+          : `次はスキル枠ボーナス: ${coin.icon}${next.cost}`;
+        ui.unlockSlotBtn.disabled = game.coinWallet[next.coin] < next.cost;
+      }
     }
-    function renderSkills(){ ui.skillList.innerHTML = SKILL_LIBRARY.map(skill => `<div class="skill-item"><div class="row"><strong>${skill.name}</strong></div><div class="small">${buildStatDesc(skill)}</div></div>`).join(''); }
-    function renderExchange(){ const systemRows = Object.values(game.systems).map(sys => { const actionLabel = sys.unlocked ? (sys.id === game.currentSystem ? '表示中' : '表示') : '解放'; const disabled = sys.unlocked ? '' : (!canAfford(sys.unlockCost) ? 'disabled' : ''); const unlockText = sys.unlockCost ? costToText(sys.unlockCost) : ''; return `<div class="shop-row"><div><div><strong>${sys.name}</strong></div><div class="small">${sys.unlocked ? `Lv${sys.level}` : `未解放 ${unlockText}`}</div></div><div class="row"><button data-system-action="${sys.id}" ${sys.unlocked && sys.id === game.currentSystem ? 'disabled' : disabled}>${actionLabel}</button></div></div>`; }).join(''); const exchangeRows = EXCHANGES.map((ex, idx) => { const from = getCoinMeta(ex.from), to = getCoinMeta(ex.to); return `<div class="shop-row"><div><div><strong>${from.icon}${ex.cost} → ${to.icon}${ex.gain}</strong></div><div class="small">低レアを高レアに換金</div></div><div class="row"><button data-ex="${idx}" ${game.coinWallet[ex.from] >= ex.cost ? '' : 'disabled'}>交換</button></div></div>`; }).join(''); ui.exchangeList.innerHTML = `<div class="small">攻撃システム</div>${systemRows}<div class="small" style="margin-top:8px">換金所</div>${exchangeRows}`; }
-    function renderUI(){ renderCoins(); renderWave(); renderSystemPanel(); renderStats(); const active = document.activeElement; const editingSelect = active && active.tagName === 'SELECT' && active.dataset.slotIndex !== undefined; if(!editingSelect) renderSlots(); renderSkills(); renderExchange(); }
 
-    function upgradeCurrentSystem(){ const sys = currentSystemObj(); const next = sys.level + 1; const cost = systemLevelCost(sys.id, next); if(!cost || !payCost(cost)) return; sys.level = next; if(sys.id === 'orbit') syncOrbits(); setDirtyUI(); }
-    function unlockSlotProgress(){ const next = SLOT_PROGRESS[game.slotProgressIndex]; if(!next || game.coinWallet[next.coin] < next.cost) return; game.coinWallet[next.coin] -= next.cost; if(next.type === 'slot'){ game.skillSlots += 1; game.equippedSkills.push(null); } else { if(next.bonus.chance) game.skillBonuses.chance += next.bonus.chance; if(next.bonus.duration) game.skillBonuses.duration += next.bonus.duration; if(next.bonus.cooldown) game.skillBonuses.cooldown += next.bonus.cooldown; if(next.bonus.hitReduce) game.skillBonuses.hitReduce += next.bonus.hitReduce; } game.slotProgressIndex += 1; setDirtyUI(); }
-    function startWave(){ if(game.waveActive || game.core.hp <= 0) return; game.waveActive = true; game.waveCleared = false; game.running = true; game.totalSpawned = 0; game.totalToSpawn = game.wave * 20; game.killCount = 0; game.spawnTimer = 0; game.globalSkillLock = 0; game.dynamicSpawnInterval = game.spawnInterval; game.enemySpeedMultiplier = 1; game.bullets.length = 0; game.beams.length = 0; game.core.sharedCooldown = 0; resetSkillRuntime(); syncOrbits(); ui.battleState.textContent = '戦闘中'; ui.nextWaveBtn.disabled = true; ui.startWaveBtn.disabled = true; setDirtyUI(); }
-    function nextWave(){ if(!game.waveCleared) return; game.wave += 1; game.waveCleared = false; ui.nextWaveBtn.disabled = true; ui.battleState.textContent = '待機中'; setDirtyUI(); }
-    function restartRun(){ game.running = false; game.waveActive = false; game.waveCleared = false; game.wave = 1; game.killCount = 0; game.totalSpawned = 0; game.totalToSpawn = 20; game.dynamicSpawnInterval = game.spawnInterval; game.enemySpeedMultiplier = 1; game.spawnTimer = 0; game.enemies.length = 0; game.bullets.length = 0; game.beams.length = 0; game.orbits.length = 0; game.particles.length = 0; damageTexts.length = 0; skillTexts.length = 0; game.core.hp = game.core.maxHp; game.core.sharedCooldown = 0; game.lastTime = 0; resetSkillRuntime(); syncOrbits(); ui.battleState.textContent = '待機中'; ui.startWaveBtn.disabled = false; ui.nextWaveBtn.disabled = true; setDirtyUI(); renderUI(); }
+    function renderSkillMemo(){
+      const skills = getSortedSkills();
+      ui.skillMemoArea.innerHTML = skills.slice(0,12).map(skill => `
+        <div class="skill-item">
+          <div class="row wrap">
+            <strong>${skill.name}</strong>
+            <span class="mini-chip">発動率 ${skill.chance}%</span>
+            <span class="mini-chip">CT ${skill.cooldown}s</span>
+          </div>
+          <div class="small">${buildStatDesc(skill)}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderSystemSwitch(){
+      ui.systemSwitchList.innerHTML = Object.values(game.systems).map(sys => {
+        const actionLabel = sys.unlocked ? (sys.id === game.currentSystem ? '表示中' : '表示') : '解放';
+        const disabled = sys.unlocked ? '' : (!canAfford(sys.unlockCost) ? 'disabled' : '');
+        const unlockText = sys.unlockCost ? costToText(sys.unlockCost) : '';
+        return `
+          <div class="shop-row">
+            <div>
+              <div><strong>${sys.name}</strong></div>
+              <div class="small">${sys.unlocked ? `Lv${sys.level}` : `未解放 ${unlockText}`}</div>
+            </div>
+            <div class="row">
+              <button data-system-action="${sys.id}" ${sys.unlocked && sys.id === game.currentSystem ? 'disabled' : disabled}>${actionLabel}</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderExchange(){
+      ui.exchangeList.innerHTML = EXCHANGES.map((ex, idx) => {
+        const from = getCoinMeta(ex.from), to = getCoinMeta(ex.to);
+        return `
+          <div class="shop-row">
+            <div>
+              <div><strong>${from.icon}${Number(ex.cost).toLocaleString('ja-JP')} → ${to.icon}${Number(ex.gain).toLocaleString('ja-JP')}</strong></div>
+              <div class="small">${ex.from === 'brown' ? '最上位コインを大量赤コインへ交換' : '低レアを高レアに換金'}</div>
+            </div>
+            <div class="row">
+              <button data-ex="${idx}" ${game.coinWallet[ex.from] >= ex.cost ? '' : 'disabled'}>交換</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderBattleSidePanels(){
+      ui.battleSystemList.innerHTML = Object.values(game.systems).map(sys => `
+        <div class="soft-card">
+          <div class="row"><strong>${sys.name}</strong><span class="chip">Lv${sys.level}</span></div>
+          <div class="small">${sys.unlocked ? '解放済み' : '未解放'}</div>
+        </div>
+      `).join('');
+
+      ui.battleCoreUpgradeList.innerHTML = `
+        <div class="soft-card"><div class="row"><strong>最小攻撃力</strong><span class="chip">Lv${game.coreUpgrades.min}</span></div></div>
+        <div class="soft-card"><div class="row"><strong>最大攻撃力</strong><span class="chip">Lv${game.coreUpgrades.max}</span></div></div>
+        <div class="soft-card"><div class="row"><strong>攻撃速度</strong><span class="chip">Lv${game.coreUpgrades.atkSpeed}</span></div></div>
+        <div class="soft-card"><div class="row"><strong>球数</strong><span class="chip">Lv${game.coreUpgrades.projectiles}</span></div></div>
+        <div class="soft-card"><div class="row"><strong>射程</strong><span class="chip">Lv${game.coreUpgrades.range}</span></div></div>
+      `;
+    }
+
+    function renderAttackMemo(){
+      const coreAtkSpeed = getCoreBaseAtkPerSec();
+      const coreProjectiles = getCoreBaseProjectileCount();
+      const coreRange = getCoreBaseRange();
+      const current = Object.values(game.systems).map(sys => `
+        <div class="soft-card">
+          <div class="row"><strong>${sys.name}</strong><span class="chip">Lv${sys.level}</span></div>
+          <div class="tiny">参照値: atkSpeed=${coreAtkSpeed.toFixed(2)} / projectiles=${coreProjectiles} / range=${coreRange.toFixed(0)}</div>
+        </div>
+      `).join('');
+      ui.attackVisibleMemo.innerHTML = current;
+      ui.systemMemoArea.innerHTML = current;
+    }
+
+    function renderUI(){
+      renderTopWallet();
+      renderCoins();
+      renderWave();
+      renderSystemPanel();
+      renderStats();
+      renderSlots();
+      renderSkillMemo();
+      renderSystemSwitch();
+      renderExchange();
+      renderBattleSidePanels();
+      renderAttackMemo();
+    }
+
+    /* ===== 軽量土台描画 ===== */
+    function drawBackground(){
+      ctx.clearRect(0,0,game.width,game.height);
+      const grad = ctx.createRadialGradient(game.core.x, game.core.y, 20, game.core.x, game.core.y, 520);
+      grad.addColorStop(0, 'rgba(56,189,248,.05)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = '#0b1020';
+      ctx.fillRect(0,0,game.width,game.height);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0,0,game.width,game.height);
+      ctx.save();
+      ctx.translate(game.core.x, game.core.y);
+      for(let r=80;r<=360;r+=70){
+        ctx.beginPath();
+        ctx.arc(0,0,r,0,Math.PI*2);
+        ctx.strokeStyle='rgba(255,255,255,.05)';
+        ctx.lineWidth=1;
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawCore(){
+      ctx.save();
+      ctx.translate(game.core.x, game.core.y);
+      ctx.rotate(game.core.rotation);
+      ctx.fillStyle='#38bdf8';
+      ctx.shadowColor='rgba(56,189,248,.75)';
+      ctx.shadowBlur=26;
+      ctx.fillRect(-28,-28,56,56);
+      ctx.fillStyle='#e0f2fe';
+      ctx.fillRect(-12,-12,24,24);
+      ctx.restore();
+    }
+
+    function drawParticles(){
+      for(let i=0;i<game.particles.length;i++){
+        const p = game.particles[i];
+        if(!p) continue;
+        ctx.globalAlpha = clamp(p.life/p.maxLife,0,1);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawFloatingTexts(){
+      ctx.font='14px sans-serif';
+      ctx.fillStyle='#fca5a5';
+      for(let i=0;i<damageTexts.length;i++){
+        const t = damageTexts[i];
+        if(!t) continue;
+        ctx.fillText(String(t.text), t.x, t.y);
+      }
+      ctx.font='18px sans-serif';
+      ctx.fillStyle='#86efac';
+      for(let i=0;i<skillTexts.length;i++){
+        const t = skillTexts[i];
+        if(!t) continue;
+        ctx.fillText(t.text, t.x, t.y);
+      }
+    }
+
+    function renderCanvas(){
+      drawBackground();
+      drawParticles();
+      drawCore();
+      drawFloatingTexts();
+    }
+
+    function updateParticles(dt){
+      for(let i=game.particles.length-1;i>=0;i--){
+        const p = game.particles[i];
+        if(!p){ game.particles.splice(i,1); continue; }
+        p.life -= dt;
+        if(p.life <= 0){ game.particles.splice(i,1); continue; }
+        p.x += p.vx*dt;
+        p.y += p.vy*dt;
+        p.vx *= 0.96;
+        p.vy *= 0.96;
+      }
+    }
+
+    function updateTextEffects(dt){
+      for(let i=damageTexts.length-1;i>=0;i--){
+        const t=damageTexts[i];
+        if(!t){ damageTexts.splice(i,1); continue; }
+        t.y -= 20*dt;
+        t.life -= dt;
+        if(t.life <= 0) damageTexts.splice(i,1);
+      }
+      for(let i=skillTexts.length-1;i>=0;i--){
+        const t=skillTexts[i];
+        if(!t){ skillTexts.splice(i,1); continue; }
+        t.life -= dt;
+        if(t.life <= 0) skillTexts.splice(i,1);
+      }
+    }
+
+    function updateStatsTick(dt){
+      game.stats.secondTick += dt;
+      if(game.stats.secondTick >= 1){
+        game.stats.secondTick -= 1;
+        game.stats.lastSecondDamage = game.stats.damageThisSecond;
+        game.stats.damageThisSecond = 0;
+        setDirtyUI();
+      }
+    }
+
+    function update(dt){
+      dt *= game.timeScale;
+      updateParticles(dt);
+      updateTextEffects(dt);
+      game.core.rotation += game.core.rotationSpeed*dt;
+      updateStatsTick(dt);
+      game.uiTimer += dt;
+      if(game.dirtyUI || game.uiTimer >= 0.25){
+        game.uiTimer = 0;
+        renderUI();
+        game.dirtyUI = false;
+      }
+      renderCanvas();
+    }
+
+    function gameLoop(ts){
+      if(!game.lastTime) game.lastTime = ts;
+      const dt = Math.min(0.033, (ts - game.lastTime) / 1000);
+      game.lastTime = ts;
+      update(dt);
+      requestAnimationFrame(gameLoop);
+    }
+
+    function bindTabs(){
+      ui.tabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tabId = btn.dataset.tab;
+          ui.tabs.forEach(b => b.classList.toggle('active', b === btn));
+          ui.panels.forEach(p => p.classList.toggle('active', p.id === tabId));
+        });
+      });
+    }
+
+    function bindUI(){
+      bindTabs();
+
+      ui.coreMinBtn.addEventListener('click', ()=>{ const msg = upgradeCoreStat('min'); if(msg) ui.coreMinWarn.textContent = msg; });
+      ui.coreMaxBtn.addEventListener('click', ()=>{ upgradeCoreStat('max'); });
+      ui.coreAtkSpdBtn.addEventListener('click', ()=>{ upgradeCoreStat('atkSpeed'); });
+      ui.coreProjBtn.addEventListener('click', ()=>{ upgradeCoreStat('projectiles'); });
+      ui.coreRangeBtn.addEventListener('click', ()=>{ upgradeCoreStat('range'); });
+
+      ui.autoBtn.addEventListener('click', ()=>{ game.autoMode = !game.autoMode; setDirtyUI(); });
+      ui.speedBtn.addEventListener('click', ()=>{ game.timeScale = game.timeScale === 1 ? 2 : 1; setDirtyUI(); });
+      ui.startWaveBtn.addEventListener('click', startWave);
+      ui.nextWaveBtn.addEventListener('click', nextWave);
+      ui.resetBtn.addEventListener('click', restartRun);
+
+      ui.upgradeSystemBtn.addEventListener('click', ()=>{
+        const sys = currentSystemObj();
+        const next = sys.level + 1;
+        const cost = systemLevelCost(sys.id, next);
+        if(!cost || !payCost(cost)) return;
+        sys.level = next;
+        setDirtyUI();
+      });
+
+      ui.unlockSlotBtn.addEventListener('click', ()=>{
+        const next = SLOT_PROGRESS[game.slotProgressIndex];
+        if(!next || game.coinWallet[next.coin] < next.cost) return;
+        game.coinWallet[next.coin] -= next.cost;
+        if(next.type === 'slot'){
+          game.skillSlots += 1;
+          game.equippedSkills.push(null);
+        } else {
+          if(next.bonus.chance) game.skillBonuses.chance += next.bonus.chance;
+          if(next.bonus.duration) game.skillBonuses.duration += next.bonus.duration;
+          if(next.bonus.cooldown) game.skillBonuses.cooldown += next.bonus.cooldown;
+          if(next.bonus.hitReduce) game.skillBonuses.hitReduce += next.bonus.hitReduce;
+        }
+        game.slotProgressIndex += 1;
+        setDirtyUI();
+      });
+
+      ui.slotList.addEventListener('change', (e)=>{
+        const target = e.target;
+        if(!(target instanceof HTMLSelectElement)) return;
+        const idx = Number(target.dataset.slotIndex);
+        const value = target.value || null;
+        if(value && game.equippedSkills.includes(value) && game.equippedSkills[idx] !== value){
+          target.value = game.equippedSkills[idx] || '';
+          return;
+        }
+        game.equippedSkills[idx] = value;
+        setDirtyUI();
+      });
+
+      ui.exchangeList.addEventListener('click', (e)=>{
+        const target = e.target;
+        if(!(target instanceof HTMLButtonElement)) return;
+        if(target.dataset.ex === undefined) return;
+        const ex = EXCHANGES[Number(target.dataset.ex)];
+        if(game.coinWallet[ex.from] < ex.cost) return;
+        game.coinWallet[ex.from] -= ex.cost;
+        game.coinWallet[ex.to] += ex.gain;
+        setDirtyUI();
+      });
+
+      ui.systemSwitchList.addEventListener('click', (e)=>{
+        const target = e.target;
+        if(!(target instanceof HTMLButtonElement)) return;
+        const id = target.dataset.systemAction;
+        if(!id) return;
+        const sys = game.systems[id];
+        if(!sys.unlocked){
+          if(!payCost(sys.unlockCost)) return;
+          sys.unlocked = true;
+          sys.level = 1;
+        }
+        game.currentSystem = id;
+        setDirtyUI();
+      });
+
+      ui.skillSortSelect.addEventListener('change', ()=>{
+        game.skillSortMode = ui.skillSortSelect.value;
+        setDirtyUI();
+      });
+
+      ui.codeSubmitBtn.addEventListener('click', ()=>{
+        applyCode(ui.codeInput.value);
+        ui.codeInput.value = '';
+      });
+      ui.codeInput.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter'){
+          applyCode(ui.codeInput.value);
+          ui.codeInput.value = '';
+        }
+      });
+
+      ui.langJPBtn.addEventListener('click', ()=>applyLanguage('jp'));
+      ui.langENBtn.addEventListener('click', ()=>applyLanguage('en'));
+      ui.langKRBtn.addEventListener('click', ()=>applyLanguage('kr'));
+    }
 
     function runSelfTests(){
       const defs = buildSystemDefinitions();
@@ -921,44 +1853,2469 @@
       console.assert(buildStatDesc(SKILL_LIBRARY[0]).includes('最大攻撃力'), 'skill descriptions should show stat names');
       console.assert(getCoreBaseProjectileCount() === 1, 'base projectile count should start at 1');
       console.assert(getCoreBaseRange() === 250, 'base range should start at 250');
-      console.assert(game.coinWallet.red === 50, 'initial red coins should be 50');
-      console.assert(applyDamage(undefined, 10) === false, 'applyDamage should guard undefined enemy');
-      game.enemies.push(undefined);
-      updateEnemies(0.016);
-      console.assert(game.enemies.every(e => e !== undefined), 'undefined enemies should be purged');
-      const msg = canUpgradeCoreStat('min');
-      console.assert(typeof msg.ok === 'boolean', 'core min upgrade check should work');
+      console.assert(applyCode !== undefined, 'applyCode should exist');
     }
-
-    function bindUI(){
-      ui.coreMinBtn.addEventListener('click', ()=>{ const msg = upgradeCoreStat('min'); if(msg) ui.coreMinWarn.textContent = msg; });
-      ui.coreMaxBtn.addEventListener('click', ()=>{ upgradeCoreStat('max'); });
-      ui.coreAtkSpdBtn.addEventListener('click', ()=>{ upgradeCoreStat('atkSpeed'); });
-      ui.coreProjBtn.addEventListener('click', ()=>{ upgradeCoreStat('projectiles'); });
-      ui.coreRangeBtn.addEventListener('click', ()=>{ upgradeCoreStat('range'); });
-      ui.autoBtn.addEventListener('click', ()=>{ game.autoMode = !game.autoMode; setDirtyUI(); if(game.autoMode && !game.waveActive && !game.waveCleared && game.core.hp > 0) startWave(); });
-      ui.speedBtn.addEventListener('click', ()=>{ game.timeScale = game.timeScale === 1 ? 2 : 1; setDirtyUI(); });
-      ui.startWaveBtn.addEventListener('click', startWave);
-      ui.nextWaveBtn.addEventListener('click', nextWave);
-      ui.upgradeSystemBtn.addEventListener('click', upgradeCurrentSystem);
-      ui.unlockSlotBtn.addEventListener('click', unlockSlotProgress);
-      ui.resetBtn.addEventListener('click', restartRun);
-      ui.slotList.addEventListener('change', (e)=>{ const target = e.target; if(!(target instanceof HTMLSelectElement)) return; const idx = Number(target.dataset.slotIndex); const value = target.value || null; if(value && game.equippedSkills.includes(value) && game.equippedSkills[idx] !== value){ target.value = game.equippedSkills[idx] || ''; return; } game.equippedSkills[idx] = value; setDirtyUI(); });
-      ui.exchangeList.addEventListener('click', (e)=>{ const target = e.target; if(!(target instanceof HTMLButtonElement)) return; if(target.dataset.ex){ const ex = EXCHANGES[Number(target.dataset.ex)]; if(game.coinWallet[ex.from] < ex.cost) return; game.coinWallet[ex.from] -= ex.cost; game.coinWallet[ex.to] += ex.gain; setDirtyUI(); return; } if(target.dataset.systemAction){ const id = target.dataset.systemAction; const sys = game.systems[id]; if(!sys.unlocked){ if(!payCost(sys.unlockCost)) return; sys.unlocked = true; sys.level = 1; } game.currentSystem = id; if(id === 'orbit') syncOrbits(); setDirtyUI(); } });
-    }
-
-    function gameLoop(ts){ if(!game.lastTime) game.lastTime = ts; const dt = Math.min(0.033, (ts - game.lastTime) / 1000); game.lastTime = ts; update(dt); requestAnimationFrame(gameLoop); }
 
     resetSkillRuntime();
     for(const k of Object.keys(game.coinWallet)) game.coinWallet[k] = 0;
     game.coinWallet.red = 50;
-    syncOrbits();
     bindUI();
     runSelfTests();
+    logCodeMessage(I18N[game.lang].ready);
     setDirtyUI();
     renderUI();
     requestAnimationFrame(gameLoop);
   });
+    /* =========================================================
+   ENEMY DATA
+========================================================= */
+
+const ENEMY_TYPES={
+
+normal:{
+atk:100,
+hp:500,
+spd:120,
+skill(enemy){
+
+let extra=enemy.hp
+
+enemy.contactDamage=enemy.atk+extra
+
+}
+},
+
+fast:{
+atk:200,
+hp:350,
+spd:260,
+skill(enemy){
+
+let lost=(enemy.maxHp-enemy.hp)/enemy.maxHp
+
+let stack=Math.floor(lost/0.15)
+
+enemy.spdMult=1+(stack*0.05)
+
+}
+},
+
+tank:{
+atk:500,
+hp:1200,
+spd:77,
+skill(enemy){
+
+if(enemy.skillTimer<=0){
+
+enemy.spd=0
+
+enemy.slowResist=0.55
+
+enemy.hp+=enemy.maxHp*0.05
+
+enemy.skillTimer=4
+
+}
+
+}
+},
+
+elite:{
+atk:1000,
+hp:2000,
+spd:150,
+skill(enemy){
+
+for(let e of game.enemies){
+
+if(dist(enemy,e)<120){
+
+e.spd*=1.05
+
+e.hp+=e.maxHp*0.03
+
+}
+
+}
+
+enemy.atk*=1.02
+
+}
+}
+
+}
+
+/* =========================================================
+   ENEMY CLASS
+========================================================= */
+
+class Enemy{
+
+constructor(type){
+
+let data=ENEMY_TYPES[type]
+
+this.type=type
+
+this.maxHp=data.hp
+
+this.hp=data.hp
+
+this.atk=data.atk
+
+this.spd=data.spd
+
+this.spdMult=1
+
+this.skillTimer=0
+
+let angle=Math.random()*Math.PI*2
+let r=600
+
+this.x=core.x+Math.cos(angle)*r
+this.y=core.y+Math.sin(angle)*r
+
+}
+
+update(){
+
+let dx=core.x-this.x
+let dy=core.y-this.y
+let d=Math.hypot(dx,dy)
+
+let speed=this.spd*this.spdMult*0.35
+
+this.x+=dx/d*speed
+this.y+=dy/d*speed
+
+if(d<20){
+
+core.hp-=this.atk
+
+this.dead=true
+
+}
+
+}
+
+draw(){
+
+ctx.fillStyle="#ff4444"
+
+ctx.beginPath()
+ctx.arc(this.x,this.y,12,0,Math.PI*2)
+ctx.fill()
+
+}
+
+}
+
+/* =========================================================
+   SPAWN SYSTEM
+========================================================= */
+
+let spawnTimer=0
+let spawnInterval=5000
+let spawnBatch=0.10
+
+function spawnWave(){
+
+let maxEnemies=Math.min(300,game.wave*20)
+
+spawnBatch=Math.ceil(maxEnemies*0.10)
+
+for(let i=0;i<spawnBatch;i++){
+
+spawnEnemyType()
+
+}
+
+}
+
+function spawnEnemyType(){
+
+let r=Math.random()
+
+let type="normal"
+
+if(r>0.85)type="fast"
+if(r>0.93)type="tank"
+if(r>0.97)type="elite"
+
+game.enemies.push(new Enemy(type))
+
+}
+
+/* =========================================================
+   WAVE SYSTEM
+========================================================= */
+
+let waveActive=false
+
+function startWave(){
+
+waveActive=true
+
+spawnWave()
+
+}
+
+function updateWave(){
+
+if(!waveActive)return
+
+spawnTimer+=delta
+
+if(spawnTimer>spawnInterval){
+
+spawnTimer=0
+
+spawnWave()
+
+}
+
+let alive=game.enemies.length
+
+let maxEnemies=Math.min(300,game.wave*20)
+
+if(alive>maxEnemies*0.20){
+
+slowEnemies()
+
+spawnInterval*=1.04
+
+}
+
+if(alive<maxEnemies*0.07){
+
+spawnInterval*=0.90
+
+}
+
+}
+
+/* =========================================================
+   ENEMY SLOW MECHANIC
+========================================================= */
+
+function slowEnemies(){
+
+for(let e of game.enemies){
+
+e.spd*=0.94
+
+}
+
+}
+
+/* =========================================================
+   ENEMY UPDATE
+========================================================= */
+
+function updateEnemies(){
+
+for(let e of game.enemies){
+
+if(!e.dead){
+
+e.update()
+
+}
+
+}
+
+game.enemies=game.enemies.filter(e=>!e.dead)
+
+}
+
+/* =========================================================
+   ENEMY DRAW
+========================================================= */
+
+function drawEnemies(){
+
+for(let e of game.enemies){
+
+e.draw()
+
+}
+
+}
+
+/* =========================================================
+   WAVE UI
+========================================================= */
+
+document.getElementById("startWaveBtn").onclick=()=>{
+
+startWave()
+
+}
+/* =========================================================
+   PART 3 / 5
+   ATTACK SYSTEMS FULL
+   - 単発
+   - 感染
+   - ショットガン
+   - ビーム
+   - 跳弾
+   - 天動説
+========================================================= */
+
+/* =========================================================
+   SYSTEM STATE
+========================================================= */
+
+const attackSystems = {
+  single: { unlocked:true, level:1, key:"single" },
+  infection: { unlocked:false, level:0, key:"infection" },
+  shotgun: { unlocked:false, level:0, key:"shotgun" },
+  beam: { unlocked:false, level:0, key:"beam" },
+  bounce: { unlocked:false, level:0, key:"bounce" },
+  orbit: { unlocked:false, level:0, key:"orbit" }
+}
+
+game.currentSystem = "single"
+game.projectiles = game.projectiles || []
+game.beams = game.beams || []
+game.damageZones = game.damageZones || []
+game.orbitShots = game.orbitShots || []
+game.orbits = game.orbits || []
+game.stats = game.stats || {}
+game.stats.infectedTotal = game.stats.infectedTotal || 0
+
+const orbitMeta = [
+  { name:"太陽", baseRadius:60, speedMul:1.00, bonus:(n)=>((n*5)+120)/100 },
+  { name:"月", baseRadius:80, speedMul:1.02, bonus:(n)=>((n)+10)/100 },
+  { name:"水星", baseRadius:110, speedMul:1.61, bonus:(n)=>((n*1.5)+250)/100 },
+  { name:"火星", baseRadius:140, speedMul:0.81, bonus:(n)=>((n*3.3)+90)/100 },
+  { name:"木星", baseRadius:170, speedMul:0.44, bonus:(n)=>((n/2)+777)/100 },
+  { name:"土星", baseRadius:200, speedMul:0.33, bonus:(n)=>((n-100)+100)/100 },
+  { name:"金星", baseRadius:230, speedMul:1.17, bonus:(n)=>((n*0.15)+15)/100 },
+  { name:"天王星", baseRadius:260, speedMul:0.23, bonus:(n)=>((n*n)+15)/100 },
+  { name:"海王星", baseRadius:300, speedMul:0.18, bonus:(n)=>((((n*n)+n)*n)+0)/100 }
+]
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function clamp(v,min,max){
+  return Math.max(min,Math.min(max,v))
+}
+
+function rand(min,max){
+  return min + Math.random() * (max - min)
+}
+
+function dist(a,b){
+  const dx = a.x - b.x
+  const dy = a.y - b.y
+  return Math.hypot(dx,dy)
+}
+
+function angleTo(from,to){
+  return Math.atan2(to.y - from.y, to.x - from.x)
+}
+
+function getMinAtk(){
+  return Number(document.getElementById("statMinAtk")?.textContent) || core.minAtk || 80
+}
+
+function getMaxAtk(){
+  return Number(document.getElementById("statMaxAtk")?.textContent) || core.maxAtk || 150
+}
+
+function getAvgAtk(){
+  return Number(document.getElementById("statAvgAtk")?.textContent) || core.avgAtk || ((getMinAtk()+getMaxAtk())/2)
+}
+
+function getAtkSpeed(){
+  return core.atkSpeed || 1.1
+}
+
+function getProjectileCount(){
+  return core.projectiles || 1
+}
+
+function getRange(){
+  return core.range || 250
+}
+
+function getSystemLevel(key){
+  return attackSystems[key]?.level || 0
+}
+
+function getEnemiesInRange(range){
+  return game.enemies.filter(e => !e.dead && dist(core,e) <= range)
+}
+
+function getNearestEnemy(range = Infinity){
+  let best = null
+  let bestD = Infinity
+
+  for(const e of game.enemies){
+    if(e.dead) continue
+    const d = dist(core,e)
+    if(d <= range && d < bestD){
+      best = e
+      bestD = d
+    }
+  }
+  return best
+}
+
+function getHighestHpEnemy(range = Infinity){
+  let best = null
+  let bestHp = -1
+  for(const e of game.enemies){
+    if(e.dead) continue
+    const d = dist(core,e)
+    if(d > range) continue
+    if(e.hp > bestHp){
+      best = e
+      bestHp = e.hp
+    }
+  }
+  return best
+}
+
+function rollSingleDamage(n){
+  const minAtk = getMinAtk()
+  const maxAtk = getMaxAtk()
+  const extra = rand(n, n*n)
+  return rand(minAtk, maxAtk) + extra
+}
+
+function dealDamage(enemy, dmg){
+  if(!enemy || enemy.dead) return
+
+  enemy.hp -= dmg
+
+  if(enemy.hp <= 0){
+    enemy.hp = 0
+    enemy.dead = true
+
+    onEnemyKilled(enemy)
+  }
+}
+
+function onEnemyKilled(enemy){
+  if(enemy.infected){
+    if(enemy.infectionData){
+      createDamageZone(enemy.x, enemy.y, getSystemLevel("infection"))
+    }
+
+    if(getSystemLevel("infection") >= 100){
+      core.maxHp += 5
+      core.hp = Math.min(core.maxHp, core.hp + 5)
+    }
+  }
+}
+
+function createProjectile(data){
+  game.projectiles.push({
+    x:data.x,
+    y:data.y,
+    vx:data.vx,
+    vy:data.vy,
+    radius:data.radius ?? 5,
+    damage:data.damage ?? 1,
+    type:data.type ?? "single",
+    color:data.color ?? "#e0f2fe",
+    life:data.life ?? 180,
+    homing:data.homing ?? false,
+    splitCount:data.splitCount ?? 0,
+    bounceLeft:data.bounceLeft ?? 0,
+    bounceCount:data.bounceCount ?? 0,
+    target:data.target ?? null,
+    hitSet:new Set()
+  })
+}
+
+function createDamageZone(x,y,n){
+  game.damageZones.push({
+    x,y,
+    radius:110 + n * 2,
+    timer:5 * 60,
+    level:n
+  })
+}
+
+/* =========================================================
+   GLOBAL ATTACK LOOP
+========================================================= */
+
+let systemCooldowns = {
+  single:0,
+  infection:0,
+  shotgun:0,
+  beam:0,
+  bounce:0,
+  orbit:0
+}
+
+function updateAttackSystems(){
+  updateSingleSystem()
+  updateInfectionSystem()
+  updateShotgunSystem()
+  updateBeamSystem()
+  updateBounceSystem()
+  updateOrbitSystem()
+
+  updateProjectiles()
+  updateBeams()
+  updateDamageZones()
+  updateOrbitBodies()
+  updateOrbitShots()
+}
+
+/* =========================================================
+   SINGLE
+   レベル100になると球の大きさが10倍になる。
+   ダメージ: 最小攻撃力 ～ 最大攻撃力 + n〜n×n
+========================================================= */
+
+function updateSingleSystem(){
+  const n = getSystemLevel("single")
+  if(n <= 0 || !attackSystems.single.unlocked) return
+
+  systemCooldowns.single -= 1
+  const interval = Math.max(1, Math.round(60 / Math.max(0.01, getAtkSpeed())))
+
+  if(systemCooldowns.single > 0) return
+
+  systemCooldowns.single = interval
+
+  const target = getNearestEnemy(getRange())
+  if(!target) return
+
+  const sizeMul = n >= 100 ? 10 : 1
+  const count = Math.max(1, getProjectileCount())
+
+  for(let i=0;i<count;i++){
+    const angle = angleTo(core, target)
+    const speed = 7
+    createProjectile({
+      x:core.x,
+      y:core.y,
+      vx:Math.cos(angle) * speed,
+      vy:Math.sin(angle) * speed,
+      radius:5 * sizeMul,
+      damage:rollSingleDamage(n),
+      type:"single",
+      color:"#dff4ff",
+      target
+    })
+  }
+}
+
+/* =========================================================
+   INFECTION
+   クールタイム 5秒
+========================================================= */
+
+function ensureInfectionFields(enemy){
+  if(enemy.infectionStacks == null) enemy.infectionStacks = 0
+  if(enemy.infected == null) enemy.infected = false
+  if(enemy.healBlock == null) enemy.healBlock = 0
+  if(enemy.infectionSlow == null) enemy.infectionSlow = 0
+  if(enemy.infectionData == null) enemy.infectionData = null
+  if(enemy.infectionTick == null) enemy.infectionTick = 0
+  if(enemy.zoneTick == null) enemy.zoneTick = 0
+}
+
+function infectEnemy(enemy,n){
+  ensureInfectionFields(enemy)
+
+  if(!enemy.infected){
+    enemy.infected = true
+    enemy.infectionData = {
+      level:n,
+      damageTick:0,
+      duration:(5 + (n / 2)) * 60
+    }
+    game.stats.infectedTotal += 1
+  }
+
+  enemy.infectionStacks = Math.max(enemy.infectionStacks, 3)
+
+  if(n >= 100){
+    enemy.healBlock = 0.99
+  }
+}
+
+function addInfectionStack(enemy,n){
+  ensureInfectionFields(enemy)
+
+  enemy.infectionStacks += 1
+
+  const slowPct = clamp((30 + n/2) / 100 * enemy.infectionStacks, 0, 0.95)
+  enemy.infectionSlow = slowPct
+
+  if(enemy.infectionStacks >= 3){
+    infectEnemy(enemy,n)
+  }
+}
+
+function updateInfectionSystem(){
+  const n = getSystemLevel("infection")
+  if(n <= 0 || !attackSystems.infection.unlocked) return
+
+  systemCooldowns.infection -= 1
+
+  if(systemCooldowns.infection <= 0){
+    systemCooldowns.infection = 5 * 60
+
+    const count = 1 + Math.floor(n / 3)
+    const list = getEnemiesInRange(getRange() + 120)
+      .sort((a,b)=>dist(core,a)-dist(core,b))
+      .slice(0,count)
+
+    for(const enemy of list){
+      infectEnemy(enemy,n)
+    }
+  }
+
+  let infectedAlive = 0
+
+  for(const enemy of game.enemies){
+    if(enemy.dead) continue
+    ensureInfectionFields(enemy)
+
+    if(enemy.infectionSlow > 0){
+      enemy.spdMult = Math.min(enemy.spdMult, 1 - enemy.infectionSlow)
+    }
+
+    if(enemy.infected && enemy.infectionData){
+      infectedAlive++
+
+      enemy.infectionData.duration -= 1
+      enemy.infectionTick += 1
+
+      if(enemy.infectionTick >= 60){
+        enemy.infectionTick = 0
+
+        const dps = 1 + (n / 5) + (getMinAtk() * 0.01)
+        dealDamage(enemy, dps)
+
+        enemy.incomingDamageMul = 1 + ((1 + Math.sqrt(n)) / 100)
+      }
+
+      if(enemy.infectionData.duration <= 0){
+        enemy.infected = false
+        enemy.infectionData = null
+      }
+    }
+  }
+
+  if(n >= 100 && infectedAlive > 0){
+    core.hp = Math.min(core.maxHp, core.hp + (1/60))
+  }
+
+  if(n >= 100 && game.stats.infectedTotal >= 100){
+    if(!game.massInfectionZone || game.massInfectionZone.timer <= 0){
+      game.massInfectionZone = {
+        x:core.x,
+        y:core.y,
+        radius:getRange() * 2.6,
+        timer:5 * 60,
+        level:n
+      }
+      game.stats.infectedTotal = 0
+    }
+  }
+}
+
+function updateDamageZones(){
+  for(let i=game.damageZones.length-1;i>=0;i--){
+    const zone = game.damageZones[i]
+    zone.timer -= 1
+
+    for(const enemy of game.enemies){
+      if(enemy.dead) continue
+      ensureInfectionFields(enemy)
+
+      const d = Math.hypot(enemy.x-zone.x, enemy.y-zone.y)
+      if(d <= zone.radius){
+        enemy.zoneTick += 1
+        if(enemy.zoneTick >= 60){
+          enemy.zoneTick = 0
+          dealDamage(enemy, zone.level)
+          addInfectionStack(enemy, zone.level)
+        }
+      }
+    }
+
+    if(zone.timer <= 0){
+      game.damageZones.splice(i,1)
+    }
+  }
+
+  if(game.massInfectionZone && game.massInfectionZone.timer > 0){
+    game.massInfectionZone.timer -= 1
+
+    for(const enemy of game.enemies){
+      if(enemy.dead) continue
+      const d = Math.hypot(enemy.x-game.massInfectionZone.x, enemy.y-game.massInfectionZone.y)
+      if(d <= game.massInfectionZone.radius){
+        dealDamage(enemy, getSystemLevel("infection") * 2.5 / 60)
+        addInfectionStack(enemy, getSystemLevel("infection"))
+      }
+    }
+  }
+}
+
+/* =========================================================
+   SHOTGUN
+   弾数 = 4 + n
+   弾1発 = 平均攻撃力×1.12÷n
+   Lv100 で反射+分裂最大3回
+========================================================= */
+
+function updateShotgunSystem(){
+  const n = getSystemLevel("shotgun")
+  if(n <= 0 || !attackSystems.shotgun.unlocked) return
+
+  systemCooldowns.shotgun -= 1
+  const interval = Math.max(6, Math.round(60 / Math.max(0.01, getAtkSpeed())))
+
+  if(systemCooldowns.shotgun > 0) return
+  systemCooldowns.shotgun = interval
+
+  const target = getNearestEnemy(getRange())
+  if(!target) return
+
+  const angleBase = angleTo(core,target)
+  const count = 4 + n
+  const spread = 0.40
+  const perDamage = n > 0 ? (getAvgAtk() * 1.12 / n) : getAvgAtk()
+
+  for(let i=0;i<count;i++){
+    const angle = angleBase + rand(-spread, spread)
+    const speed = 8.5
+
+    createProjectile({
+      x:core.x,
+      y:core.y,
+      vx:Math.cos(angle) * speed,
+      vy:Math.sin(angle) * speed,
+      radius:3.2,
+      damage:perDamage,
+      type:"shotgun",
+      color:"#ffe08a",
+      splitCount:0
+    })
+  }
+}
+
+/* =========================================================
+   BEAM
+   クールタイム = 6×(1-(n/(n+10)))
+   ビーム数 = n
+   持続時間 = 同式
+   ダメージ = 毎フレーム 平均攻撃力×0.15
+========================================================= */
+
+function getBeamCooldownFrames(n){
+  const sec = 6 * (1 - (n / (n + 10)))
+  return Math.max(6, Math.round(sec * 60))
+}
+
+function getBeamDurationFrames(n){
+  let sec = 6 * (1 - (n / (n + 10)))
+
+  if(n >= 10) sec *= 1.30
+  if(n >= 15) sec *= 1.30
+  if(n >= 20) sec *= 1.40
+
+  return Math.max(10, Math.round(sec * 60))
+}
+
+function getBeamCount(n){
+  let c = n
+  if(n >= 20) c += Math.floor(n / 5)
+  return c
+}
+
+function updateBeamSystem(){
+  const n = getSystemLevel("beam")
+  if(n <= 0 || !attackSystems.beam.unlocked) return
+
+  systemCooldowns.beam -= 1
+
+  if(systemCooldowns.beam > 0) return
+  systemCooldowns.beam = getBeamCooldownFrames(n) * (n >= 20 ? 0.95 : 1)
+
+  const nearTarget = getNearestEnemy(getRange() * 0.10)
+  const target = nearTarget || getNearestEnemy(getRange() + 180)
+  if(!target) return
+
+  const count = getBeamCount(n)
+  const duration = getBeamDurationFrames(n)
+  const damageMul = n >= 15 ? 1.40 : 1
+  const rotate = n >= 100
+
+  for(let i=0;i<count;i++){
+    const angle = angleTo(core,target) + (i * ((Math.PI*2)/Math.max(1,count)))
+    game.beams.push({
+      x1:core.x,
+      y1:core.y,
+      angle,
+      length:getRange() + 180,
+      timer:duration,
+      damage:getAvgAtk() * 0.15 * damageMul,
+      pierce:n >= 5,
+      rotate
+    })
+  }
+}
+
+function updateBeams(){
+  for(let i=game.beams.length-1;i>=0;i--){
+    const beam = game.beams[i]
+    beam.timer -= 1
+
+    if(beam.rotate){
+      beam.angle += (core.rotationSpeed || 0.03)
+    }
+
+    const x2 = core.x + Math.cos(beam.angle) * beam.length
+    const y2 = core.y + Math.sin(beam.angle) * beam.length
+
+    let hitOnce = false
+
+    for(const enemy of game.enemies){
+      if(enemy.dead) continue
+
+      const d = pointToSegmentDistance(enemy.x, enemy.y, core.x, core.y, x2, y2)
+
+      if(d <= 12){
+        dealDamage(enemy, beam.damage)
+
+        if(!beam.pierce){
+          hitOnce = true
+          break
+        }
+      }
+    }
+
+    if(hitOnce || beam.timer <= 0){
+      game.beams.splice(i,1)
+    }
+  }
+}
+
+function pointToSegmentDistance(px,py,x1,y1,x2,y2){
+  const dx = x2 - x1
+  const dy = y2 - y1
+
+  if(dx === 0 && dy === 0){
+    return Math.hypot(px - x1, py - y1)
+  }
+
+  const t = clamp(((px - x1) * dx + (py - y1) * dy) / (dx*dx + dy*dy), 0, 1)
+  const lx = x1 + t * dx
+  const ly = y1 + t * dy
+
+  return Math.hypot(px - lx, py - ly)
+}
+
+/* =========================================================
+   BOUNCE
+   同時弾数 = 1 + floor(n/2)
+   跳弾回数 = n
+   ダメージ増加 = ((n+5)/2)% × バウンド回数
+   Lv100 で高HP優先 / 5回ごと分裂
+========================================================= */
+
+function updateBounceSystem(){
+  const n = getSystemLevel("bounce")
+  if(n <= 0 || !attackSystems.bounce.unlocked) return
+
+  systemCooldowns.bounce -= 1
+  const interval = Math.max(8, Math.round(60 / Math.max(0.01, getAtkSpeed())))
+
+  if(systemCooldowns.bounce > 0) return
+  systemCooldowns.bounce = interval
+
+  const activeBounce = game.projectiles.filter(p => p.type === "bounce").length
+  const maxBounce = 1 + Math.floor(n / 2)
+
+  if(activeBounce >= maxBounce) return
+
+  const target = n >= 100
+    ? getHighestHpEnemy(getRange() + 150)
+    : getNearestEnemy(getRange() + 150)
+
+  if(!target) return
+
+  const ang = angleTo(core,target)
+
+  createProjectile({
+    x:core.x,
+    y:core.y,
+    vx:Math.cos(ang) * 7,
+    vy:Math.sin(ang) * 7,
+    radius:6,
+    damage:getAvgAtk(),
+    type:"bounce",
+    color:"#d8c4ff",
+    bounceLeft:n,
+    homing:true,
+    target
+  })
+}
+
+/* =========================================================
+   ORBIT
+========================================================= */
+
+function getOrbitBodyCount(n){
+  return Math.min(orbitMeta.length, n)
+}
+
+function syncOrbitBodies(){
+  const n = getSystemLevel("orbit")
+  const count = getOrbitBodyCount(n)
+
+  while(game.orbits.length < count){
+    const meta = orbitMeta[game.orbits.length]
+    game.orbits.push({
+      name:meta.name,
+      angle:(game.orbits.length / Math.max(1,count)) * Math.PI * 2,
+      hitTimer:0
+    })
+  }
+
+  while(game.orbits.length > count){
+    game.orbits.pop()
+  }
+}
+
+function updateOrbitSystem(){
+  const n = getSystemLevel("orbit")
+  if(n <= 0 || !attackSystems.orbit.unlocked) return
+
+  syncOrbitBodies()
+}
+
+function updateOrbitBodies(){
+  const n = getSystemLevel("orbit")
+  if(n <= 0) return
+
+  const baseAtkSpeed = getAtkSpeed()
+  const baseLoop = baseAtkSpeed / 3.65
+  const globalSpeedBonus = 1 + (n * 0.03)
+
+  for(let i=0;i<game.orbits.length;i++){
+    const body = game.orbits[i]
+    const meta = orbitMeta[i]
+    if(!meta) continue
+
+    const radiusBonus = getRange() * 0.05
+    const hasNewPlanetThisLevel = i < getOrbitBodyCount(n)
+
+    const passiveBonus = hasNewPlanetThisLevel ? 1 : 1.01
+
+    const orbitRadius = (meta.baseRadius + radiusBonus) * passiveBonus
+    const orbitSpeed = baseLoop * meta.speedMul * globalSpeedBonus * passiveBonus
+
+    body.angle += orbitSpeed * 0.01
+    body.x = core.x + Math.cos(body.angle) * orbitRadius
+    body.y = core.y + Math.sin(body.angle) * orbitRadius
+    body.radius = 7 + i * 1.4
+    body.damage = calcOrbitDamage(meta, n) * (1 + orbitSpeed * 0.15)
+
+    body.hitTimer = Math.max(0, body.hitTimer - 1)
+
+    for(const enemy of game.enemies){
+      if(enemy.dead) continue
+      if(Math.hypot(enemy.x - body.x, enemy.y - body.y) <= body.radius + 12){
+        if(body.hitTimer <= 0){
+          dealDamage(enemy, body.damage)
+          body.hitTimer = 5
+        }
+      }
+    }
+
+    if(n >= 100){
+      updateOrbitShooter(body, meta, n)
+    }
+  }
+
+  if(n >= 50){
+    updateOrbitLines(n)
+  }
+}
+
+function calcOrbitDamage(meta, n){
+  const base = getAvgAtk() * 0.77
+  return base + (base * meta.bonus(n))
+}
+
+function updateOrbitLines(n){
+  for(let i=0;i<game.orbits.length-1;i++){
+    const a = game.orbits[i]
+    const b = game.orbits[i+1]
+    if(!a || !b) continue
+
+    for(const enemy of game.enemies){
+      if(enemy.dead) continue
+      const d = pointToSegmentDistance(enemy.x, enemy.y, a.x, a.y, b.x, b.y)
+      if(d <= 10){
+        enemy.lineHitTimer = (enemy.lineHitTimer || 0) - 1
+        if(enemy.lineHitTimer <= 0){
+          enemy.lineHitTimer = 30
+          const min = getMinAtk() * 0.80
+          const max = getMaxAtk() * 1.30
+          dealDamage(enemy, rand(min,max))
+        }
+      }
+    }
+  }
+}
+
+function updateOrbitShooter(body, meta, n){
+  body.shotTimer = (body.shotTimer || 0) - 1
+  const fireInterval = Math.max(8, Math.round(60 / Math.max(0.1, getAtkSpeed() * 0.40)))
+
+  if(body.shotTimer > 0) return
+
+  const target = getNearestEnemy(getRange() + 220)
+  if(!target) return
+
+  body.shotTimer = fireInterval
+
+  const a = angleTo(body,target)
+  createProjectile({
+    x:body.x,
+    y:body.y,
+    vx:Math.cos(a) * 7.5,
+    vy:Math.sin(a) * 7.5,
+    radius:4,
+    damage:getAvgAtk() * 0.40,
+    type:"orbitShot",
+    color:"#ffd86e"
+  })
+}
+
+function updateOrbitShots(){
+  /* orbitShot は projectile 共通処理で進行するのでここは予備 */
+}
+
+/* =========================================================
+   PROJECTILE UPDATE
+========================================================= */
+
+function splitBounceProjectile(p){
+  if(p.splitCount >= 3) return
+  p.splitCount += 1
+
+  const newBounce = Math.max(0, Math.floor(p.bounceLeft / 2))
+
+  for(let k=-1;k<=1;k+=2){
+    const ang = Math.atan2(p.vy, p.vx) + (0.35 * k)
+    const speed = Math.hypot(p.vx, p.vy)
+
+    createProjectile({
+      x:p.x,
+      y:p.y,
+      vx:Math.cos(ang) * speed,
+      vy:Math.sin(ang) * speed,
+      radius:p.radius,
+      damage:p.damage,
+      type:p.type,
+      color:p.color,
+      bounceLeft:newBounce,
+      bounceCount:p.bounceCount,
+      splitCount:p.splitCount
+    })
+  }
+}
+
+function findBounceNextTarget(hitEnemy, projectile, n){
+  let best = null
+
+  if(n >= 100){
+    let hpBest = -1
+    for(const e of game.enemies){
+      if(e.dead || e === hitEnemy) continue
+      if(projectile.hitSet.has(e)) continue
+      if(e.hp > hpBest){
+        hpBest = e.hp
+        best = e
+      }
+    }
+    return best
+  }
+
+  let bestD = Infinity
+  for(const e of game.enemies){
+    if(e.dead || e === hitEnemy) continue
+    if(projectile.hitSet.has(e)) continue
+    const d = Math.hypot(e.x - hitEnemy.x, e.y - hitEnemy.y)
+    if(d < bestD){
+      bestD = d
+      best = e
+    }
+  }
+  return best
+}
+
+function updateProjectiles(){
+  for(let i=game.projectiles.length-1;i>=0;i--){
+    const p = game.projectiles[i]
+
+    p.life -= 1
+    if(p.life <= 0){
+      game.projectiles.splice(i,1)
+      continue
+    }
+
+    if(p.homing && p.target && !p.target.dead){
+      const desired = angleTo(p, p.target)
+      const spd = Math.hypot(p.vx,p.vy)
+      p.vx = Math.cos(desired) * spd
+      p.vy = Math.sin(desired) * spd
+    }
+
+    p.x += p.vx
+    p.y += p.vy
+
+    if(p.type === "shotgun" && getSystemLevel("shotgun") >= 100){
+      let bounced = false
+
+      if(p.x <= 0 || p.x >= canvas.width){
+        p.vx *= -1
+        bounced = true
+      }
+      if(p.y <= 0 || p.y >= canvas.height){
+        p.vy *= -1
+        bounced = true
+      }
+
+      if(bounced){
+        if(p.splitCount < 3){
+          splitBounceProjectile(p)
+        }else{
+          game.projectiles.splice(i,1)
+          continue
+        }
+      }
+    }else{
+      if(p.x < -60 || p.y < -60 || p.x > canvas.width+60 || p.y > canvas.height+60){
+        game.projectiles.splice(i,1)
+        continue
+      }
+    }
+
+    let removed = false
+
+    for(const enemy of game.enemies){
+      if(enemy.dead) continue
+
+      const hitR = (p.radius || 5) + 12
+      const dx = enemy.x - p.x
+      const dy = enemy.y - p.y
+      if(dx*dx + dy*dy > hitR*hitR) continue
+
+      if(p.type === "bounce" && p.hitSet.has(enemy)) continue
+
+      let dmg = p.damage
+
+      if(enemy.incomingDamageMul){
+        dmg *= enemy.incomingDamageMul
+      }
+
+      dealDamage(enemy, dmg)
+
+      if(p.type === "bounce"){
+        p.hitSet.add(enemy)
+        p.bounceLeft -= 1
+        p.bounceCount += 1
+
+        const bonusPct = (((getSystemLevel("bounce") + 5) / 2) / 100) * p.bounceCount
+        p.damage *= (1 + bonusPct)
+
+        if(getSystemLevel("bounce") >= 100 && p.bounceCount > 0 && p.bounceCount % 5 === 0){
+          splitBounceProjectile(p)
+        }
+
+        if(p.bounceLeft > 0){
+          const next = findBounceNextTarget(enemy, p, getSystemLevel("bounce"))
+          if(next){
+            p.target = next
+            const a = angleTo(enemy, next)
+            const spd = Math.hypot(p.vx,p.vy)
+            p.x = enemy.x
+            p.y = enemy.y
+            p.vx = Math.cos(a) * spd
+            p.vy = Math.sin(a) * spd
+            removed = false
+            break
+          }else{
+            removed = true
+          }
+        }else{
+          removed = true
+        }
+      }else{
+        removed = true
+      }
+
+      if(removed){
+        game.projectiles.splice(i,1)
+      }
+      break
+    }
+  }
+}
+
+/* =========================================================
+   DRAW HELPERS FOR PART 3
+========================================================= */
+
+function drawProjectiles(){
+  for(const p of game.projectiles){
+    ctx.fillStyle = p.color || "#ffffff"
+    ctx.beginPath()
+    ctx.arc(p.x, p.y, p.radius || 5, 0, Math.PI*2)
+    ctx.fill()
+  }
+}
+
+function drawBeams(){
+  ctx.save()
+  ctx.globalAlpha = 0.7
+  for(const beam of game.beams){
+    const x2 = core.x + Math.cos(beam.angle) * beam.length
+    const y2 = core.y + Math.sin(beam.angle) * beam.length
+    ctx.strokeStyle = "#58d7ff"
+    ctx.lineWidth = 4
+    ctx.beginPath()
+    ctx.moveTo(core.x, core.y)
+    ctx.lineTo(x2, y2)
+    ctx.stroke()
+  }
+  ctx.restore()
+}
+
+function drawDamageZones(){
+  ctx.save()
+  ctx.globalAlpha = 0.22
+
+  for(const zone of game.damageZones){
+    ctx.fillStyle = "#33dd66"
+    ctx.beginPath()
+    ctx.arc(zone.x, zone.y, zone.radius, 0, Math.PI*2)
+    ctx.fill()
+  }
+
+  if(game.massInfectionZone && game.massInfectionZone.timer > 0){
+    ctx.fillStyle = "#44ffaa"
+    ctx.beginPath()
+    ctx.arc(game.massInfectionZone.x, game.massInfectionZone.y, game.massInfectionZone.radius, 0, Math.PI*2)
+    ctx.fill()
+  }
+
+  ctx.restore()
+}
+
+function drawOrbitSystem(){
+  for(let i=0;i<game.orbits.length;i++){
+    const body = game.orbits[i]
+    if(!body) continue
+
+    ctx.fillStyle = "#ffd86e"
+    ctx.beginPath()
+    ctx.arc(body.x, body.y, body.radius || 8, 0, Math.PI*2)
+    ctx.fill()
+  }
+
+  if(getSystemLevel("orbit") >= 50){
+    ctx.save()
+    ctx.globalAlpha = 0.45
+    ctx.strokeStyle = "#ffe49b"
+    ctx.lineWidth = 2
+
+    for(let i=0;i<game.orbits.length-1;i++){
+      const a = game.orbits[i]
+      const b = game.orbits[i+1]
+      if(!a || !b) continue
+      ctx.beginPath()
+      ctx.moveTo(a.x,a.y)
+      ctx.lineTo(b.x,b.y)
+      ctx.stroke()
+    }
+
+    ctx.restore()
+  }
+}
+    /* =========================================================
+   PART 4 / 5
+   EXCHANGE / CODE INPUT / LANGUAGE
+========================================================= */
+
+/* =========================================================
+   LANGUAGE DATA
+========================================================= */
+
+const LANG_PACK = {
+  JP: {
+    title: "Idle Core Defense",
+    coreWave: "コア / ウェーブ",
+    battleField: "バトルフィールド",
+    coinSkillExchange: "コイン / スキル / 換金所",
+    wave: "ウェーブ",
+    progress: "進行",
+    alive: "敵残数",
+    kills: "討伐数",
+    dps: "DPS",
+    coreHp: "コアHP",
+    waiting: "待機中",
+    battle: "戦闘中",
+    clear: "クリア",
+    defeat: "敗北",
+    startWave: "ウェーブ開始",
+    nextWave: "次のウェーブ",
+    autoOn: "オート: ON",
+    autoOff: "オート: OFF",
+    speed1: "×1",
+    speed2: "×2",
+    restart: "リスタート",
+    atkSystem: "攻撃システム",
+    currentSystem: "現在の表示システム",
+    level: "レベル",
+    strengthen: "強化",
+    coreUpgrade: "コア強化",
+    coreStatus: "コアステータス",
+    minAtk: "最小攻撃力",
+    maxAtk: "最大攻撃力",
+    avgAtk: "平均攻撃力",
+    atkSpeed: "攻撃速度/秒",
+    projectileCount: "球数",
+    range: "射程",
+    skillSlots: "スキル枠",
+    unlockedSlots: "解放済み枠",
+    skillList: "スキル一覧",
+    exchangeShop: "換金所 / システム切替",
+    setSkills: "セットスキル",
+    showingSystem: "表示中システム",
+    notSet: "未設定",
+    slot: "スロット",
+    empty: "空き",
+    equipped: "セット済み",
+    unlock: "解放",
+    showing: "表示中",
+    show: "表示",
+    exchange: "交換",
+    nextSkillSlot: "次はスキル枠+1",
+    nextSkillBonus: "次はスキル枠ボーナス",
+    slotUpgradeMax: "スキル枠強化は最大です。",
+    codeTitle: "コード入力",
+    codePlaceholder: "コードを入力",
+    codeButton: "決定",
+    codeUsed: "このコードは使用済みです",
+    codeInvalid: "無効なコードです",
+    codeReward: "報酬を獲得しました",
+    langChangedJP: "日本語に変更しました",
+    langChangedEN: "英語に変更しました",
+    langChangedKR: "韓国語に変更しました",
+    coinRarity: "レア度",
+    footer: "敵は画面外からランダム出現し、コアへ直進します。コインは敵撃破時に必ず1枚だけ落ちます。複数候補があるときは低レアほど出やすい順番抽選です。",
+    descSingle: "安定した単発射撃",
+    descInfection: "感染付与",
+    descShotgun: "拡散弾幕",
+    descBeam: "照射ビーム",
+    descBounce: "反射弾",
+    descOrbit: "惑星召喚",
+    coinRed: "赤",
+    coinOrange: "橙",
+    coinYellow: "黄",
+    coinGreen: "緑",
+    coinBlue: "青",
+    coinPurple: "紫",
+    coinBrown: "茶"
+  },
+  EN: {
+    title: "Idle Core Defense",
+    coreWave: "Core / Wave",
+    battleField: "Battlefield",
+    coinSkillExchange: "Coins / Skills / Exchange",
+    wave: "Wave",
+    progress: "Progress",
+    alive: "Enemies",
+    kills: "Kills",
+    dps: "DPS",
+    coreHp: "Core HP",
+    waiting: "Standby",
+    battle: "Battle",
+    clear: "Clear",
+    defeat: "Defeat",
+    startWave: "Start Wave",
+    nextWave: "Next Wave",
+    autoOn: "Auto: ON",
+    autoOff: "Auto: OFF",
+    speed1: "×1",
+    speed2: "×2",
+    restart: "Restart",
+    atkSystem: "Attack System",
+    currentSystem: "Current Display System",
+    level: "Level",
+    strengthen: "Upgrade",
+    coreUpgrade: "Core Upgrade",
+    coreStatus: "Core Status",
+    minAtk: "Min ATK",
+    maxAtk: "Max ATK",
+    avgAtk: "Avg ATK",
+    atkSpeed: "ATK Speed/s",
+    projectileCount: "Projectiles",
+    range: "Range",
+    skillSlots: "Skill Slots",
+    unlockedSlots: "Unlocked Slots",
+    skillList: "Skill List",
+    exchangeShop: "Exchange / System Switch",
+    setSkills: "Equipped Skills",
+    showingSystem: "Displayed System",
+    notSet: "Unset",
+    slot: "Slot",
+    empty: "Empty",
+    equipped: "Equipped",
+    unlock: "Unlock",
+    showing: "Showing",
+    show: "Show",
+    exchange: "Exchange",
+    nextSkillSlot: "Next: Skill Slot +1",
+    nextSkillBonus: "Next: Skill Slot Bonus",
+    slotUpgradeMax: "Skill slot upgrade is maxed.",
+    codeTitle: "Code Input",
+    codePlaceholder: "Enter code",
+    codeButton: "Apply",
+    codeUsed: "This code is already used",
+    codeInvalid: "Invalid code",
+    codeReward: "Reward obtained",
+    langChangedJP: "Changed to Japanese",
+    langChangedEN: "Changed to English",
+    langChangedKR: "Changed to Korean",
+    coinRarity: "Rarity",
+    footer: "Enemies spawn from outside the screen and move straight to the core. Defeated enemies always drop exactly one coin. When multiple candidates exist, lower rarity is rolled first.",
+    descSingle: "Stable single shot",
+    descInfection: "Apply infection",
+    descShotgun: "Spread barrage",
+    descBeam: "Beam attack",
+    descBounce: "Ricochet shot",
+    descOrbit: "Planet summon",
+    coinRed: "Red",
+    coinOrange: "Orange",
+    coinYellow: "Yellow",
+    coinGreen: "Green",
+    coinBlue: "Blue",
+    coinPurple: "Purple",
+    coinBrown: "Brown"
+  },
+  KR: {
+    title: "Idle Core Defense",
+    coreWave: "코어 / 웨이브",
+    battleField: "배틀필드",
+    coinSkillExchange: "코인 / 스킬 / 환전소",
+    wave: "웨이브",
+    progress: "진행",
+    alive: "적 수",
+    kills: "처치 수",
+    dps: "DPS",
+    coreHp: "코어 HP",
+    waiting: "대기 중",
+    battle: "전투 중",
+    clear: "클리어",
+    defeat: "패배",
+    startWave: "웨이브 시작",
+    nextWave: "다음 웨이브",
+    autoOn: "자동: ON",
+    autoOff: "자동: OFF",
+    speed1: "×1",
+    speed2: "×2",
+    restart: "재시작",
+    atkSystem: "공격 시스템",
+    currentSystem: "현재 표시 시스템",
+    level: "레벨",
+    strengthen: "강화",
+    coreUpgrade: "코어 강화",
+    coreStatus: "코어 상태",
+    minAtk: "최소 공격력",
+    maxAtk: "최대 공격력",
+    avgAtk: "평균 공격력",
+    atkSpeed: "공격속도/초",
+    projectileCount: "탄 수",
+    range: "사거리",
+    skillSlots: "스킬 슬롯",
+    unlockedSlots: "해금 슬롯",
+    skillList: "스킬 목록",
+    exchangeShop: "환전소 / 시스템 전환",
+    setSkills: "장착 스킬",
+    showingSystem: "표시 시스템",
+    notSet: "미설정",
+    slot: "슬롯",
+    empty: "비어 있음",
+    equipped: "장착됨",
+    unlock: "해금",
+    showing: "표시 중",
+    show: "표시",
+    exchange: "교환",
+    nextSkillSlot: "다음: 스킬 슬롯 +1",
+    nextSkillBonus: "다음: 스킬 슬롯 보너스",
+    slotUpgradeMax: "스킬 슬롯 강화는 최대입니다.",
+    codeTitle: "코드 입력",
+    codePlaceholder: "코드를 입력",
+    codeButton: "확인",
+    codeUsed: "이 코드는 이미 사용했습니다",
+    codeInvalid: "유효하지 않은 코드입니다",
+    codeReward: "보상을 획득했습니다",
+    langChangedJP: "일본어로 변경했습니다",
+    langChangedEN: "영어로 변경했습니다",
+    langChangedKR: "한국어로 변경했습니다",
+    coinRarity: "희귀도",
+    footer: "적은 화면 밖에서 랜덤으로 출현하여 코어로 직진합니다. 적 처치 시 코인은 반드시 1개만 드롭합니다. 여러 후보가 있으면 낮은 희귀도부터 순서대로 추첨합니다.",
+    descSingle: "안정적인 단발 사격",
+    descInfection: "감염 부여",
+    descShotgun: "확산 탄막",
+    descBeam: "조사 빔",
+    descBounce: "도탄",
+    descOrbit: "행성 소환",
+    coinRed: "빨강",
+    coinOrange: "주황",
+    coinYellow: "노랑",
+    coinGreen: "초록",
+    coinBlue: "파랑",
+    coinPurple: "보라",
+    coinBrown: "갈색"
+  }
+}
+
+game.language = game.language || "JP"
+
+function t(key){
+  return (LANG_PACK[game.language] && LANG_PACK[game.language][key]) || key
+}
+
+/* =========================================================
+   EXCHANGE DATA
+========================================================= */
+
+const FULL_EXCHANGES = [
+  { from:"red", cost:110, to:"orange", gain:1 },
+  { from:"orange", cost:121, to:"yellow", gain:1 },
+  { from:"yellow", cost:242, to:"green", gain:1 },
+  { from:"green", cost:266, to:"blue", gain:1 },
+  { from:"blue", cost:739, to:"purple", gain:1 },
+  { from:"purple", cost:854, to:"brown", gain:1 },
+  { from:"brown", cost:1, to:"red", gain:777777 }
+]
+
+/* =========================================================
+   CODE REWARD SYSTEM
+========================================================= */
+
+game.usedRewardCodes = game.usedRewardCodes || {}
+game.codeMessage = game.codeMessage || ""
+
+const REWARD_CODES = {
+  "Voido=evelans": { once:true, reward:{ red:777 } },
+  "20050225": { once:true, reward:{ orange:225 } },
+  "ツインターボ愛好家": { once:true, reward:{ blue:707 } },
+  "明るくいこう！": { once:true, reward:{ green:324 } },
+  "下り坂直滑降": { once:true, reward:{ yellow:444 } }
+}
+
+const LANGUAGE_CODES = {
+  "JP":"JP",
+  "EN":"EN",
+  "KR":"KR"
+}
+
+function applyReward(reward){
+  for(const key of Object.keys(reward)){
+    game.coinWallet[key] = (game.coinWallet[key] || 0) + reward[key]
+  }
+}
+
+function handleCodeSubmit(rawCode){
+  const code = String(rawCode || "").trim()
+  if(!code) return
+
+  if(LANGUAGE_CODES[code]){
+    changeLanguage(LANGUAGE_CODES[code])
+    if(LANGUAGE_CODES[code] === "JP") game.codeMessage = t("langChangedJP")
+    if(LANGUAGE_CODES[code] === "EN") game.codeMessage = t("langChangedEN")
+    if(LANGUAGE_CODES[code] === "KR") game.codeMessage = t("langChangedKR")
+    renderUI()
+    updateCodeBoxMessage()
+    return
+  }
+
+  const rewardData = REWARD_CODES[code]
+
+  if(!rewardData){
+    game.codeMessage = t("codeInvalid")
+    updateCodeBoxMessage()
+    return
+  }
+
+  if(rewardData.once && game.usedRewardCodes[code]){
+    game.codeMessage = t("codeUsed")
+    updateCodeBoxMessage()
+    return
+  }
+
+  applyReward(rewardData.reward)
+
+  if(rewardData.once){
+    game.usedRewardCodes[code] = true
+  }
+
+  game.codeMessage = t("codeReward") + " : " + rewardToText(rewardData.reward)
+  renderUI()
+  updateCodeBoxMessage()
+}
+
+function rewardToText(reward){
+  return Object.entries(reward)
+    .map(([k,v]) => `${getCoinMeta(k).icon}${v.toLocaleString()}`)
+    .join(" / ")
+}
+
+/* =========================================================
+   LANGUAGE CHANGE
+========================================================= */
+
+function getSystemDisplayName(id){
+  if(game.language === "JP"){
+    const map = {
+      single:"単発攻撃",
+      infection:"感染",
+      shotgun:"ショットガン",
+      beam:"ビーム",
+      bounce:"跳弾",
+      orbit:"天動説"
+    }
+    return map[id] || id
+  }
+
+  if(game.language === "EN"){
+    const map = {
+      single:"Single Shot",
+      infection:"Infection",
+      shotgun:"Shotgun",
+      beam:"Beam",
+      bounce:"Bounce",
+      orbit:"Heliocentrism"
+    }
+    return map[id] || id
+  }
+
+  const map = {
+    single:"단발 공격",
+    infection:"감염",
+    shotgun:"샷건",
+    beam:"빔",
+    bounce:"도탄",
+    orbit:"천동설"
+  }
+  return map[id] || id
+}
+
+function getSystemDescription(id){
+  const lv = attackSystems[id]?.level || 0
+
+  if(id === "single") return `${t("descSingle")} Lv${lv}`
+  if(id === "infection") return `${t("descInfection")} Lv${lv}`
+  if(id === "shotgun") return `${t("descShotgun")} Lv${lv}`
+  if(id === "beam") return `${t("descBeam")} Lv${lv}`
+  if(id === "bounce") return `${t("descBounce")} Lv${lv}`
+  if(id === "orbit") return `${t("descOrbit")} Lv${lv}`
+
+  return `${id} Lv${lv}`
+}
+
+function changeLanguage(lang){
+  if(!LANG_PACK[lang]) return
+  game.language = lang
+  applyLanguageToStaticUI()
+  renderUI()
+}
+
+function applyLanguageToStaticUI(){
+  document.title = t("title")
+
+  const panelHeaders = document.querySelectorAll(".panel-header h2")
+  if(panelHeaders[0]) panelHeaders[0].textContent = t("coreWave")
+  if(panelHeaders[1]) panelHeaders[1].textContent = t("battleField")
+  if(panelHeaders[2]) panelHeaders[2].textContent = t("coinSkillExchange")
+
+  const footer = document.querySelector(".footer-note")
+  if(footer) footer.textContent = t("footer")
+
+  const titleBig = document.querySelector(".title-big")
+  if(titleBig) titleBig.textContent = t("title")
+
+  const details = document.querySelectorAll("details summary")
+  if(details[0]) details[0].textContent = t("atkSystem")
+  if(details[1]) details[1].textContent = t("coreUpgrade")
+  if(details[2]) details[2].textContent = t("coreStatus")
+  if(details[3]) details[3].textContent = t("skillSlots")
+  if(details[4]) details[4].textContent = t("skillList")
+  if(details[5]) details[5].textContent = t("exchangeShop")
+
+  if(ui.startWaveBtn) ui.startWaveBtn.textContent = t("startWave")
+  if(ui.nextWaveBtn) ui.nextWaveBtn.textContent = t("nextWave")
+  if(ui.resetBtn) ui.resetBtn.textContent = t("restart")
+
+  refreshCodeBoxTexts()
+}
+
+/* =========================================================
+   CODE BOX UI
+========================================================= */
+
+function createCodeBox(){
+  const box = document.createElement("div")
+  box.id = "codeBox"
+  box.innerHTML = `
+    <div class="code-box-title" id="codeBoxTitle">${t("codeTitle")}</div>
+    <div class="code-box-row">
+      <input id="codeInput" type="text" placeholder="${t("codePlaceholder")}" />
+      <button id="codeSubmitBtn">${t("codeButton")}</button>
+    </div>
+    <div class="code-box-msg small" id="codeBoxMsg"></div>
+  `
+
+  const style = document.createElement("style")
+  style.textContent = `
+    #codeBox{
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      z-index:90;
+      width:340px;
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(12,18,36,.88);
+      box-shadow:0 18px 40px rgba(0,0,0,.35);
+      backdrop-filter:blur(10px);
+    }
+    .code-box-title{
+      font-size:14px;
+      font-weight:800;
+      margin-bottom:10px;
+      color:#eef2ff;
+    }
+    .code-box-row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:8px;
+      align-items:center;
+    }
+    #codeInput{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.18);
+      background:#0c1328;
+      color:#fff;
+      font-weight:700;
+      outline:none;
+    }
+    #codeInput:focus{
+      border-color:#38bdf8;
+      box-shadow:0 0 0 2px rgba(56,189,248,.2);
+    }
+    .code-box-msg{
+      min-height:20px;
+      margin-top:8px;
+    }
+    @media (max-width:1180px){
+      #codeBox{
+        left:16px;
+        right:16px;
+        width:auto;
+      }
+    }
+  `
+  document.head.appendChild(style)
+  document.body.appendChild(box)
+
+  const input = document.getElementById("codeInput")
+  const btn = document.getElementById("codeSubmitBtn")
+
+  btn.addEventListener("click", () => {
+    handleCodeSubmit(input.value)
+    input.value = ""
+  })
+
+  input.addEventListener("keydown", (e) => {
+    if(e.key === "Enter"){
+      handleCodeSubmit(input.value)
+      input.value = ""
+    }
+  })
+
+  refreshCodeBoxTexts()
+  updateCodeBoxMessage()
+}
+
+function refreshCodeBoxTexts(){
+  const title = document.getElementById("codeBoxTitle")
+  const input = document.getElementById("codeInput")
+  const btn = document.getElementById("codeSubmitBtn")
+
+  if(title) title.textContent = t("codeTitle")
+  if(input) input.placeholder = t("codePlaceholder")
+  if(btn) btn.textContent = t("codeButton")
+}
+
+function updateCodeBoxMessage(){
+  const msg = document.getElementById("codeBoxMsg")
+  if(msg) msg.textContent = game.codeMessage || ""
+}
+
+/* =========================================================
+   COIN META NAME OVERRIDE
+========================================================= */
+
+function getCoinLocalizedName(id){
+  if(id === "red") return t("coinRed")
+  if(id === "orange") return t("coinOrange")
+  if(id === "yellow") return t("coinYellow")
+  if(id === "green") return t("coinGreen")
+  if(id === "blue") return t("coinBlue")
+  if(id === "purple") return t("coinPurple")
+  if(id === "brown") return t("coinBrown")
+  return id
+}
+
+/* =========================================================
+   EXCHANGE / RENDER HELPERS
+========================================================= */
+
+function costToTextLocalized(cost){
+  return Object.entries(cost)
+    .map(([k,v]) => `${getCoinMeta(k).icon}${Number(v).toLocaleString()}`)
+    .join(" / ")
+}
+
+function buildLocalizedSkillDesc(skill){
+  const dur = skill.duration ? `${skill.duration}${game.language === "EN" ? "s" : "秒"}` : ""
+  const pct = (v) => `${(v*100).toFixed(0)}%`
+
+  if(game.language === "EN"){
+    switch(skill.type){
+      case "maxAtk": return `${dur} Max ATK +${pct(skill.value)}`
+      case "atkSpeed": return `${dur} ATK Speed +${pct(skill.value)}`
+      case "range": return `${dur} Range +${pct(skill.range || 0)}`
+      case "berserker": return `${dur} Min ATK +${pct(skill.minAtk||0)} / Max ATK +${pct(skill.maxAtk||0)} / Avg ATK +${pct(skill.avgAtk||0)}`
+      case "healShield": return `${dur} Damage taken -${pct(skill.reduction||0)} / Heal ${pct(skill.heal||0)} of missing HP`
+      case "dreamheal": return `${dur} Heal ${pct(skill.heal||0)} of missing HP / ATK Speed +${pct(skill.atkSpeed||0)} / Max ATK +${pct(skill.maxAtk||0)}`
+      case "rsf": return `${dur} Min ATK ${pct(skill.minAtk||0)} / Max ATK +${pct(skill.maxAtk||0)}`
+      case "chronoPlus": return `${dur} Max ATK +${pct(skill.maxAtk||0)} / ATK Speed ${pct(skill.atkSpeed||0)}`
+      case "chronoMinus": return `${dur} Min ATK ${pct(skill.minAtk||0)} / ATK Speed +${pct(skill.atkSpeed||0)}`
+      case "projectileBurst": return `${dur} Projectiles x${skill.projectileMult} / Damage ${pct((skill.damageMul||0)-1)}`
+      case "gambler": return `${dur} ATK Speed ${pct(skill.atkSpeed||0)} / After ${skill.afterDuration}s ATK Speed +${pct(skill.afterAtkSpeed||0)}`
+      case "hack": return `0.3s Invincible / Massive buff / Then ${skill.afterDuration}s severe debuff`
+      default: return dur ? `${dur} Special` : "Special"
+    }
+  }
+
+  if(game.language === "KR"){
+    switch(skill.type){
+      case "maxAtk": return `${dur} 최대 공격력 ${pct(skill.value)} 강화`
+      case "atkSpeed": return `${dur} 공격속도 ${pct(skill.value)} 강화`
+      case "range": return `${dur} 사거리 ${pct(skill.range || 0)} 강화`
+      case "berserker": return `${dur} 최소 공격력 ${pct(skill.minAtk||0)} 강화 / 최대 공격력 ${pct(skill.maxAtk||0)} 강화 / 평균 공격력 ${pct(skill.avgAtk||0)} 강화`
+      case "healShield": return `${dur} 받는 피해 ${pct(skill.reduction||0)} 감소 / 잃은 체력의 ${pct(skill.heal||0)} 회복`
+      case "dreamheal": return `${dur} 잃은 체력의 ${pct(skill.heal||0)} 회복 / 공격속도 ${pct(skill.atkSpeed||0)} 강화 / 최대 공격력 ${pct(skill.maxAtk||0)} 강화`
+      case "rsf": return `${dur} 최소 공격력 ${pct(skill.minAtk||0)} 변화 / 최대 공격력 ${pct(skill.maxAtk||0)} 강화`
+      case "chronoPlus": return `${dur} 최대 공격력 ${pct(skill.maxAtk||0)} 강화 / 공격속도 ${pct(skill.atkSpeed||0)} 변화`
+      case "chronoMinus": return `${dur} 최소 공격력 ${pct(skill.minAtk||0)} 변화 / 공격속도 ${pct(skill.atkSpeed||0)} 강화`
+      case "projectileBurst": return `${dur} 탄 수 ${skill.projectileMult}배 / 피해 ${pct((skill.damageMul||0)-1)} 변화`
+      case "gambler": return `${dur} 공격속도 ${pct(skill.atkSpeed||0)} 변화 / 종료 후 ${skill.afterDuration}초 공격속도 ${pct(skill.afterAtkSpeed||0)} 강화`
+      case "hack": return `0.3초 무적 / 대폭 강화 / 이후 ${skill.afterDuration}초 큰 약화`
+      default: return dur ? `${dur} 특수 효과` : "특수 효과"
+    }
+  }
+
+  return buildStatDesc(skill)
+}
+
+/* =========================================================
+   UI RENDER OVERRIDES
+========================================================= */
+
+function renderCoinsLocalized(){
+  if(!ui.coinGrid) return
+
+  ui.coinGrid.innerHTML = COINS
+    .map(c => `
+      <div class="coin-card">
+        <div class="row">
+          <strong>${c.icon} ${getCoinLocalizedName(c.id)}</strong>
+          <span class="badge mono">${(game.coinWallet[c.id] || 0).toLocaleString()}</span>
+        </div>
+        <div class="small">${t("coinRarity")} ${c.rarity}</div>
+      </div>
+    `)
+    .join("")
+}
+
+function renderSystemPanelLocalized(){
+  const currentId = game.currentSystem || "single"
+  const lv = attackSystems[currentId]?.level || 0
+  const systemName = getSystemDisplayName(currentId)
+  const desc = getSystemDescription(currentId)
+
+  if(ui.hudSystemTitle) ui.hudSystemTitle.textContent = `${systemName} Lv${lv}`
+  if(ui.hudSystemDesc) ui.hudSystemDesc.textContent = desc
+  if(ui.currentSystemName) ui.currentSystemName.textContent = systemName
+  if(ui.systemLevelLabel) ui.systemLevelLabel.textContent = String(lv)
+
+  const nextLevel = lv + 1
+  const levelCostMap = window.COMMON_LEVEL_COSTS || {}
+  const nextCost = levelCostMap[nextLevel]
+
+  if(ui.systemCostBox){
+    const allSystemText = Object.entries(attackSystems)
+      .map(([id,sys]) => `${getSystemDisplayName(id)}${sys.unlocked ? ` Lv${sys.level}` : ` ${t("unlock")}`}`)
+      .join(" / ")
+
+    ui.systemCostBox.innerHTML = `
+      <div class="small">${t("currentSystem")}: ${systemName}</div>
+      <div class="small" style="margin-top:6px">${allSystemText}</div>
+      <div class="small" style="margin-top:8px">${nextCost ? `${t("strengthen")}: ${costToTextLocalized(nextCost)}` : "-"}</div>
+    `
+  }
+
+  if(ui.upgradeSystemBtn){
+    ui.upgradeSystemBtn.textContent = `${systemName} ${t("strengthen")}`
+  }
+}
+
+function renderStatsLocalized(){
+  if(!ui.statMinAtk) return
+  ui.statMinAtk.textContent = `${Math.floor(getMinAtk()).toLocaleString()}`
+  ui.statMaxAtk.textContent = `${Math.floor(getMaxAtk()).toLocaleString()}`
+  ui.statAvgAtk.textContent = `${Math.floor(getAvgAtk()).toLocaleString()}`
+  ui.statAtkSpeed.textContent = `${Number(getAtkSpeed()).toFixed(2)}`
+  ui.statProjectiles.textContent = `${Math.floor(getProjectileCount()).toLocaleString()}`
+  ui.statRange.textContent = `${Math.floor(getRange()).toLocaleString()}`
+}
+
+function renderWaveLocalized(){
+  const waveTextRow = document.querySelectorAll(".stat span")
+  if(waveTextRow[0]) waveTextRow[0].textContent = t("wave")
+  if(waveTextRow[1]) waveTextRow[1].textContent = t("progress")
+  if(waveTextRow[2]) waveTextRow[2].textContent = t("alive")
+  if(waveTextRow[3]) waveTextRow[3].textContent = t("kills")
+  if(waveTextRow[4]) waveTextRow[4].textContent = t("dps")
+
+  if(ui.waveLabel) ui.waveLabel.textContent = `${game.wave}`
+  if(ui.waveProgress) ui.waveProgress.textContent = `${game.totalSpawned} / ${game.totalToSpawn}`
+  if(ui.aliveLabel) ui.aliveLabel.textContent = `${game.enemies.filter(e=>!e.dead).length}`
+  if(ui.killLabel) ui.killLabel.textContent = `${game.killCount}`
+  if(ui.dpsLabel) ui.dpsLabel.textContent = `${Math.floor(game.lastDps || 0).toLocaleString()}`
+
+  if(ui.coreHpText) ui.coreHpText.textContent = `${Math.floor(core.hp).toLocaleString()} / ${Math.floor(core.maxHp).toLocaleString()}`
+  if(ui.coreHpBar) ui.coreHpBar.style.width = `${clamp((core.hp / Math.max(1, core.maxHp)) * 100, 0, 100)}%`
+
+  if(ui.battleState){
+    let stateText = t("waiting")
+    if(game.waveActive) stateText = t("battle")
+    if(game.waveCleared) stateText = t("clear")
+    if(core.hp <= 0) stateText = t("defeat")
+    ui.battleState.textContent = stateText
+  }
+
+  if(ui.autoBtn) ui.autoBtn.textContent = game.autoMode ? t("autoOn") : t("autoOff")
+  if(ui.speedBtn) ui.speedBtn.textContent = game.timeScale === 2 ? t("speed2") : t("speed1")
+
+  if(ui.hudSkills){
+    const names = (game.equippedSkills || [])
+      .filter(Boolean)
+      .map(id => {
+        const s = SKILL_LIBRARY.find(v => v.id === id)
+        return s ? s.name : id
+      })
+    ui.hudSkills.textContent = names.length ? names.join(" / ") : t("notSet")
+  }
+}
+
+function renderSlotsLocalized(){
+  if(!ui.slotList) return
+
+  ui.slotCountLabel.textContent = `${game.skillSlots}`
+
+  ui.slotList.innerHTML = ""
+
+  for(let i=0;i<game.skillSlots;i++){
+    const wrap = document.createElement("div")
+    wrap.className = "skill-slot"
+
+    const selected = game.equippedSkills[i] || ""
+    const options = ['<option value="">-- ' + t("notSet") + ' --</option>']
+      .concat(
+        SKILL_LIBRARY.map(s => {
+          const dup = game.equippedSkills.includes(s.id) && selected !== s.id
+          return `<option value="${s.id}" ${selected===s.id?'selected':''} ${dup?'disabled':''}>${s.name} - ${buildLocalizedSkillDesc(s)}</option>`
+        })
+      )
+      .join("")
+
+    wrap.innerHTML = `
+      <div class="row">
+        <strong>${t("slot")} ${i+1}</strong>
+        <span class="small">${selected ? t("equipped") : t("empty")}</span>
+      </div>
+      <select data-slot-index="${i}">${options}</select>
+    `
+    ui.slotList.appendChild(wrap)
+  }
+
+  const next = SLOT_PROGRESS[game.slotProgressIndex]
+  if(!next){
+    ui.slotCostBox.textContent = t("slotUpgradeMax")
+    ui.unlockSlotBtn.disabled = true
+  }else{
+    const coin = getCoinMeta(next.coin)
+    ui.slotCostBox.textContent = next.type === "slot"
+      ? `${t("nextSkillSlot")}: ${coin.icon}${next.cost.toLocaleString()}`
+      : `${t("nextSkillBonus")}: ${coin.icon}${next.cost.toLocaleString()}`
+    ui.unlockSlotBtn.disabled = (game.coinWallet[next.coin] || 0) < next.cost
+  }
+}
+
+function renderSkillsLocalized(){
+  if(!ui.skillList) return
+  ui.skillList.innerHTML = SKILL_LIBRARY.map(skill => `
+    <div class="skill-item">
+      <div class="row"><strong>${skill.name}</strong></div>
+      <div class="small">${buildLocalizedSkillDesc(skill)}</div>
+    </div>
+  `).join("")
+}
+
+function renderExchangeLocalized(){
+  if(!ui.exchangeList) return
+
+  const systemRows = Object.entries(attackSystems).map(([id,sys]) => {
+    const actionLabel = sys.unlocked
+      ? (id === game.currentSystem ? t("showing") : t("show"))
+      : t("unlock")
+
+    const levelCostMap = window.COMMON_LEVEL_COSTS || {}
+    const unlockText = !sys.unlocked && sys.level === 0 && levelCostMap[1]
+      ? costToTextLocalized(levelCostMap[1])
+      : ""
+
+    return `
+      <div class="shop-row">
+        <div>
+          <div><strong>${getSystemDisplayName(id)}</strong></div>
+          <div class="small">${sys.unlocked ? `Lv${sys.level}` : `${t("unlock")} ${unlockText}`}</div>
+        </div>
+        <div class="row">
+          <button data-system-action="${id}" ${sys.unlocked && id === game.currentSystem ? "disabled" : ""}>${actionLabel}</button>
+        </div>
+      </div>
+    `
+  }).join("")
+
+  const exchangeRows = FULL_EXCHANGES.map((ex, idx) => {
+    const from = getCoinMeta(ex.from)
+    const to = getCoinMeta(ex.to)
+    const can = (game.coinWallet[ex.from] || 0) >= ex.cost
+
+    return `
+      <div class="shop-row">
+        <div>
+          <div><strong>${from.icon}${Number(ex.cost).toLocaleString()} → ${to.icon}${Number(ex.gain).toLocaleString()}</strong></div>
+          <div class="small">${getCoinLocalizedName(ex.from)} → ${getCoinLocalizedName(ex.to)}</div>
+        </div>
+        <div class="row">
+          <button data-ex="${idx}" ${can ? "" : "disabled"}>${t("exchange")}</button>
+        </div>
+      </div>
+    `
+  }).join("")
+
+  ui.exchangeList.innerHTML = `
+    <div class="small">${t("atkSystem")}</div>
+    ${systemRows}
+    <div class="small" style="margin-top:8px">${t("exchangeShop")}</div>
+    ${exchangeRows}
+  `
+}
+
+function renderCoreUpgradeLocalized(){
+  const statLabels = document.querySelectorAll('.upgrade-card strong')
+  if(statLabels[0]) statLabels[0].textContent = t("minAtk")
+  if(statLabels[1]) statLabels[1].textContent = t("maxAtk")
+  if(statLabels[2]) statLabels[2].textContent = t("atkSpeed")
+  if(statLabels[3]) statLabels[3].textContent = t("projectileCount")
+  if(statLabels[4]) statLabels[4].textContent = t("range")
+
+  const coreStatRows = document.querySelectorAll('details:nth-of-type(3) .stat span')
+  if(coreStatRows[0]) coreStatRows[0].textContent = t("minAtk")
+  if(coreStatRows[1]) coreStatRows[1].textContent = t("maxAtk")
+  if(coreStatRows[2]) coreStatRows[2].textContent = t("avgAtk")
+  if(coreStatRows[3]) coreStatRows[3].textContent = t("atkSpeed")
+  if(coreStatRows[4]) coreStatRows[4].textContent = t("projectileCount")
+  if(coreStatRows[5]) coreStatRows[5].textContent = t("range")
+
+  const hpLabel = document.querySelector('.panel-body .small')
+  if(hpLabel && hpLabel.textContent.includes("HP")){
+    hpLabel.textContent = t("coreHp")
+  }
+}
+
+function renderLocalizedUI(){
+  applyLanguageToStaticUI()
+  renderCoinsLocalized()
+  renderSystemPanelLocalized()
+  renderStatsLocalized()
+  renderWaveLocalized()
+  renderSlotsLocalized()
+  renderSkillsLocalized()
+  renderExchangeLocalized()
+  renderCoreUpgradeLocalized()
+  updateCodeBoxMessage()
+}
+
+/* =========================================================
+   EXCHANGE ACTION
+========================================================= */
+
+function handleExchange(index){
+  const ex = FULL_EXCHANGES[index]
+  if(!ex) return
+  if((game.coinWallet[ex.from] || 0) < ex.cost) return
+
+  game.coinWallet[ex.from] -= ex.cost
+  game.coinWallet[ex.to] = (game.coinWallet[ex.to] || 0) + ex.gain
+
+  renderUI()
+}
+
+/* =========================================================
+   SYSTEM SWITCH ACTION
+========================================================= */
+
+function handleSystemAction(id){
+  const sys = attackSystems[id]
+  if(!sys) return
+
+  if(!sys.unlocked){
+    sys.unlocked = true
+    if(sys.level <= 0) sys.level = 1
+  }
+
+  game.currentSystem = id
+  renderUI()
+}
+
+/* =========================================================
+   OVERRIDE renderUI
+========================================================= */
+
+const __baseRenderUI = (typeof renderUI === "function") ? renderUI : null
+renderUI = function(){
+  renderLocalizedUI()
+}
+
+/* =========================================================
+   OVERRIDE BIND UI EXTENSION
+========================================================= */
+
+const __baseBindUI = (typeof bindUI === "function") ? bindUI : null
+bindUI = function(){
+  if(__baseBindUI) __baseBindUI()
+
+  if(ui.exchangeList && !ui.exchangeList.__part4Bound){
+    ui.exchangeList.__part4Bound = true
+
+    ui.exchangeList.addEventListener("click", (e) => {
+      const target = e.target
+      if(!(target instanceof HTMLButtonElement)) return
+
+      if(target.dataset.ex != null && target.dataset.ex !== ""){
+        handleExchange(Number(target.dataset.ex))
+        return
+      }
+
+      if(target.dataset.systemAction){
+        handleSystemAction(target.dataset.systemAction)
+      }
+    })
+  }
+}
+
+/* =========================================================
+   INIT PART 4
+========================================================= */
+
+applyLanguageToStaticUI()
+createCodeBox()
+renderUI()
+    /* =========================================================
+   PART 5 / 5
+   FINAL LOOP / DRAW / INIT
+========================================================= */
+
+/* =========================================================
+   DRAW CORE
+========================================================= */
+
+function drawCore(){
+
+ctx.fillStyle="#38bdf8"
+
+ctx.beginPath()
+ctx.arc(core.x,core.y,18,0,Math.PI*2)
+ctx.fill()
+
+}
+
+/* =========================================================
+   DRAW ENEMIES
+========================================================= */
+
+function drawEnemies(){
+
+for(const e of game.enemies){
+
+if(e.dead) continue
+
+ctx.fillStyle="#ef4444"
+
+ctx.beginPath()
+ctx.arc(e.x,e.y,12,0,Math.PI*2)
+ctx.fill()
+
+if(e.infected){
+
+ctx.strokeStyle="#22ff88"
+
+ctx.beginPath()
+ctx.arc(e.x,e.y,16,0,Math.PI*2)
+ctx.stroke()
+
+}
+
+}
+
+}
+
+/* =========================================================
+   MAIN UPDATE
+========================================================= */
+
+function updateGame(){
+
+updateWave()
+
+updateEnemies()
+
+updateAttackSystems()
+
+}
+
+/* =========================================================
+   MAIN DRAW
+========================================================= */
+
+function drawGame(){
+
+ctx.clearRect(0,0,canvas.width,canvas.height)
+
+drawCore()
+
+drawEnemies()
+
+drawProjectiles()
+
+drawBeams()
+
+drawDamageZones()
+
+drawOrbitSystem()
+
+}
+
+/* =========================================================
+   GAME LOOP
+========================================================= */
+
+let lastTime=0
+
+function gameLoop(t){
+
+let delta=(t-lastTime)/16.666
+
+lastTime=t
+
+for(let i=0;i<game.timeScale;i++){
+
+updateGame()
+
+}
+
+drawGame()
+
+requestAnimationFrame(gameLoop)
+
+}
+
+/* =========================================================
+   RESTART SYSTEM
+========================================================= */
+
+function restartGame(){
+
+game.wave=1
+
+game.enemies=[]
+
+game.projectiles=[]
+
+game.beams=[]
+
+game.damageZones=[]
+
+game.orbits=[]
+
+game.stats.infectedTotal=0
+
+core.hp=core.maxHp
+
+game.killCount=0
+
+game.totalSpawned=0
+
+game.waveActive=false
+
+}
+
+/* =========================================================
+   AUTO MODE
+========================================================= */
+
+setInterval(()=>{
+
+if(!game.autoMode) return
+
+if(!game.waveActive){
+
+startWave()
+
+}
+
+if(core.hp<=0){
+
+restartGame()
+
+}
+
+},1000)
+
+/* =========================================================
+   BUTTON BINDS
+========================================================= */
+
+if(ui.startWaveBtn){
+
+ui.startWaveBtn.onclick=()=>{
+
+startWave()
+
+}
+
+}
+
+if(ui.autoBtn){
+
+ui.autoBtn.onclick=()=>{
+
+game.autoMode=!game.autoMode
+
+renderUI()
+
+}
+
+}
+
+if(ui.speedBtn){
+
+ui.speedBtn.onclick=()=>{
+
+game.timeScale=game.timeScale===1?2:1
+
+renderUI()
+
+}
+
+}
+
+if(ui.resetBtn){
+
+ui.resetBtn.onclick=()=>{
+
+restartGame()
+
+}
+
+}
+
+/* =========================================================
+   INITIALIZE
+========================================================= */
+
+function initGame(){
+
+createCodeBox()
+
+applyLanguageToStaticUI()
+
+renderUI()
+
+requestAnimationFrame(gameLoop)
+
+}
+
+/* =========================================================
+   START
+========================================================= */
+
+initGame()
+
+/* =========================================================
+   SIMPLE TESTS
+========================================================= */
+
+function runSelfTests(){
+
+console.log("Running basic tests...")
+
+console.assert(typeof updateAttackSystems==="function","Attack system missing")
+
+console.assert(typeof spawnEnemyType==="function","Enemy spawn missing")
+
+console.assert(typeof renderUI==="function","UI render missing")
+
+console.log("Tests passed")
+
+}
+
+runSelfTests()
+
   </script>
 </body>
 </html>
