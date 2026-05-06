@@ -110,7 +110,7 @@ function update(delta) {
   // ===== 攻撃速度 =====
   let AS = Number(asInput.value) || 1;
   let ASp = Number(asPInput.value) || 0;
-  AS *= (1 + ASp / 100);
+  AS *= (1 + ASp / 10);
 
   const interval = 1 / AS;
 
