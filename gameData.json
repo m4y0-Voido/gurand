@@ -76,7 +76,7 @@ function update() {
   const SPD = Number(spdInput.value) || 0;
   
   // SPD → 実際の移動速度に変換（調整ポイント）
-  const speed = SPD * 0.1;
+  const speed = SPD * 0.007;
 
   if (keys["w"]) player.y -= speed;
   if (keys["s"]) player.y += speed;
