@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>Speed & Range Preview</title>
+<title>Combat Preview</title>
 <style>
   body {
     margin: 0;
@@ -20,7 +20,7 @@
     border-radius: 8px;
   }
   input {
-    width: 80px;
+    width: 70px;
   }
 </style>
 </head>
@@ -28,14 +28,21 @@
 
 <div id="ui">
   <div>
-    SPD（移動速度）:
-    <input type="number" id="spd" value="300">
+    SPD: <input type="number" id="spd" value="300">
+    % <input type="number" id="spdP" value="0">
   </div>
   <div>
-    AE（攻撃範囲）:
-    <input type="number" id="ae" value="300">
+    AE: <input type="number" id="ae" value="300">
+    % <input type="number" id="aeP" value="0">
   </div>
-  <p>WASDで移動 / クリックで位置変更</p>
+  <div>
+    AS（攻撃/秒）: <input type="number" step="0.1" id="as" value="1.0">
+    % <input type="number" id="asP" value="0">
+  </div>
+  <div>
+    攻撃角度（度）: <input type="number" id="angle" value="90">
+  </div>
+  <p>WASD移動 / クリック移動</p>
 </div>
 
 <canvas id="game"></canvas>
@@ -56,11 +63,19 @@ let player = {
   y: canvas.height / 2
 };
 
-// 入力取得
+// 入力
 const spdInput = document.getElementById("spd");
-const aeInput = document.getElementById("ae");
+const spdPInput = document.getElementById("spdP");
 
-// キー入力
+const aeInput = document.getElementById("ae");
+const aePInput = document.getElementById("aeP");
+
+const asInput = document.getElementById("as");
+const asPInput = document.getElementById("asP");
+
+const angleInput = document.getElementById("angle");
+
+// キー
 const keys = {};
 window.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
 window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
@@ -71,34 +86,65 @@ canvas.addEventListener("click", e => {
   player.y = e.clientY;
 });
 
-// 更新
-function update() {
-  const SPD = Number(spdInput.value) || 0;
-  
-  // SPD → 実際の移動速度に変換（調整ポイント）
+// 攻撃管理
+let attackTimer = 0;
+let attackProgress = 0;
+let attacking = false;
+
+let lastTime = 0;
+
+function update(delta) {
+
+  // ===== SPD計算 =====
+  let SPD = Number(spdInput.value) || 0;
+  let SPDp = Number(spdPInput.value) || 0;
+  SPD *= (1 + SPDp / 100);
+
   const speed = SPD * 0.008;
 
   if (keys["w"]) player.y -= speed;
   if (keys["s"]) player.y += speed;
   if (keys["a"]) player.x -= speed;
   if (keys["d"]) player.x += speed;
+
+  // ===== 攻撃速度 =====
+  let AS = Number(asInput.value) || 1;
+  let ASp = Number(asPInput.value) || 0;
+  AS *= (1 + ASp / 100);
+
+  const interval = 1 / AS;
+
+  attackTimer += delta;
+
+  if (attackTimer >= interval) {
+    attackTimer = 0;
+    attacking = true;
+    attackProgress = 0;
+  }
+
+  if (attacking) {
+    attackProgress += delta * 4; // モーション速度
+
+    if (attackProgress >= 1) {
+      attacking = false;
+    }
+  }
 }
 
 // 描画
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const AE = Number(aeInput.value) || 0;
+  // ===== AE計算 =====
+  let AE = Number(aeInput.value) || 0;
+  let AEp = Number(aePInput.value) || 0;
+  AE *= (1 + AEp / 100);
 
-  // 攻撃範囲
+  // 範囲表示
   ctx.beginPath();
   ctx.arc(player.x, player.y, AE, 0, Math.PI * 2);
   ctx.strokeStyle = "cyan";
-  ctx.lineWidth = 2;
   ctx.stroke();
-
-  ctx.fillStyle = "cyan";
-  ctx.fillText("AE: " + AE, player.x + AE - 60, player.y);
 
   // プレイヤー
   ctx.beginPath();
@@ -106,18 +152,42 @@ function draw() {
   ctx.fillStyle = "white";
   ctx.fill();
 
+  // ===== 剣モーション =====
+  if (attacking) {
+    let angle = Number(angleInput.value) || 90;
+    let rad = angle * Math.PI / 180;
+
+    // 振り進行
+    let start = -rad/2;
+    let end = start + rad * attackProgress;
+
+    ctx.beginPath();
+    ctx.moveTo(player.x, player.y);
+    ctx.arc(player.x, player.y, AE, start, end);
+    ctx.closePath();
+
+    ctx.fillStyle = "rgba(255, 100, 100, 0.4)";
+    ctx.fill();
+  }
+
+  // UI表示
   ctx.fillStyle = "white";
-  ctx.fillText("SPD: " + spdInput.value, 20, canvas.height - 20);
+  ctx.fillText("SPD: " + spdInput.value, 20, canvas.height - 60);
+  ctx.fillText("AS: " + asInput.value, 20, canvas.height - 40);
+  ctx.fillText("AE: " + aeInput.value, 20, canvas.height - 20);
 }
 
 // ループ
-function loop() {
-  update();
+function loop(time) {
+  const delta = (time - lastTime) / 1000;
+  lastTime = time;
+
+  update(delta);
   draw();
   requestAnimationFrame(loop);
 }
 
-loop();
+loop(0);
 </script>
 
 </body>
