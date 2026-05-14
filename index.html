@@ -1,193 +1,450 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>Combat Preview</title>
-<style>
-  body {
-    margin: 0;
-    background: #111;
-    color: white;
-    font-family: sans-serif;
-    overflow: hidden;
-  }
-  #ui {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    background: rgba(0,0,0,0.6);
-    padding: 10px;
-    border-radius: 8px;
-  }
-  input {
-    width: 70px;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>パッシブ・ヒーローRPG</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #0f111a; color: #e2e8f0; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .game-container { width: 100%; max-width: 800px; background: #1a1c2e; padding: 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); border: 1px solid #2d3142; }
+        h2, h3 { text-align: center; color: #4ade80; margin-top: 0; text-transform: uppercase; letter-spacing: 1px; }
+        .screen { display: none; }
+        .active { display: block; }
+        
+        /* ボタン */
+        button { background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.2s; }
+        button:hover { background: #2563eb; transform: translateY(-1px); }
+        button:disabled { background: #4b5563; cursor: not-allowed; transform: none; }
+        .btn-danger { background: #ef4444; }
+        .btn-danger:hover { background: #dc2626; }
+
+        /* 特典パネル */
+        .bonus-panel { background: #2d3748; border-left: 4px solid #ecc94b; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; }
+        
+        /* パッシブ・育成画面 */
+        .status-board { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .status-card { background: #22253f; padding: 15px; border-radius: 10px; border: 1px solid #3b4260; text-align: center; }
+        .stat-val { font-size: 20px; font-weight: bold; color: #f3f4f6; margin: 5px 0; }
+        .exp-info { font-size: 18px; text-align: center; margin-bottom: 25px; color: #38bdf8; background: #1e293b; padding: 10px; border-radius: 8px; }
+
+        /* 階層選択 */
+        .stage-selector { background: #1e293b; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
+        .stage-btn-group { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 10px; }
+        .stage-num { font-size: 24px; font-weight: bold; color: #f43f5e; min-width: 100px; }
+
+        /* バトル */
+        .battle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .unit-box { background: #22253f; padding: 20px; border-radius: 12px; border: 1px solid #3b4260; text-align: center; }
+        .hp-bar-container { background: #475569; border-radius: 10px; height: 20px; overflow: hidden; margin-top: 10px; border: 1px solid #1e293b; }
+        .hp-bar { background: #10b981; height: 100%; width: 100%; transition: width 0.15s ease-out; }
+        .enemy-hp { background: #f43f5e; }
+        .log-box { background: #090d16; border: 1px solid #2d3142; height: 160px; overflow-y: auto; padding: 12px; font-size: 14px; border-radius: 8px; margin-bottom: 20px; font-family: monospace; }
+    </style>
 </head>
 <body>
 
-<div id="ui">
-  <div>
-    SPD: <input type="number" id="spd" value="300">
-    % <input type="number" id="spdP" value="0">
-  </div>
-  <div>
-    AE: <input type="number" id="ae" value="300">
-    % <input type="number" id="aeP" value="0">
-  </div>
-  <div>
-    AS（攻撃/秒）: <input type="number" step="0.1" id="as" value="1.0">
-    % <input type="number" id="asP" value="0">
-  </div>
-  <div>
-    攻撃角度（度）: <input type="number" id="angle" value="90">
-  </div>
-  <p>WASD移動 / クリック移動</p>
+<div class="game-container">
+    <!-- 1. 拠点・パッシブ育成画面 -->
+    <div id="home-screen" class="screen active">
+        <h2>🛡️ パッシブ・ヒーローベース</h2>
+        
+        <!-- ログイン＆オフライン報酬通知 -->
+        <div id="bonus-notice" class="bonus-panel" style="display:none;"></div>
+
+        <div class="exp-info">
+            ✨ 総蓄積EXP: <span id="player-exp">0</span><br>
+            <span style="font-size: 12px; color: #94a3b8;">（上の階層をクリアするほど桁違いのEXPと永続ボーナスが入ります）</span>
+        </div>
+        
+        <h3 style="text-align:left;">🧬 パッシブ・ステータス（永続強化）</h3>
+        <div class="status-board">
+            <div class="status-card">
+                <div>最大HP</div>
+                <div class="stat-val" id="stat-hp">100</div>
+                <button onclick="upgradeStat('hp')" style="font-size:12px;">強化 (コスト: <span id="cost-hp">15</span>)</button>
+            </div>
+            <div class="status-card">
+                <div>平均攻撃力</div>
+                <div class="stat-val" id="stat-atk">15</div>
+                <div style="font-size:11px; color:#94a3b8; margin-bottom:5px;">(振幅: <span id="stat-range">9〜21</span>)</div>
+                <button onclick="upgradeStat('atk')" style="font-size:12px;">強化 (コスト: <span id="cost-atk">10</span>)</button>
+            </div>
+            <div class="status-card">
+                <div>パッシブ防御力</div>
+                <div class="stat-val" id="stat-def">5</div>
+                <button onclick="upgradeStat('def')" style="font-size:12px;">強化 (コスト: <span id="cost-def">10</span>)</button>
+            </div>
+            <div class="status-card">
+                <div>自動リジェネ (毎秒)</div>
+                <div class="stat-val" id="stat-regen">2</div>
+                <button onclick="upgradeStat('regen')" style="font-size:12px;">強化 (コスト: <span id="cost-regen">12</span>)</button>
+            </div>
+        </div>
+
+        <!-- 階層選択 -->
+        <div class="stage-selector">
+            <h3 style="margin:0; font-size:16px;">挑戦する階層（ステージ）を選択</h3>
+            <div class="stage-btn-group">
+                <button onclick="changeStage(-1)">◀ 前の階</button>
+                <div class="stage-num"><span id="select-stage">1</span> 階</div>
+                <button onclick="changeStage(1)">次の階 ▶</button>
+            </div>
+            <div style="font-size:12px; color:#fbbf24; margin-top:8px;" id="stage-reward-preview">クリア時予測獲得EXP: 15</div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <button onclick="startBattle()" style="font-size: 20px; padding: 14px 50px; background: #10b981;">戦闘開始</button>
+        </div>
+    </div>
+
+    <!-- 2. バトル画面 -->
+    <div id="battle-screen" class="screen">
+        <h2 id="battle-title">階層 1 戦闘中</h2>
+        
+        <div class="battle-grid">
+            <!-- ヒーロー -->
+            <div class="unit-box">
+                <div style="font-weight:bold; color:#38bdf8; font-size:18px;">ヒーロー</div>
+                <div style="margin-top:10px; font-size:15px;">HP: <span id="battle-p-hp">100</span> / <span id="battle-p-maxhp">100</span></div>
+                <div class="hp-bar-container"><div id="p-hp-bar" class="hp-bar"></div></div>
+                <div style="font-size:12px; color:#94a3b8; margin-top:5px;">平均攻撃力: <span id="bp-atk">15</span></div>
+            </div>
+            <!-- モンスター -->
+            <div class="unit-box">
+                <div id="enemy-name" style="font-weight:bold; color:#f43f5e; font-size:18px;">階層の守護者</div>
+                <div style="margin-top:10px; font-size:15px;">HP: <span id="battle-e-hp">50</span> / <span id="battle-e-maxhp">50</span></div>
+                <div class="hp-bar-container"><div id="e-hp-bar" class="hp-bar enemy-hp"></div></div>
+                <div style="font-size:12px; color:#94a3b8; margin-top:5px;">敵攻撃力: <span id="be-atk">10</span></div>
+            </div>
+        </div>
+
+        <!-- リアルタイムログ -->
+        <div class="log-box" id="battle-log"></div>
+
+        <div style="text-align: center; display:flex; gap:10px; justify-content:center;">
+            <button id="auto-turn-btn" onclick="toggleAutoBattle()" style="background:#ecc94b; color:#111;">オート戦闘開始</button>
+            <button onclick="escapeBattle()" class="btn-danger">拠点へ撤退</button>
+        </div>
+    </div>
 </div>
 
-<canvas id="game"></canvas>
-
 <script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+    // --- ゲームの基本データ構造 ---
+    let player = {
+        exp: 0,
+        currentStage: 1,
+        maxStageReached: 1,
+        // ステータスレベル
+        lvlHp: 0,
+        lvlAtk: 0,
+        lvlDef: 0,
+        lvlRegen: 0,
+        // ログイン管理
+        lastLoginDate: "", 
+        lastLogoutTime: 0,
+        loginStreak: 0
+    };
 
-function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-window.addEventListener("resize", resize);
-resize();
-
-let player = {
-  x: canvas.width / 2,
-  y: canvas.height / 2
-};
-
-// 入力
-const spdInput = document.getElementById("spd");
-const spdPInput = document.getElementById("spdP");
-
-const aeInput = document.getElementById("ae");
-const aePInput = document.getElementById("aeP");
-
-const asInput = document.getElementById("as");
-const asPInput = document.getElementById("asP");
-
-const angleInput = document.getElementById("angle");
-
-// キー
-const keys = {};
-window.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
-window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
-
-// クリック移動
-canvas.addEventListener("click", e => {
-  player.x = e.clientX;
-  player.y = e.clientY;
-});
-
-// 攻撃管理
-let attackTimer = 0;
-let attackProgress = 0;
-let attacking = false;
-
-let lastTime = 0;
-
-function update(delta) {
-
-  // ===== SPD計算 =====
-  let SPD = Number(spdInput.value) || 0;
-  let SPDp = Number(spdPInput.value) || 0;
-  SPD *= (1 + SPDp / 100);
-
-  const speed = SPD * 0.008;
-
-  if (keys["w"]) player.y -= speed;
-  if (keys["s"]) player.y += speed;
-  if (keys["a"]) player.x -= speed;
-  if (keys["d"]) player.x += speed;
-
-  // ===== 攻撃速度 =====
-  let AS = Number(asInput.value) || 1;
-  let ASp = Number(asPInput.value) || 0;
-  AS *= (1 + ASp / 10);
-
-  const interval = 1 / AS;
-
-  attackTimer += delta;
-
-  if (attackTimer >= interval) {
-    attackTimer = 0;
-    attacking = true;
-    attackProgress = 0;
-  }
-
-  if (attacking) {
-    attackProgress += delta * 4; // モーション速度
-
-    if (attackProgress >= 1) {
-      attacking = false;
+    // 計算後の実ステータス取得
+    function getPlayerStats() {
+        return {
+            maxHp: 100 + (player.lvlHp * 25),
+            atk: 15 + (player.lvlAtk * 4), // これが平均攻撃力
+            def: 5 + (player.lvlDef * 2),
+            regen: 2 + (player.lvlRegen * 2)
+        };
     }
-  }
-}
 
-// 描画
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // 各ステータスの強化コスト計算公式
+    function getUpgradeCost(stat, lvl) {
+        if (stat === 'hp') return Math.floor(15 * Math.pow(1.15, lvl));
+        if (stat === 'atk') return Math.floor(10 * Math.pow(1.15, lvl));
+        if (stat === 'def') return Math.floor(10 * Math.pow(1.15, lvl));
+        if (stat === 'regen') return Math.floor(12 * Math.pow(1.2, lvl));
+        return 10;
+    }
 
-  // ===== AE計算 =====
-  let AE = Number(aeInput.value) || 0;
-  let AEp = Number(aePInput.value) || 0;
-  AE *= (1 + AEp / 100);
+    let enemy = { hp: 0, maxHp: 0, atk: 0, def: 0, expReward: 0 };
+    let battleInterval = null;
+    let isAutoPlaying = false;
+    let bPlayerHp = 0;
 
-  // 範囲表示
-  ctx.beginPath();
-  ctx.arc(player.x, player.y, AE, 0, Math.PI * 2);
-  ctx.strokeStyle = "cyan";
-  ctx.stroke();
+    // --- ログインボーナス ＆ オフライン報酬システム ---
+    function checkLoginAndOfflineRewards() {
+        const now = new Date();
+        const todayStr = now.toDateString(); // "Thu May 14 2026" 等
+        const nowMs = now.getTime();
 
-  // プレイヤー
-  ctx.beginPath();
-  ctx.arc(player.x, player.y, 10, 0, Math.PI * 2);
-  ctx.fillStyle = "white";
-  ctx.fill();
+        let noticeHtml = "";
 
-  // ===== 剣モーション =====
-  if (attacking) {
-    let angle = Number(angleInput.value) || 90;
-    let rad = angle * Math.PI / 180;
+        // 1. ログインボーナス判定
+        if (player.lastLoginDate !== todayStr) {
+            // 日付が変わった
+            if (player.lastLoginDate !== "") {
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                if (player.lastLoginDate === yesterday.toDateString()) {
+                    player.loginStreak += 1; // 連続ログイン
+                } else {
+                    player.loginStreak = 1; // 途切れた
+                }
+            } else {
+                player.loginStreak = 1; // 初回
+            }
+            
+            // 連続日数に応じたボーナス支給
+            let loginBonus = 20 * player.loginStreak * player.maxStageReached; 
+            player.exp += loginBonus;
+            player.lastLoginDate = todayStr;
+            noticeHtml += `📅 <b>ログインボーナス獲得！</b><br>連続ログイン <b>${player.loginStreak}</b> 日目！<br>報酬として <b>+${loginBonus} EXP</b> が支給されました。<br><br>`;
+        }
 
-    // 振り進行
-    let start = -rad/5;
-    let end = start + rad * attackProgress;
+        // 2. オフライン報酬判定 (最大8時間まで蓄積)
+        if (player.lastLogoutTime > 0) {
+            let offlineMs = nowMs - player.lastLogoutTime;
+            if (offlineMs < 0) offlineMs = 0;
+            
+            let offlineSec = Math.floor(offlineMs / 1000);
+            if (offlineSec > 28800) offlineSec = 28800; // 最大8時間制限
 
-    ctx.beginPath();
-    ctx.moveTo(player.x, player.y);
-    ctx.arc(player.x, player.y, AE, start, end);
-    ctx.closePath();
+            if (offlineSec > 10) { // 10秒以上離れていた場合
+                // 1秒あたり、最高到達階層に応じた微小なパッシブEXP
+                let expPerSec = 0.1 * player.maxStageReached;
+                let offlineExp = Math.floor(offlineSec * expPerSec);
+                
+                if (offlineExp > 0) {
+                    player.exp += offlineExp;
+                    noticeHtml += `⏳ <b>オフライン放置報酬！</b><br>離れていた時間: <b>${Math.floor(offlineSec/60)}分 ${offlineSec%60}秒</b><br>自動パッシブ育成により <b>+${offlineExp} EXP</b> を獲得しました！`;
+                }
+            }
+        }
 
-    ctx.fillStyle = "rgba(255, 100, 100, 0.4)";
-    ctx.fill();
-  }
+        // 通知があれば表示
+        if (noticeHtml !== "") {
+            const noticeBox = document.getElementById('bonus-notice');
+            noticeBox.innerHTML = noticeHtml;
+            noticeBox.style.display = "block";
+        }
 
-  // UI表示
-  ctx.fillStyle = "white";
-  ctx.fillText("SPD: " + spdInput.value, 20, canvas.height - 60);
-  ctx.fillText("AS: " + asInput.value, 20, canvas.height - 40);
-  ctx.fillText("AE: " + aeInput.value, 20, canvas.height - 20);
-}
+        // ログアウト追跡用タイマー開始 (10秒ごとに現在時刻をLocalに刻む)
+        setInterval(() => {
+            player.lastLogoutTime = new Date().getTime();
+            saveGame();
+        }, 5000);
+    }
 
-// ループ
-function loop(time) {
-  const delta = (time - lastTime) / 1000;
-  lastTime = time;
+    // --- セーブ ＆ ロード ---
+    function saveGame() {
+        localStorage.setItem("passive_hero_save", JSON.stringify(player));
+    }
 
-  update(delta);
-  draw();
-  requestAnimationFrame(loop);
-}
+    function loadGame() {
+        let saved = localStorage.getItem("passive_hero_save");
+        if (saved) {
+            try {
+                let parsed = JSON.parse(saved);
+                // データの引き継ぎ
+                if(parsed.exp !== undefined) player.exp = parsed.exp;
+                if(parsed.currentStage !== undefined) player.currentStage = parsed.currentStage;
+                if(parsed.maxStageReached !== undefined) player.maxStageReached = parsed.maxStageReached;
+                if(parsed.lvlHp !== undefined) player.lvlHp = parsed.lvlHp;
+                if(parsed.lvlAtk !== undefined) player.lvlAtk = parsed.lvlAtk;
+                if(parsed.lvlDef !== undefined) player.lvlDef = parsed.lvlDef;
+                if(parsed.lvlRegen !== undefined) player.lvlRegen = parsed.lvlRegen;
+                if(parsed.lastLoginDate !== undefined) player.lastLoginDate = parsed.lastLoginDate;
+                if(parsed.lastLogoutTime !== undefined) player.lastLogoutTime = parsed.lastLogoutTime;
+                if(parsed.loginStreak !== undefined) player.loginStreak = parsed.loginStreak;
+            } catch(e) { console.error("データ読み込み失敗", e); }
+        }
+    }
 
-loop(0);
+    // --- UI更新 (拠点画面) ---
+    function updateHomeUI() {
+        const stats = getPlayerStats();
+        document.getElementById('player-exp').innerText = Math.floor(player.exp);
+        document.getElementById('select-stage').innerText = player.currentStage;
+
+        document.getElementById('stat-hp').innerText = stats.maxHp;
+        document.getElementById('stat-atk').innerText = stats.atk;
+        document.getElementById('stat-range').innerText = `${Math.floor(stats.atk * 0.6)} 〜 ${Math.floor(stats.atk * 1.4)}`;
+        document.getElementById('stat-def').innerText = stats.def;
+        document.getElementById('stat-regen').innerText = stats.regen;
+
+        // コスト表示更新
+        document.getElementById('cost-hp').innerText = getUpgradeCost('hp', player.lvlHp);
+        document.getElementById('cost-atk').innerText = getUpgradeCost('atk', player.lvlAtk);
+        document.getElementById('cost-def').innerText = getUpgradeCost('def', player.lvlDef);
+        document.getElementById('cost-regen').innerText = getUpgradeCost('regen', player.lvlRegen);
+
+        // 階層報酬プレビュー (指数関数的に報酬が跳ね上がるロジック)
+        // 1階なら15, 5階なら300, 10階なら5000...といった圧倒的なインフレ
+        let previewExp = Math.floor(10 * Math.pow(1.8, player.currentStage));
+        document.getElementById('stage-reward-preview').innerText = `階層クリア報酬予測: +${previewExp} EXP (永続強化ボーナス含む)`;
+    }
+
+    // --- 階層の変更 ---
+    function changeStage(dir) {
+        player.currentStage += dir;
+        if (player.currentStage < 1) player.currentStage = 1;
+        // 未クリアの先の階層へも進めますが、あまりに高いと一瞬で全滅します
+        updateHomeUI();
+    }
+
+    // --- ステータス強化 ---
+    function upgradeStat(stat) {
+        let currentLvl = 0;
+        if(stat === 'hp') currentLvl = player.lvlHp;
+        if(stat === 'atk') currentLvl = player.lvlAtk;
+        if(stat === 'def') currentLvl = player.lvlDef;
+        if(stat === 'regen') currentLvl = player.lvlRegen;
+
+        let cost = getUpgradeCost(stat, currentLvl);
+
+        if (player.exp >= cost) {
+            player.exp -= cost;
+            if(stat === 'hp') player.lvlHp++;
+            if(stat === 'atk') player.lvlAtk++;
+            if(stat === 'def') player.lvlDef++;
+            if(stat === 'regen') player.lvlRegen++;
+            
+            saveGame();
+            updateHomeUI();
+        } else {
+            alert("EXPが不足しています！もっと上の階層へ行くか放置報酬を待ちましょう。");
+        }
+    }
+
+    // --- バトルシステム ---
+    function startBattle() {
+        const stats = getPlayerStats();
+        
+        // 敵のステータス設定 (階層が上がると強くなるが、プレイヤーのインフレ報酬に比べると上昇率はマイルド)
+        // これにより、上の階層で少し鍛えるだけで下の階層は文字通り「無双」できます
+        let stage = player.currentStage;
+        enemy.maxHp = Math.floor(30 * Math.pow(1.35, stage));
+        enemy.hp = enemy.maxHp;
+        enemy.atk = Math.floor(8 * Math.pow(1.25, stage));
+        enemy.def = Math.floor(2 * Math.pow(1.2, stage));
+        
+        // クリア時の獲得EXP (階層が上がると爆発的に増える)
+        enemy.expReward = Math.floor(10 * Math.pow(1.8, stage));
+
+        bPlayerHp = stats.maxHp;
+
+        // UI切り替え
+        document.getElementById('battle-title').innerText = `第 ${stage} 階層 リアルタイム戦闘`;
+        document.getElementById('enemy-name').innerText = `階層の支配者 (Lv.${stage})`;
+        document.getElementById('bp-atk').innerText = stats.atk;
+        document.getElementById('be-atk').innerText = enemy.atk;
+        
+        document.getElementById('battle-log').innerHTML = "<p style='color:#ecc94b;'>戦闘が開始されました。パッシブ効果が常時発動します。</p>";
+
+        updateBattleUI();
+        document.getElementById('home-screen').style.display = "none";
+        document.getElementById('battle-screen').style.display = "block";
+
+        // 自動戦闘スタート
+        isAutoPlaying = true;
+        document.getElementById('auto-turn-btn').innerText = "オート戦闘一時停止";
+        battleInterval = setInterval(battleTick, 800); // 0.8秒ごとに1ターン進む
+    }
+
+    function updateBattleUI() {
+        const stats = getPlayerStats();
+        document.getElementById('battle-p-hp').innerText = Math.max(0, Math.floor(bPlayerHp));
+        document.getElementById('battle-p-maxhp').innerText = stats.maxHp;
+        document.getElementById('p-hp-bar').style.width = (bPlayerHp / stats.maxHp * 100) + "%";
+
+        document.getElementById('battle-e-hp').innerText = Math.max(0, Math.floor(enemy.hp));
+        document.getElementById('battle-e-maxhp').innerText = enemy.maxHp;
+        document.getElementById('e-hp-bar').style.width = (enemy.hp / enemy.maxHp * 100) + "%";
+    }
+
+    function toggleAutoBattle() {
+        if (isAutoPlaying) {
+            clearInterval(battleInterval);
+            isAutoPlaying = false;
+            document.getElementById('auto-turn-btn').innerText = "オート戦闘再開";
+        } else {
+            isAutoPlaying = true;
+            document.getElementById('auto-turn-btn').innerText = "オート戦闘一時停止";
+            battleInterval = setInterval(battleTick, 800);
+        }
+    }
+
+    // 毎ターンの戦闘計算ループ
+    function battleTick() {
+        const stats = getPlayerStats();
+        const log = document.getElementById('battle-log');
+
+        // 1. プレイヤーのパッシブリジェネ(毎ターン回復)
+        if (bPlayerHp < stats.maxHp) {
+            bPlayerHp = Math.min(stats.maxHp, bPlayerHp + stats.regen);
+            log.innerHTML += `<p style='color:#10b981;'>[パッシブ] ヒーローのHPが ${stats.regen} 回復した。</p>`;
+        }
+
+        // 2. プレイヤーの攻撃力振れ幅計算（平均の0.6倍〜1.4倍の完全ランダム）
+        let randFactor = 0.6 + (Math.random() * 0.8); // 0.6 〜 1.4
+        let rawAtk = stats.atk * randFactor;
+        let pDamage = Math.max(1, Math.floor(rawAtk - enemy.def));
+        
+        enemy.hp -= pDamage;
+        log.innerHTML += `<p>⚔️ ヒーローの攻撃！ 敵に <b>${pDamage}</b> のダメージを与えた！ <span style='font-size:11px; color:#94a3b8;'>(振れ幅:${Math.floor(randFactor*100)}%)</span></p>`;
+
+        // 敵の撃破判定
+        if (enemy.hp <= 0) {
+            endBattle(true);
+            return;
+        }
+
+        // 3. 敵の反撃
+        let eDamage = Math.max(1, Math.floor(enemy.atk - stats.def));
+        bPlayerHp -= eDamage;
+        log.innerHTML += `<p style='color:#f43f5e;'>⚡ 敵の反撃！ ヒーローは <b>${eDamage}</b> のダメージを受けた！</p>`;
+
+        // ヒーローの死亡判定
+        if (bPlayerHp <= 0) {
+            endBattle(false);
+            return;
+        }
+
+        updateBattleUI();
+        log.scrollTop = log.scrollHeight; // ログの最下部自動スクロール
+    }
+
+    // バトル終了処理
+    function endBattle(isWin) {
+        clearInterval(battleInterval);
+        isAutoPlaying = false;
+
+        if (isWin) {
+            player.exp += enemy.expReward;
+            if (player.currentStage === player.maxStageReached) {
+                player.maxStageReached++;
+            }
+            alert(`🎉 階層クリア！\n圧倒的成長！ +${enemy.expReward} EXP を獲得しました！\n最高到達階層が更新されました。`);
+        } else {
+            alert(`💀 敗北しました...\nですがパッシブヒーローの肉体は滅びません。拠点でさらにキャラを鍛えましょう！`);
+        }
+
+        saveGame();
+        escapeBattle();
+    }
+
+    function escapeBattle() {
+        clearInterval(battleInterval);
+        isAutoPlaying = false;
+        document.getElementById('battle-screen').style.display = "none";
+        document.getElementById('home-screen').style.display = "block";
+        updateHomeUI();
+    }
+
+    // --- ゲーム起動処理 ---
+    window.onload = function() {
+        loadGame();
+        checkLoginAndOfflineRewards();
+        updateHomeUI();
+    };
 </script>
 
 </body>
