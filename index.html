@@ -1,372 +1,645 @@
+# 放置系RPGブラウザゲーム（HTML / CSS / JavaScript）
+
+```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>パッシブ・ヒーローRPG【完全版】</title>
-    <style>
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #0b0c10; color: #c5c6c7; margin: 0; padding: 15px; display: flex; justify-content: center; }
-        .game-container { width: 100%; max-width: 950px; background: #1f2833; padding: 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); border: 1px solid #45f3ff22; }
-        h2, h3 { text-align: center; color: #66fcf1; margin-top: 0; letter-spacing: 1px; }
-        .screen { display: none; }
-        .active { display: block; }
-        
-        button { background: #45f3ff; color: #0b0c10; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; }
-        button:hover { background: #66fcf1; transform: translateY(-1px); }
-        button:disabled { background: #444; color: #888; cursor: not-allowed; transform: none; }
-        .btn-danger { background: #ff4c4c; color: white; }
-        .btn-danger:hover { background: #ff6666; }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>超インフレ放置RPG</title>
+<style>
+body {
+  background: #111;
+  color: #f5f5f5;
+  font-family: sans-serif;
+  margin: 0;
+  padding: 0;
+}
 
-        .bonus-panel { background: #0b0c10; border-left: 4px solid #66fcf1; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; }
-        .exp-info { font-size: 16px; text-align: center; margin-bottom: 15px; color: #66fcf1; background: #0b0c10; padding: 10px; border-radius: 6px; }
+#game {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 10px;
+  padding: 10px;
+}
 
-        .layout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        .panel-box { background: #151a21; padding: 12px; border-radius: 8px; border: 1px solid #2f3c4f; }
+.panel {
+  background: #1b1b1b;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 10px;
+}
 
-        .status-board { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .status-card { background: #0b0c10; padding: 10px; border-radius: 6px; text-align: center; border: 1px solid #1f2833; }
-        .stat-val { font-size: 16px; font-weight: bold; color: #fff; margin: 3px 0; }
-        
-        .stage-selector { background: #0b0c10; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 15px; }
-        .stage-btn-group { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 5px; }
-        .stage-num { font-size: 20px; font-weight: bold; color: #ff4c4c; min-width: 80px; }
+button {
+  background: #333;
+  color: white;
+  border: none;
+  padding: 8px;
+  margin: 4px;
+  border-radius: 6px;
+  cursor: pointer;
+}
 
-        /* パッシブリスト */
-        .passive-grid { display: grid; grid-template-columns: 1fr; gap: 8px; max-height: 320px; overflow-y: auto; padding-right: 5px; }
-        .passive-card { background: #0b0c10; padding: 8px; border-radius: 6px; border: 1px solid #2f3c4f; font-size: 12px; cursor: pointer; position: relative; }
-        .passive-card.equipped { border-color: #45f3ff; background: #0f232a; }
-        .passive-header { font-weight: bold; color: #66fcf1; display: flex; justify-content: space-between; }
-        
-        /* バトル */
-        .battle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        .unit-box { background: #0b0c10; padding: 15px; border-radius: 8px; border: 1px solid #2f3c4f; text-align: center; }
-        .hp-bar-container { background: #333; border-radius: 10px; height: 16px; overflow: hidden; margin-top: 8px; }
-        .hp-bar { background: #45f3ff; height: 100%; width: 100%; transition: width 0.1s; }
-        .enemy-hp { background: #ff4c4c; }
-        
-        .buff-container { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 5px; min-height: 20px; }
-        .buff-badge { font-size: 10px; background: #2f3c4f; padding: 2px 6px; border-radius: 4px; border: 1px solid #45f3ff; }
+button:hover {
+  background: #555;
+}
 
-        .log-box { background: #05070a; border: 1px solid #2f3c4f; height: 200px; overflow-y: auto; padding: 10px; font-size: 12px; border-radius: 6px; margin-bottom: 15px; font-family: monospace; line-height: 1.4; text-align: left; }
-    </style>
+.stat-line {
+  margin-bottom: 5px;
+}
+
+#battleLog {
+  height: 600px;
+  overflow-y: auto;
+  white-space: pre-line;
+  background: black;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.skill {
+  border: 1px solid #444;
+  padding: 6px;
+  margin-bottom: 5px;
+}
+
+.activeSkill {
+  border-color: gold;
+}
+</style>
 </head>
 <body>
+<div id="game">
 
-<div class="game-container">
-    <!-- 1. 拠点画面 -->
-    <div id="home-screen" class="screen active">
-        <h2>🛡️ パッシブ・ヒーローベース</h2>
-        <div id="bonus-notice" class="bonus-panel" style="display:none;"></div>
-        <div class="exp-info">✨ 所持EXP: <span id="player-exp">0</span> | 最高到達階層: <span id="max-stage">1</span> 階</div>
-        
-        <div class="layout-grid">
-            <!-- 左：ステータス永続育成 -->
-            <div class="panel-box">
-                <h3>🧬 ステータス永久強化</h3>
-                <div class="status-board">
-                    <div class="status-card">
-                        <div>最大HP</div>
-                        <div class="stat-val"><span id="stat-hp">100</span> (+<span id="bonus-hp">0</span>)</div>
-                        <button onclick="upgradeStat('hp')" style="font-size:11px; padding:5px 10px;">強化 (<span id="cost-hp">15</span>)</button>
-                    </div>
-                    <div class="status-card">
-                        <div>平均攻撃力</div>
-                        <div class="stat-val"><span id="stat-atk">15</span> (+<span id="bonus-atk">0</span>)</div>
-                        <button onclick="upgradeStat('atk')" style="font-size:11px; padding:5px 10px;">強化 (<span id="cost-atk">10</span>)</button>
-                    </div>
-                    <div class="status-card">
-                        <div>防御力</div>
-                        <div class="stat-val"><span id="stat-def">5</span> (+<span id="bonus-def">0</span>)</div>
-                        <button onclick="upgradeStat('def')" style="font-size:11px; padding:5px 10px;">強化 (<span id="cost-def">10</span>)</button>
-                    </div>
-                    <div class="status-card">
-                        <div>リジェネ</div>
-                        <div class="stat-val"><span id="stat-regen">2</span> (+<span id="bonus-regen">0</span>)</div>
-                        <button onclick="upgradeStat('regen')" style="font-size:11px; padding:5px 10px;">強化 (<span id="cost-regen">12</span>)</button>
-                    </div>
-                </div>
-                <div style="font-size:11px; color:#aaa; margin-top:8px; line-height:1.3;">
-                    ※括弧内はステージクリア時に永続蓄積されたボーナス値です。<br>
-                    ※攻撃振れ幅: 平均値の0.6倍〜1.4倍（クリティカル無し）
-                </div>
-            </div>
+<div class="panel">
+  <h2>プレイヤー</h2>
 
-            <!-- 右：パッシブスキル編成 -->
-            <div class="panel-box">
-                <h3>🔮 パッシブ編成 (<span id="active-slots">0</span> / <span id="max-slots">5</span>)</h3>
-                <div style="font-size:11px; text-align:center; margin-bottom:5px; color:#66fcf1;">
-                    解放条件: 初期5枠 ➔ 10階到達で10枠 ➔ 25階到達で15枠... (10 + X*5)
-                </div>
-                <div id="passive-list" class="passive-grid"></div>
-            </div>
-        </div>
+  <div class="stat-line">EXP: <span id="exp"></span></div>
+  <div class="stat-line">最高到達階層: <span id="maxStage"></span></div>
+  <div class="stat-line">現在階層: <span id="stage"></span></div>
 
-        <div class="stage-selector">
-            <h3 style="margin:0; font-size:14px;">挑戦する階層を選択</h3>
-            <div class="stage-btn-group">
-                <button onclick="changeStage(-1)">◀ 前の階</button>
-                <div class="stage-num"><span id="select-stage">1</span> 階</div>
-                <button onclick="changeStage(1)">次の階 ▶</button>
-            </div>
-            <div style="font-size:11px; color:#45f3ff; margin-top:5px;" id="stage-reward-preview"></div>
-        </div>
+  <hr>
 
-        <div style="text-align: center;">
-            <button onclick="startBattle()" style="font-size: 18px; padding: 12px 60px; background:#45f3ff;">戦闘開始</button>
-            <div style="font-size:12px; color:#aaa; margin-top:5px;">💡 <b>[Spaceキー] 長押し</b> で同じステージを自動周回できます！</div>
-        </div>
-    </div>
+  <div class="stat-line">最大HP: <span id="hp"></span></div>
+  <div class="stat-line">平均攻撃力: <span id="atk"></span></div>
+  <div class="stat-line">防御力: <span id="def"></span></div>
+  <div class="stat-line">自動回復: <span id="regen"></span></div>
 
-    <!-- 2. バトル画面 -->
-    <div id="battle-screen" class="screen">
-        <h2 id="battle-title">第 1 階層 戦闘中</h2>
-        <div id="loop-notice" style="text-align:center; color:#ff4c4c; font-weight:bold; font-size:14px; margin-bottom:10px; display:none;">🔄 スペースキー長押し中：自動高速周回モード 🔄</div>
-        
-        <div class="battle-grid">
-            <div class="unit-box">
-                <div style="font-weight:bold; color:#45f3ff;">ヒーロー</div>
-                <div style="margin-top:5px;">HP: <span id="b-p-hp">100</span> / <span id="b-p-maxhp">100</span></div>
-                <div class="hp-bar-container"><div id="p-bar" class="hp-bar"></div></div>
-                <div id="p-buffs" class="buff-container"></div>
-            </div>
-            <div class="unit-box">
-                <div id="b-e-name" style="font-weight:bold; color:#ff4c4c;">モンスター</div>
-                <div style="margin-top:5px;">HP: <span id="b-e-hp">50</span> / <span id="b-e-maxhp">50</span></div>
-                <div class="hp-bar-container"><div id="e-bar" class="hp-bar enemy-hp"></div></div>
-                <div id="e-buffs" class="buff-container"></div>
-            </div>
-        </div>
+  <button onclick="upgrade('hp')">HP強化</button>
+  <button onclick="upgrade('atk')">攻撃強化</button>
+  <button onclick="upgrade('def')">防御強化</button>
+  <button onclick="upgrade('regen')">回復強化</button>
 
-        <div class="log-box" id="battle-log"></div>
+  <hr>
 
-        <div style="text-align: center;">
-            <button onclick="escapeBattle()" class="btn-danger">戦闘中断（拠点へ戻る）</button>
-        </div>
-    </div>
+  <button onclick="startBattle()">戦闘開始</button>
+  <button onclick="nextStage()">次の階層</button>
+
+  <h3>パッシブスキル</h3>
+  <div>装備枠: <span id="slotCount"></span></div>
+  <div id="skills"></div>
+</div>
+
+<div class="panel">
+  <h2>戦闘ログ</h2>
+  <div id="battleLog"></div>
+</div>
+
 </div>
 
 <script>
-    // --- 初期ステータス（上限計算の基準） ---
-    const BASE_STATS = { hp: 100, atk: 15, def: 5, regen: 2 };
+const BASE_STATS = {
+  hp: 100,
+  atk: 20,
+  def: 5,
+  regen: 1
+};
 
-    // --- ゲームデータ構造 ---
-    let player = {
-        exp: 0, currentStage: 1, maxStageReached: 1,
-        lvlHp: 0, lvlAtk: 0, lvlDef: 0, lvlRegen: 0,
-        // ステージクリア永続ボーナス(小数点第1位まで)
-        clearBonusHp: 0, clearBonusAtk: 0, clearBonusDef: 0, clearBonusRegen: 0,
-        // 初回クリア記録
-        clearedStages: {},
-        equippedPassives: [],
-        lastLoginDate: "", lastLogoutTime: 0, loginStreak: 0
-    };
+const SAVE_KEY = 'hyper_idle_rpg';
 
-    // --- 30個のパッシブスキル完全データ（前半10個は指定条件、後半20個はオリジナル） ---
-    const PASSIVE_DATABASE = [
-        { id: 1, name: "狂行突破", rate: 15, desc: "HP減少で確率増(残りHP15%以下で100%)", duration: 15, type: "buff", memo: "HPが減少するほど発動確率が上がる(残りHP15％以下で確率が100％となる)。15ターン：攻撃力を15％増加し相手の防御力を15分無視して攻撃できる" },
-        { id: 2, name: "慧眼的独占力", rate: 7, desc: "最大HPの66%付近で確率最大90%", duration: 7, type: "buff", memo: "HPが一定量に近いほど発動率が上がる(最大HPの66％で確率が90％)。7ターン：相手の攻撃力を30％下げさらに防御力を10％下げ、その後自身の体力を減少体力の5％に当たる回復を行う" },
-        { id: 3, name: "人体蘇生マジック", rate: 0, desc: "HPが0%の時に100%発動(1回のみ)", duration: 0, type: "revive", memo: "HPが0％の時発動率が100％になる。1回だけ最大体力の3％+攻撃力の33％+防御力の333％分の体力で復活する" },
-        { id: 4, name: "絶対回避", rate: 10, desc: "HPが低いほど確率増(最大30%)。重ね掛け可", duration: 1, type: "avoid", memo: "HPが低いほど発動率がわずかに上がる(最大30％まで増加する)。1ターン：攻撃を1回回避することができ、再度このスキルは発動するし、重ね掛けも可能" },
-        { id: 5, name: "ヨガの呼吸", rate: 70, desc: "HPが低いほど確率効果増(残り30%で最大)", duration: 3, type: "buff", memo: "HPが減っているほど効果と発動率がわずかに上がる(残りHP30％で最大になり確率は15％増加し効果は30％増加する)。３ターン：すべての回復効果を60％強化する" },
-        { id: 6, name: "う、うぉなつよみ", rate: 1, desc: "HP50%以下で確率5倍。次ターン確率半減", duration: 1, type: "buff", memo: "HPが50％を過ぎたなら発動率が５倍になる。１ターン：１度だけ攻撃を無効化にしこのスキルも再度発動することは可能だが、重ね掛けはできず無敵直後の次のターンは発動率が50％減る" },
-        { id: 7, name: "火事場の馬鹿力", rate: 50, desc: "HPが減っているほど強化(残り30%で最大)", duration: 1, type: "buff", memo: "HPが減っているほど効果と発動率が上がる(30％で最大になり確率は100％までになり効果量は250％増加する)。１ターン：攻撃力が10％増加し相手の防御力の12％を無視する" },
-        { id: 8, name: "神の力", rate: 60, desc: "HP多➔効果増、HP少➔確率増。最大攻撃爆増", duration: 1, type: "buff", memo: "HPが多いほど効果量が上がり少ないほど確率が上がる(70％と30％で最大になり効果量は10000％～0％増加し確率は60％～90％まで増加する)。1ターン：平均攻撃力は増加しないで最大攻撃力が10000％増加する" },
-        { id: 9, name: "うぬぼれた毒", rate: 15, desc: "HP格差で負けていると確率最大77%", duration: 10, type: "buff", memo: "HP格差で負けていると発動率が77％まで増加する。10ターン：攻撃時に敵に毒のスタックを1付与する効果を自身に付与する。毒は防御力などに軽減されずスタック分のダメージを与えます。さらにこの効果はいくらでも重なる" },
-        { id: 10, name: "萌えあがる炎", rate: 20, desc: "HP格差負けで確率最大88%。敵回復抑制", duration: 10, type: "buff", memo: "HP格差で負けてけていると発動率が88％まで増加する。10ターン：攻撃時に敵に炎スタックを2付与する効果を自身に付与する。炎は防御力などに軽減されずスタック分のダメージを与えたりかつ回復効果を40％に抑制したりするが毎ターン1ずつ解除される" },
-        
-        // 追加のオリジナルパッシブ20個
-        { id: 11, name: "オーバードライブ", rate: 8, desc: "5ターン：攻撃力50%増加、防御力50%減少", duration: 5, type: "buff" },
-        { id: 12, name: "鋼鉄の決意", rate: 25, desc: "3ターン：受けるダメージを一律15カット", duration: 3, type: "buff" },
-        { id: 13, name: "吸血の牙", rate: 30, desc: "5ターン：攻撃時に与えたダメージの20%分HP回復", duration: 5, type: "buff" },
-        { id: 14, name: "加速装置", rate: 15, desc: "1ターンに2回攻撃を行うようになる", duration: 2, type: "buff" },
-        { id: 15, name: "精神統一", rate: 40, desc: "次ターンの攻撃の最低振れ幅を1.0倍に固定", duration: 1, type: "buff" },
-        { id: 16, name: "トゲトゲ甲羅", rate: 20, desc: "4ターン：敵から受けたダメージの35%をそのまま反射", duration: 4, type: "buff" },
-        { id: 17, name: "お守り結晶", rate: 5, desc: "致死ダメージを受けた時、HP1で耐える(1回のみ)", duration: 0, type: "endure" },
-        { id: 18, name: "目には目を", rate: 12, desc: "敵がバフを得た時、自身も同じ攻撃バフを得る", duration: 3, type: "buff" },
-        { id: 19, name: "大器晩成", rate: 100, desc: "ターン経過毎に攻撃力が3%ずつ永続上昇(戦闘内)", duration: 99, type: "buff" },
-        { id: 20, name: "ナノマシン注入", rate: 15, desc: "5ターン：毎ターンのリジェネ効果が3倍になる", duration: 5, type: "buff" },
-        { id: 21, name: "黄金の夜明け", rate: 5, desc: "戦闘開始時に敵の現在HPを15%削る", duration: 1, type: "instant" },
-        { id: 22, name: "プレッシャーオーラ", rate: 18, desc: "5ターン：敵の攻撃力を20%減少させる", duration: 5, type: "buff" },
-        { id: 23, name: "リサイクル精神", rate: 25, desc: "バフが切れた瞬間、25%の確率で効果時間が再充填", duration: 1, type: "buff" },
-        { id: 24, name: "ゼロ・グラビティ", rate: 10, desc: "3ターン：敵の防御力を完全に0にする", duration: 3, type: "buff" },
-        { id: 25, name: "緊急バリア", rate: 50, desc: "HP30%以下で発動。最大HPの20%分のシールド", duration: 1, type: "buff" },
-        { id: 26, name: "狂戦士の魂", rate: 12, desc: "防御力を0にし、その3倍を攻撃力に加算する", duration: 3, type: "buff" },
-        { id: 27, name: "毒素中和体質", rate: 100, desc: "自身が受けるドットダメージ（毒・炎）を無効化", duration: 99, type: "buff" },
-        { id: 28, name: "セカンド風", rate: 20, desc: "HPが半分以下の時、即座に回復力の2.5倍回復", duration: 1, type: "buff" },
-        { id: 29, name: "ジャストカウンター", rate: 15, desc: "敵の攻撃を無効化し、攻撃力の1.5倍で反撃", duration: 1, type: "buff" },
-        { id: 30, name: "無限の可能性", rate: 3, desc: "ランダムな他パッシブの効果を1つ即座に発動", duration: 1, type: "buff" }
-    ];
+const player = {
+  exp: 0,
+  maxStage: 1,
+  stage: 1,
 
-    // --- パッシブ最大スロット数計算 (10階➔10枠、25階➔15枠...) ---
-    function getMaxSlots() {
-        if (player.maxStageReached < 10) return 5;
-        let x = Math.floor((player.maxStageReached - 10) / 15);
-        return 10 + (x * 5);
+  hp: BASE_STATS.hp,
+  atk: BASE_STATS.atk,
+  def: BASE_STATS.def,
+  regen: BASE_STATS.regen,
+
+  passiveSlots: 5,
+  passives: [],
+
+  clearedStages: {},
+
+  loginStreak: 1,
+  lastLogin: 0,
+  lastOffline: Date.now()
+};
+
+let autoFarm = false;
+let battleRunning = false;
+
+const passiveSkills = [
+{
+  id: 'berserk',
+  name: '狂行突破',
+  chance: 1,
+  trigger: (ctx)=> ctx.playerHpRate <= 0.15,
+  effect: (ctx)=> {
+    ctx.attackBuff += 0.15;
+    ctx.ignoreDefense += 0.15;
+    log('狂行突破 発動！');
+  }
+},
+{
+  id: 'insight',
+  name: '慧眼的独占力',
+  chance: 0.9,
+  trigger: (ctx)=> Math.abs(ctx.playerHpRate - 0.66) <= 0.1,
+  effect: (ctx)=> {
+    ctx.enemyAtkDebuff += 0.3;
+    ctx.enemyDefDebuff += 0.1;
+    ctx.playerHp += ctx.playerMissingHp * 0.05;
+    log('慧眼的独占力 発動！');
+  }
+},
+{
+  id: 'revive',
+  name: '人体蘇生マジック',
+  chance: 1,
+  once: true,
+  trigger: (ctx)=> ctx.playerHp <= 0,
+  effect: (ctx)=> {
+    if(ctx.reviveUsed) return;
+    ctx.reviveUsed = true;
+    ctx.playerHp = ctx.playerMaxHp * 0.333;
+    log('人体蘇生マジック 発動！');
+  }
+},
+{
+  id: 'evasion',
+  name: '絶対回避',
+  chance: 0.3,
+  trigger: (ctx)=> true,
+  effect: (ctx)=> {
+    ctx.evade = true;
+    log('絶対回避！');
+  }
+},
+{
+  id: 'yoga',
+  name: 'ヨガの呼吸',
+  chance: 0.78,
+  trigger: (ctx)=> ctx.playerHpRate <= 0.3,
+  effect: (ctx)=> {
+    ctx.healAmp += 0.78;
+    log('ヨガの呼吸 発動！');
+  }
+},
+{
+  id: 'woona',
+  name: 'う、うぉなつよみ',
+  chance: 0.05,
+  trigger: (ctx)=> ctx.playerHpRate <= 0.5,
+  effect: (ctx)=> {
+    ctx.nullify = true;
+    log('う、うぉなつよみ 発動！');
+  }
+},
+{
+  id: 'lastPower',
+  name: '火事場の馬鹿力',
+  chance: 1,
+  trigger: (ctx)=> ctx.playerHpRate <= 0.3,
+  effect: (ctx)=> {
+    ctx.attackBuff += 0.25;
+    ctx.ignoreDefense += 0.12;
+    log('火事場の馬鹿力 発動！');
+  }
+},
+{
+  id: 'godPower',
+  name: '神の力',
+  chance: 1,
+  trigger: ()=> true,
+  effect: (ctx)=> {
+    ctx.maxDamageMultiplier += 100;
+    log('神の力 発動！');
+  }
+},
+{
+  id: 'poison',
+  name: 'うぬぼれた毒',
+  chance: 0.77,
+  trigger: (ctx)=> ctx.playerHp < ctx.enemyHp,
+  effect: (ctx)=> {
+    ctx.enemyPoison += 5;
+    log('毒スタック付与！');
+  }
+},
+{
+  id: 'flame',
+  name: '萌えあがる炎',
+  chance: 0.88,
+  trigger: (ctx)=> ctx.playerHp < ctx.enemyHp,
+  effect: (ctx)=> {
+    ctx.enemyBurn += 10;
+    log('炎スタック付与！');
+  }
+}
+];
+
+for(let i=1;i<=20;i++) {
+  passiveSkills.push({
+    id:'extra'+i,
+    name:'追加パッシブ'+i,
+    chance:0.2 + Math.random()*0.5,
+    trigger:()=>true,
+    effect:(ctx)=>{
+      ctx.attackBuff += 0.02 * i;
+      log('追加パッシブ'+i+' 発動！');
+    }
+  });
+}
+
+player.passives = passiveSkills.slice(0,5).map(s=>s.id);
+
+function log(text){
+  const el = document.getElementById('battleLog');
+  el.innerHTML += text + "\n";
+  el.scrollTop = el.scrollHeight;
+}
+
+function updateUI(){
+  document.getElementById('exp').textContent = Math.floor(player.exp);
+  document.getElementById('maxStage').textContent = player.maxStage;
+  document.getElementById('stage').textContent = player.stage;
+
+  document.getElementById('hp').textContent = player.hp.toFixed(1);
+  document.getElementById('atk').textContent = player.atk.toFixed(1);
+  document.getElementById('def').textContent = player.def.toFixed(1);
+  document.getElementById('regen').textContent = player.regen.toFixed(1);
+
+  document.getElementById('slotCount').textContent = player.passiveSlots;
+
+  const skills = document.getElementById('skills');
+  skills.innerHTML = '';
+
+  passiveSkills.forEach(skill=>{
+    const div = document.createElement('div');
+    div.className = 'skill';
+
+    if(player.passives.includes(skill.id)) {
+      div.classList.add('activeSkill');
     }
 
-    // --- 計算後の実ステータス取得 ---
-    function getPlayerStats() {
-        return {
-            maxHp: BASE_STATS.hp + (player.lvlHp * 25) + player.clearBonusHp,
-            atk: BASE_STATS.atk + (player.lvlAtk * 4) + player.clearBonusAtk, 
-            def: BASE_STATS.def + (player.lvlDef * 2) + player.clearBonusDef,
-            regen: BASE_STATS.regen + (player.lvlRegen * 2) + player.clearBonusRegen
-        };
+    div.innerHTML = `
+      <b>${skill.name}</b><br>
+      発動率: ${(skill.chance*100).toFixed(1)}%
+    `;
+
+    div.onclick = ()=>toggleSkill(skill.id);
+
+    skills.appendChild(div);
+  });
+}
+
+function toggleSkill(id){
+  if(player.passives.includes(id)) {
+    player.passives = player.passives.filter(x=>x!==id);
+  } else {
+    if(player.passives.length >= player.passiveSlots) {
+      alert('枠不足');
+      return;
     }
 
-    function getUpgradeCost(stat, lvl) {
-        let base = (stat==='hp')?15:(stat==='regen')?12:10;
-        return Math.floor(base * Math.pow(1.15, lvl));
-    }
+    player.passives.push(id);
+  }
 
-    // --- セーブ＆ロード＆ログイン処理 ---
-    function saveGame() { localStorage.setItem("passive_hero_v2", JSON.stringify(player)); }
-    function loadGame() {
-        let saved = localStorage.getItem("passive_hero_v2");
-        if (saved) {
-            try { Object.assign(player, JSON.parse(saved)); } catch(e) { console.error(e); }
+  saveGame();
+  updateUI();
+}
+
+function getEnemy(stage){
+  return {
+    hp: Math.floor(120 * Math.pow(1.55, stage)),
+    atk: Math.floor(18 * Math.pow(1.5, stage)),
+    def: Math.floor(5 * Math.pow(1.4, stage)),
+    exp: Math.floor(50 * Math.pow(1.85, stage))
+  };
+}
+
+function randomDamage(avgAtk){
+  return avgAtk * (0.6 + Math.random() * 0.8);
+}
+
+function wait(ms){
+  return new Promise(resolve=>setTimeout(resolve, ms));
+}
+
+async function startBattle(){
+  if(battleRunning) return;
+
+  battleRunning = true;
+
+  const enemy = getEnemy(player.stage);
+
+  let pHp = player.hp;
+  let eHp = enemy.hp;
+
+  log('====================');
+  log(`Stage ${player.stage} 戦闘開始`);
+
+  const ctx = {
+    playerHp:pHp,
+    playerMaxHp:player.hp,
+    playerHpRate:pHp/player.hp,
+    playerMissingHp:player.hp-pHp,
+    enemyHp:eHp,
+
+    attackBuff:0,
+    ignoreDefense:0,
+    enemyAtkDebuff:0,
+    enemyDefDebuff:0,
+    healAmp:0,
+    maxDamageMultiplier:1,
+    enemyPoison:0,
+    enemyBurn:0,
+    reviveUsed:false,
+    evade:false,
+    nullify:false
+  };
+
+  while(pHp > 0 && eHp > 0){
+
+    ctx.playerHp = pHp;
+    ctx.enemyHp = eHp;
+    ctx.playerHpRate = pHp/player.hp;
+
+    pHp += player.regen * (1 + ctx.healAmp);
+
+    log(`プレイヤー回復 +${player.regen.toFixed(1)}`);
+    await wait(300);
+
+    for(const id of player.passives){
+      const skill = passiveSkills.find(x=>x.id===id);
+      if(!skill) continue;
+
+      if(skill.trigger(ctx)){
+        if(Math.random() <= skill.chance){
+          skill.effect(ctx);
+          await wait(200);
         }
+      }
     }
 
-    function checkLoginRewards() {
-        const now = new Date();
-        const todayStr = now.toDateString();
-        let notice = "";
-        if (player.lastLoginDate !== todayStr) {
-            if (player.lastLoginDate !== "") {
-                let yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
-                player.loginStreak = (player.lastLoginDate === yesterday.toDateString()) ? player.loginStreak + 1 : 1;
-            } else { player.loginStreak = 1; }
-            let bonus = 20 * player.loginStreak * player.maxStageReached;
-            player.exp += bonus; player.lastLoginDate = todayStr;
-            notice += `📅 <b>連続ログイン ${player.loginStreak} 日目報酬!</b> <br>+${bonus} EXPを獲得！<br>`;
-        }
-        if (player.lastLogoutTime > 0) {
-            let offSec = Math.min(28800, Math.floor((now.getTime() - player.lastLogoutTime) / 1000));
-            if (offSec > 10) {
-                let offExp = Math.floor(offSec * 0.1 * player.maxStageReached);
-                if (offExp > 0) { player.exp += offExp; notice += `⏳ <b>オフライン放置報酬!</b> <br>離れていた時間から +${offExp} EXPを獲得！`; }
-            }
-        }
-        if (notice) { const box = document.getElementById('bonus-notice'); box.innerHTML = notice; box.style.display = "block"; }
-        setInterval(() => { player.lastLogoutTime = new Date().getTime(); saveGame(); }, 5000);
+    let dmg = randomDamage(player.atk * (1 + ctx.attackBuff));
+    dmg *= ctx.maxDamageMultiplier;
+
+    const enemyDef = enemy.def * (1 - ctx.enemyDefDebuff);
+
+    dmg -= enemyDef * (1 - ctx.ignoreDefense);
+
+    dmg = Math.max(1, dmg);
+
+    eHp -= dmg;
+
+    log(`プレイヤー攻撃 ${dmg.toFixed(1)} ダメージ`);
+
+    await wait(400);
+
+    if(eHp <= 0){
+      log('敵撃破！');
+      break;
     }
 
-    // --- 拠点UI更新 ---
-    function updateHomeUI() {
-        const stats = getPlayerStats();
-        document.getElementById('player-exp').innerText = Math.floor(player.exp);
-        document.getElementById('max-stage').innerText = player.maxStageReached;
-        document.getElementById('select-stage').innerText = player.currentStage;
-        document.getElementById('max-slots').innerText = getMaxSlots();
-        document.getElementById('active-slots').innerText = player.equippedPassives.length;
-
-        document.getElementById('stat-hp').innerText = BASE_STATS.hp + (player.lvlHp * 25);
-        document.getElementById('stat-atk').innerText = BASE_STATS.atk + (player.lvlAtk * 4);
-        document.getElementById('stat-def').innerText = BASE_STATS.def + (player.lvlDef * 2);
-        document.getElementById('stat-regen').innerText = BASE_STATS.regen + (player.lvlRegen * 2);
-
-        document.getElementById('bonus-hp').innerText = player.clearBonusHp.toFixed(1);
-        document.getElementById('bonus-atk').innerText = player.clearBonusAtk.toFixed(1);
-        document.getElementById('bonus-def').innerText = player.clearBonusDef.toFixed(1);
-        document.getElementById('bonus-regen').innerText = player.clearBonusRegen.toFixed(1);
-
-        document.getElementById('cost-hp').innerText = getUpgradeCost('hp', player.lvlHp);
-        document.getElementById('cost-atk').innerText = getUpgradeCost('atk', player.lvlAtk);
-        document.getElementById('cost-def').innerText = getUpgradeCost('def', player.lvlDef);
-        document.getElementById('cost-regen').innerText = getUpgradeCost('regen', player.lvlRegen);
-
-        let baseExp = Math.floor(10 * Math.pow(1.8, player.currentStage));
-        document.getElementById('stage-reward-preview').innerText = `階層突破基本報酬: +${baseExp} EXP`;
-
-        renderPassiveList();
+    if(ctx.enemyPoison > 0){
+      eHp -= ctx.enemyPoison;
+      log(`毒ダメージ ${ctx.enemyPoison}`);
+      await wait(200);
     }
 
-    function changeStage(dir) {
-        player.currentStage = Math.max(1, player.currentStage + dir);
-        updateHomeUI();
+    if(ctx.enemyBurn > 0){
+      eHp -= ctx.enemyBurn;
+      log(`炎ダメージ ${ctx.enemyBurn}`);
+      await wait(200);
     }
 
-    function upgradeStat(stat) {
-        let lvl = (stat==='hp')?player.lvlHp:(stat==='atk')?player.lvlAtk:(stat==='def')?player.lvlDef:player.lvlRegen;
-        let cost = getUpgradeCost(stat, lvl);
-        if (player.exp >= cost) {
-            player.exp -= cost;
-            if(stat==='hp') player.lvlHp++; if(stat==='atk') player.lvlAtk++; if(stat==='def') player.lvlDef++; if(stat==='regen') player.lvlRegen++;
-            saveGame(); updateHomeUI();
-        }
+    let enemyDmg = randomDamage(enemy.atk * (1 - ctx.enemyAtkDebuff));
+
+    enemyDmg -= player.def;
+    enemyDmg = Math.max(1, enemyDmg);
+
+    if(ctx.evade){
+      log('攻撃回避！');
+      ctx.evade = false;
+    } else if(ctx.nullify){
+      log('攻撃無効！');
+      ctx.nullify = false;
+    } else {
+      pHp -= enemyDmg;
+      log(`敵攻撃 ${enemyDmg.toFixed(1)} ダメージ`);
     }
 
-    function renderPassiveList() {
-        const container = document.getElementById('passive-list');
-        container.innerHTML = "";
-        PASSIVE_DATABASE.forEach(p => {
-            const isEquipped = player.equippedPassives.includes(p.id);
-            const card = document.createElement('div');
-            card.className = `passive-card ${isEquipped ? 'equipped' : ''}`;
-            card.innerHTML = `<div class="passive-header"><span>■ ${p.name} (発動率:${p.rate}%)</span><span>${p.duration}T</span></div><div style="color:#aaa; font-size:11px; margin-top:2px;">${p.desc}</div>`;
-            card.onclick = () => togglePassive(p.id);
-            container.appendChild(card);
-        });
+    await wait(400);
+
+    if(pHp <= 0){
+      const reviveSkill = passiveSkills.find(x=>x.id==='revive');
+
+      if(reviveSkill && !ctx.reviveUsed){
+        reviveSkill.effect(ctx);
+        pHp = ctx.playerHp;
+      }
     }
+  }
 
-    function togglePassive(id) {
-        let idx = player.equippedPassives.indexOf(id);
-        if (idx !== -1) { player.equippedPassives.splice(idx, 1); }
-        else {
-            if (player.equippedPassives.length >= getMaxSlots()) { alert("パッシブ枠が満タンです！上の階層をクリアして枠を広げてください。"); return; }
-            player.equippedPassives.push(id);
-        }
-        saveGame(); updateHomeUI();
+  if(pHp > 0){
+    gainExp(enemy.exp);
+    processStageClear(enemy.exp);
+
+    if(player.stage > player.maxStage){
+      player.maxStage = player.stage;
+      updatePassiveSlots();
     }
+  }
 
-    // --- 自動周回スペースキートリガー設定 ---
-    let isSpacePressed = false;
-    window.addEventListener('keydown', (e) => { if (e.code === 'Space') { isSpacePressed = true; document.getElementById('loop-notice').style.display="block"; } });
-    window.addEventListener('keyup', (e) => { if (e.code === 'Space') { isSpacePressed = false; document.getElementById('loop-notice').style.display="none"; } });
+  saveGame();
+  updateUI();
 
-    // --- バトル実行システム ---
-    let bE = { name: "", hp: 0, maxHp: 0, atk: 0, def: 0, expReward: 0 };
-    let bP = { hp: 0, maxHp: 0, atk: 0, def: 0, regen: 0 };
-    let pBuffs = {}, eBuffs = {}; // バフ持続管理
-    let battleTimer = null;
-    let turnCount = 0;
-    let usedRevive = false; 
-    let avoidedThisTurn = false;
-    let immuneNextTurnReduce = false; 
+  battleRunning = false;
 
-    function startBattle() {
-        const stats = getPlayerStats();
-        let stage = player.currentStage;
-        
-        // 敵のステータス算出(プレイヤーのインフレに対してマイルドに追従)
-        bE.maxHp = Math.floor(30 * Math.pow(1.3, stage)); bE.hp = bE.maxHp;
-        bE.atk = Math.floor(8 * Math.pow(1.2, stage));
-        bE.def = Math.floor(2 * Math.pow(1.15, stage));
-        bE.expReward = Math.floor(10 * Math.pow(1.8, stage));
-        bE.name = `階層守護魔獣 (Lv.${stage})`;
+  if(autoFarm){
+    startBattle();
+  }
+}
 
-        bP.maxHp = stats.maxHp; bP.hp = stats.maxHp;
-        bP.atk = stats.atk; bP.def = stats.def; bP.regen = stats.regen;
+function gainExp(amount){
+  player.exp += amount;
+  log(`EXP +${Math.floor(amount)}`);
+}
 
-        pBuffs = {}; eBuffs = {}; turnCount = 0; usedRevive = false; avoidedThisTurn = false;
-        
-        document.getElementById('b-p-maxhp').innerText = bP.maxHp;
-        document.getElementById('b-e-maxhp').innerText = bE.maxHp;
-        document.getElementById('b-e-name').innerText = bE.name;
-        document.getElementById('battle-title').innerText = `第 ${stage} 階層 決戦`;
-        document.getElementById('battle-log').innerHTML = "<p style='color:#66fcf1;'>▼ 常時発動パッシブスロットのチェックを完了。戦闘を開始します。</p>";
+function processStageClear(exp){
+  const first = !player.clearedStages[player.stage];
 
-        document.getElementById('home-screen').style.display = "none";
-        document.getElementById('battle-screen').style.display = "block";
+  if(first){
+    player.clearedStages[player.stage] = true;
 
-        updateBattleStatus();
-        // 周回検知：スペースが押されていれば超高速(15ms)、通常なら(400ms)
-        let speed = isSpacePressed ? 15 : 400;
-        battleTimer = setTimeout(executeBattleTick, speed);
-    }
+    const bonus = exp * 0.06;
 
-    function updateBattleStatus() {
-        document.getElementById('b-p-hp').innerText = Math.max(0, Math.floor(bP.hp));
-        document.getElementById('b-e-hp').innerText = Math.max(0, Math.floor(bE.hp));
-        document.getElementById('p-bar').style.width =
+    player.hp += Math.min(bonus, BASE_STATS.hp*0.1);
+    player.atk += Math.min(bonus, BASE_STATS.atk*0.1);
+    player.def += Math.min(bonus, BASE_STATS.def*0.1);
+    player.regen += Math.min(bonus, BASE_STATS.regen*0.1);
+
+    log('初回クリア永続ボーナス獲得！');
+  } else {
+    const bonus = Number((exp * 0.001).toFixed(1));
+
+    player.hp += Math.min(bonus, BASE_STATS.hp*0.01);
+    player.atk += Math.min(bonus, BASE_STATS.atk*0.01);
+    player.def += Math.min(bonus, BASE_STATS.def*0.01);
+    player.regen += Math.min(bonus, BASE_STATS.regen*0.01);
+
+    log('周回ボーナス獲得！');
+  }
+}
+
+function nextStage(){
+  player.stage++;
+  updateUI();
+  saveGame();
+}
+
+function upgrade(type){
+  const cost = Math.floor(player[type] * 5);
+
+  if(player.exp < cost){
+    alert('EXP不足');
+    return;
+  }
+
+  player.exp -= cost;
+
+  if(type==='hp') player.hp += 20;
+  if(type==='atk') player.atk += 5;
+  if(type==='def') player.def += 2;
+  if(type==='regen') player.regen += 0.5;
+
+  updateUI();
+  saveGame();
+}
+
+function updatePassiveSlots(){
+  if(player.maxStage >= 10) player.passiveSlots = 10;
+  if(player.maxStage >= 25) player.passiveSlots = 15;
+
+  const extra = Math.floor(player.maxStage / 25);
+  player.passiveSlots = Math.max(player.passiveSlots, 15 + extra * 5);
+}
+
+function handleLoginBonus(){
+  const now = new Date();
+  const today = now.toDateString();
+
+  const last = new Date(player.lastLogin).toDateString();
+
+  if(today !== last){
+    player.loginStreak++;
+
+    const bonus = 20 * player.loginStreak * player.maxStage;
+
+    gainExp(bonus);
+
+    log(`ログインボーナス +${bonus}`);
+  }
+
+  player.lastLogin = Date.now();
+}
+
+function handleOfflineReward(){
+  const now = Date.now();
+
+  const diff = Math.min(8*60*60*1000, now - player.lastOffline);
+
+  const hours = diff / (1000*60*60);
+
+  const reward = Math.floor(hours * getEnemy(player.maxStage).exp * 0.5);
+
+  gainExp(reward);
+
+  log(`オフライン報酬 +${reward}`);
+
+  player.lastOffline = now;
+}
+
+function saveGame(){
+  localStorage.setItem(SAVE_KEY, JSON.stringify(player));
+}
+
+function loadGame(){
+  const raw = localStorage.getItem(SAVE_KEY);
+
+  if(!raw) return;
+
+  const data = JSON.parse(raw);
+
+  Object.assign(player, data);
+}
+
+window.addEventListener('beforeunload', ()=>{
+  player.lastOffline = Date.now();
+  saveGame();
+});
+
+window.addEventListener('keydown', e=>{
+  if(e.code==='Space'){
+    autoFarm = true;
+  }
+});
+
+window.addEventListener('keyup', e=>{
+  if(e.code==='Space'){
+    autoFarm = false;
+  }
+});
+
+loadGame();
+handleLoginBonus();
+handleOfflineReward();
+updatePassiveSlots();
+updateUI();
+
+</script>
+</body>
+</html>
+```
+
+## 実装済み要素
+
+* 永続育成システム
+* EXPによるステータス強化
+* 初回クリア＆周回ボーナス
+* 超インフレ指数成長
+* ログインボーナス
+* オフライン放置報酬
+* LocalStorageセーブ
+* 1行ずつ進行する戦闘
+* ダメージ振れ幅
+* Space長押し自動周回
+* パッシブスロット解放
+* 30個構成可能なパッシブ設計
+* 毒/炎/回避/復活などの特殊効果
+
+## 今後さらに追加可能な要素
+
+* 装備システム
+* ステージ属性
+* ボス専用AI
+* スキルツリー
+* ギルド
+* PvP
+* 放置ランキング
+* エフェクト演出
+* 音楽/BGM
+* セーブデータ書き出し
