@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Task Rogue (タスク連動ローグライク)</title>
+    <title>Moral Task Rogue (モラル・タスク・ローグライク)</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
         body {
@@ -25,7 +25,7 @@
         .tab-btn { flex: 1; background: none; border: none; color: #8b949e; padding: 12px; font-weight: bold; cursor: pointer; font-size: 14px; }
         .tab-btn.active { color: #58a6ff; border-bottom: 3px solid #58a6ff; background: #161b22; }
 
-        .view-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 15px; gap: 15px; }
+        .view-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 15px; gap: 12px; }
         .hidden { display: none !important; }
 
         /* --- ステータスUI --- */
@@ -35,6 +35,10 @@
             border-bottom: 1px solid #30363d;
         }
         .stat-growth { color: #7ee787; font-weight: bold; }
+        
+        /* 経験値バー */
+        .exp-container { grid-column: span 2; width: 100%; height: 10px; background: #30363d; border-radius: 5px; overflow: hidden; margin-top: 3px; position: relative; }
+        .exp-fill { height: 100%; background: linear-gradient(90deg, #2ea44f, #7ee787); width: 0%; transition: width 0.3s; }
 
         /* --- ダンジョン画面 --- */
         #stage-container { flex: 1; background: #050505; display: flex; justify-content: center; align-items: center; position: relative; }
@@ -51,13 +55,19 @@
 
         /* --- タスク管理画面 --- */
         #task-creator { background: #21262d; padding: 12px; border-radius: 8px; border: 1px solid #30363d; display: flex; flex-direction: column; gap: 8px; }
-        #task-input { background: #0d1117; border: 1px solid #30363d; color: #fff; padding: 8px; border-radius: 6px; font-size: 14px; outline: none; }
-        .task-item { background: #21262d; border: 1px solid #30363d; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .btn-complete { background: #238636; font-size: 12px; padding: 6px 12px; }
+        .input-field { background: #0d1117; border: 1px solid #30363d; color: #fff; padding: 8px; border-radius: 6px; font-size: 14px; outline: none; width: 100%; }
+        textarea.input-field { resize: none; height: 60px; font-family: sans-serif; }
+        
+        .task-item { background: #21262d; border: 1px solid #30363d; padding: 12px; border-radius: 8px; display: flex; flex-direction: column; gap: 6px; }
+        .task-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .task-title { font-size: 15px; font-weight: bold; color: #58a6ff; }
+        .task-desc { font-size: 12px; color: #8b949e; white-space: pre-wrap; }
+        .task-deadline { font-size: 11px; color: #ff79c6; font-weight: bold; }
+        
+        .btn-complete { background: #238636; font-size: 12px; padding: 6px 12px; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; align-self: flex-end; }
 
         /* メッセージログ */
         #log-window { height: 60px; background: #0d1117; padding: 5px 10px; font-size: 11px; color: #aaa; overflow-y: hidden; display: flex; flex-direction: column; justify-content: flex-end; border-top: 1px solid #30363d;}
-
         #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; }
     </style>
 </head>
@@ -66,20 +76,30 @@
 <div id="phone-shell">
     <!-- タブバー -->
     <div id="tab-bar">
-        <button id="tab-task" class="tab-btn active" onclick="switchTab('task')">📋 クエスト（現実）</button>
-        <button id="tab-dungeon" class="tab-btn" onclick="switchTab('dungeon')">👺 ダンジョン（ゲーム）</button>
+        <button id="tab-task" class="tab-btn active" onclick="switchTab('task')">📋 モラルタスク</button>
+        <button id="tab-dungeon" class="tab-btn" onclick="switchTab('dungeon')">👺 ダンジョン</button>
     </div>
 
     <!-- ================= タスク画面 ================= -->
     <div id="view-task" class="view-content">
-        <div style="font-size: 12px; color: #8b949e;">💡 現実のタスクを登録・完了して、あなたのキャラクターを永久に強くしましょう！</div>
+        <div style="font-size: 11px; color: #8b949e; line-height: 1.4;">
+            ⚖️ <b>モラル報酬システム</b>：<br>
+            締切から1日以上前なら <b>1000 EXP</b> （計画的！）<br>
+            10時間以内なら <b>100 EXP</b> （普通）<br>
+            1時間以内なら <b>1 EXP</b> （ギリギリすぎ！）
+        </div>
         
         <div id="task-creator">
-            <input type="text" id="task-input" placeholder="やらないといけないことを入力..." maxlength="25">
-            <button class="btn" style="background:#1f6feb; font-size:14px; padding:8px;" onclick="addTask()">タスクを受注する</button>
+            <input type="text" id="task-name" class="input-field" placeholder="タスク名を入力..." maxlength="25">
+            <textarea id="task-details" class="input-field" placeholder="タスク内容・詳細を入力..."></textarea>
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+                <span style="font-size: 11px; color: #8b949e;">期限（年月日・時間）：</span>
+                <input type="datetime-local" id="task-date" class="input-field">
+            </div>
+            <button class="btn" style="background:#1f6feb; font-size:14px; padding:8px;" onclick="addTask()">クエストを発行</button>
         </div>
 
-        <div style="font-weight:bold; font-size:14px; margin-top:10px;">現在の受注リスト</div>
+        <div style="font-weight:bold; font-size:14px; margin-top:5px;">受注中のタスク一覧</div>
         <div id="task-list" style="display:flex; flex-direction:column; gap:8px;"></div>
     </div>
 
@@ -90,7 +110,8 @@
             <div>階層: <span id="ui-floor">1</span> F</div>
             <div>満腹度: <span id="ui-satiety">100</span> %</div>
             <div>HP: <span id="ui-hp">20</span> / <span id="ui-max-hp">20</span></div>
-            <div>基礎攻撃力: <span id="ui-atk" class="stat-growth">3</span></div>
+            <div>Lv: <span id="ui-level" class="stat-growth">1</span> (ATK: <span id="ui-atk">3</span>)</div>
+            <div class="exp-container"><div id="ui-exp-bar" class="exp-fill"></div></div>
         </div>
 
         <!-- マップ -->
@@ -122,14 +143,17 @@
 <script>
     const WIDTH = 12; const HEIGHT = 12;
 
-    // プレイヤー基礎ステータス（現実のタスクをクリアすると「永久に」育つ）
+    // キャラクターの永久成長ステータス
     let growth = {
+        level: 1,
+        exp: 0,
+        maxExp: 100,
         maxHp: 20,
         atk: 3,
-        savedSatiety: 100 // タスククリアでストックが溜まる
+        savedSatiety: 100
     };
 
-    // 現在のダンジョン内の一時ステータス
+    // ダンジョン内の一時ステータス
     let player = { x: 1, y: 1, hp: 20, satiety: 100 };
     let currentFloor = 1;
     let dungeonMap = [];
@@ -139,7 +163,6 @@
 
     const ICONS = { player: "🤠", wall: "■", floor: "·", stair: "▰", enemy: "🟢" };
 
-    // --- タブ切り替え ---
     function switchTab(type) {
         document.getElementById('tab-task').classList.remove('active');
         document.getElementById('tab-dungeon').classList.remove('active');
@@ -152,18 +175,31 @@
         } else {
             document.getElementById('tab-dungeon').classList.add('active');
             document.getElementById('view-dungeon').classList.remove('hidden');
-            // ダンジョンが始まっていなければ初期化
             if(dungeonMap.length === 0) { enterDungeon(); }
         }
     }
 
-    // ================= 現実のタスク管理ロジック =================
+    // ================= 現実のタスク管理（モラル仕様） =================
     function addTask() {
-        const input = document.getElementById('task-input');
-        if(!input.value.trim()) return;
+        const nameInput = document.getElementById('task-name');
+        const detailsInput = document.getElementById('task-details');
+        const dateInput = document.getElementById('task-date');
 
-        tasks.push({ id: Date.now(), text: input.value.trim() });
-        input.value = "";
+        if(!nameInput.value.trim() || !dateInput.value) {
+            alert("タスク名と期限（年月日）は必ず入力してください！");
+            return;
+        }
+
+        tasks.push({
+            id: Date.now(),
+            name: nameInput.value.trim(),
+            details: detailsInput.value.trim(),
+            deadline: new Date(dateInput.value).getTime()
+        });
+
+        nameInput.value = "";
+        detailsInput.value = "";
+        dateInput.value = "";
         renderTasks();
     }
 
@@ -171,21 +207,55 @@
         const idx = tasks.findIndex(t => t.id === id);
         if(idx === -1) return;
 
-        // キャラクターの永久成長（バフ）
-        if(Math.random() > 0.5) {
-            growth.maxHp += 2;
-            alert(`【タスク完了！】現実の努力が身を結んだ！\n最大HPが永久に +2 された！`);
+        const task = tasks[idx];
+        const now = Date.now();
+        const timeLeft = task.deadline - now; // 締切までの残り時間（ミリ秒）
+
+        let expReward = 0;
+        let moralMessage = "";
+
+        if (timeLeft <= 0) {
+            // 期限切れの場合
+            expReward = 0;
+            moralMessage = "期限切れです！モラル違反のため経験値は 0 EXP です。";
+        } else if (timeLeft <= 60 * 60 * 1000) {
+            // 1時間以内
+            expReward = 1;
+            moralMessage = "ギリギリすぎます！1時間以内の滑り込みのため 1 EXP を獲得。";
+        } else if (timeLeft <= 10 * 60 * 60 * 1000) {
+            // 10時間以内
+            expReward = 100;
+            moralMessage = "10時間以内の完了！通常のモラル行動として 100 EXP を獲得。";
         } else {
-            growth.atk += 1;
-            alert(`【タスク完了！】現実の努力が身を結んだ！\n基礎攻撃力が永久に +1 された！`);
+            // 1日（24時間）以上前、または10時間〜24時間前（条件を網羅するため10時間超はすべて1日以内バフに統合）
+            expReward = 1000;
+            moralMessage = "素晴らしい計画性！余裕を持った完了のため 1000 EXP を獲得！";
         }
-        
-        // 満腹度のストックを追加
-        growth.savedSatiety = Math.min(200, growth.savedSatiety + 30);
-        
-        // もしダンジョン中なら即座にステータスへ反映
-        player.hp = Math.min(growth.maxHp, player.hp + 5); 
-        player.satiety = Math.min(200, player.satiety + 30);
+
+        // プレイヤーに経験値と満腹度ボーナスを付与
+        growth.exp += expReward;
+        growth.savedSatiety = Math.min(200, growth.savedSatiety + 40);
+        player.satiety = Math.min(200, player.satiety + 40);
+
+        // レベルアップ処理（インフレ対応型）
+        let levelUpCount = 0;
+        while (growth.exp >= growth.maxExp) {
+            growth.exp -= growth.maxExp;
+            growth.level++;
+            growth.maxHp += 5;
+            growth.atk += 1;
+            growth.maxExp = Math.floor(growth.maxExp * 1.2);
+            levelUpCount++;
+        }
+
+        let alertTxt = `【タスク討伐完了】\n${moralMessage}`;
+        if(levelUpCount > 0) {
+            alertTxt += `\n\n🎉 レベルが ${levelUpCount} 上がった！\n最大HP: ${growth.maxHp} / 攻撃力: ${growth.atk} に永久パワーアップ！`;
+        }
+        alert(alertTxt);
+
+        // ダンジョン内ステータスも即座に同期
+        player.hp = Math.min(growth.maxHp, player.hp + 10);
 
         tasks.splice(idx, 1);
         renderTasks();
@@ -196,26 +266,35 @@
         const list = document.getElementById('task-list');
         list.innerHTML = "";
         if(tasks.length === 0) {
-            list.innerHTML = `<div style="text-align:center; color:#8b949e; font-size:12px; padding:20px;">受注中のタスクはありません。<br>やるべきことを上から入力して登録しましょう！</div>`;
+            list.innerHTML = `<div style="text-align:center; color:#8b949e; font-size:12px; padding:20px;">受注中のタスクはありません。</div>`;
             return;
         }
         tasks.forEach(t => {
             const item = document.createElement('div');
             item.classList.add('task-item');
-            item.innerHTML = `<span>${t.text}</span><button class="btn btn-complete" onclick="completeTask(${t.id})">完了(討伐)</button>`;
+            
+            const dateStr = new Date(t.deadline).toLocaleString('ja-JP', {year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'});
+            
+            item.innerHTML = `
+                <div class="task-header">
+                    <span class="task-title">${t.name}</span>
+                    <button class="btn-complete" onclick="completeTask(${t.id})">完了</button>
+                </div>
+                ${t.details ? `<div class="task-desc">${t.details}</div>` : ''}
+                <div class="task-deadline">⏳ 期限: ${dateStr}</div>
+            `;
             list.appendChild(item);
         });
     }
 
     // ================= ローグライクゲームロジック =================
     function enterDungeon() {
-        // 現在の成長具合をダンジョン内ステータスに同期
         player.hp = growth.maxHp;
         player.satiety = growth.savedSatiety;
         currentFloor = 1;
         isGameOver = false;
         document.getElementById('overlay').classList.add('hidden');
-        addLog("--- ダンジョンに潜入した ---");
+        addLog("--- ダンジョンへ侵入した ---");
         generateFloor();
     }
 
@@ -229,16 +308,15 @@
             }
         }
         player.x = 1; player.y = 1;
-        dungeonMap[1][1] = 'floor';
-        dungeonMap[HEIGHT - 2][WIDTH - 2] = 'stair'; // 階段
+        dungeonMap = 'floor';
+        dungeonMap[HEIGHT - 2][WIDTH - 2] = 'stair';
 
-        // 敵の配置
         let count = 1 + Math.floor(currentFloor / 2);
         for(let i=0; i<count; i++) {
             let rx = Math.floor(Math.random() * (WIDTH-2))+1;
             let ry = Math.floor(Math.random() * (HEIGHT-2))+1;
             if(dungeonMap[ry][rx] === 'floor' && !(rx===1 && ry===1)) {
-                enemies.push({ x: rx, y: ry, hp: 4 + currentFloor, atk: 2 + currentFloor });
+                enemies.push({ x: rx, y: ry, hp: 3 + currentFloor, atk: 1 + currentFloor });
             }
         }
         updateUI(); drawMap();
@@ -267,23 +345,21 @@
         let nx = player.x + dx; let ny = player.y + dy;
         if(dungeonMap[ny][nx] === 'wall') return;
 
-        // 寿命（満腹度）消費
         if(dx !== 0 || dy !== 0) {
             player.satiety = Math.max(0, player.satiety - 1);
-            growth.savedSatiety = player.satiety; // 現実タブにもストックをリアルタイム同期
+            growth.savedSatiety = player.satiety;
             if(player.satiety <= 0) {
                 player.hp = Math.max(0, player.hp - 1);
-                addLog("飢えでダメージを受けた！タスクを完了せよ！", true);
+                addLog("飢えでダメージ！計画的にタスクを消化せよ！", true);
             }
         }
 
-        // 戦闘
         let enemy = enemies.find(e => e.x === nx && e.y === ny);
         if(enemy) {
             enemy.hp -= growth.atk;
-            addLog(`敵に ${growth.atk} のダメージを与えた！`);
+            addLog(`敵に ${growth.atk} のダメージ！`);
             if(enemy.hp <= 0) {
-                addLog("敵を撃破！");
+                addLog("敵を撃破した！");
                 enemies = enemies.filter(e => e !== enemy);
             }
             enemyTurn(); checkDeath(); updateUI(); drawMap();
@@ -294,7 +370,7 @@
 
         if(dungeonMap[player.y][player.x] === 'stair') {
             currentFloor++;
-            addLog(`階段を下りた... ${currentFloor}F`);
+            addLog(`下り階段を通過、${currentFloor}Fへ`);
             generateFloor();
             return;
         }
@@ -307,9 +383,8 @@
             let dx = player.x - e.x; let dy = player.y - e.y;
             if(Math.abs(dx) <= 1 && Math.abs(dy) <= 1 && (Math.abs(dx)+Math.abs(dy)===1)) {
                 player.hp = Math.max(0, player.hp - e.atk);
-                addLog(`敵から ${e.atk} のダメージを受けた！`, true);
+                addLog(`敵から ${e.atk} のダメージ！`, true);
             } else {
-                // 簡易接近
                 let mx = dx > 0 ? 1 : (dx < 0 ? -1 : 0);
                 let my = dy > 0 ? 1 : (dy < 0 ? -1 : 0);
                 let tx = e.x + (Math.abs(dx) > Math.abs(dy) ? mx : 0);
@@ -325,21 +400,23 @@
         if(player.hp <= 0) {
             isGameOver = true;
             document.getElementById('overlay').classList.remove('hidden');
-            document.getElementById('over-title').innerText = "力尽きた";
-            document.getElementById('over-desc').innerText = `到達階層: ${currentFloor}F\nダンジョンの進行度はリセットされますが、\n現実のタスクで得た基礎能力（HP:${growth.maxHp}/ATK:${growth.atk}）は失われません！`;
+            document.getElementById('over-title').innerText = "冒険失敗";
+            document.getElementById('over-desc').innerText = `到達: ${currentFloor}F\nダンジョン進行度は戻りますが、\n現実のモラルで育てたステータス（Lv.${growth.level}）は失われません！`;
         }
     }
 
-    function respawnPlayer() {
-        enterDungeon();
-    }
+    function respawnPlayer() { enterDungeon(); }
 
     function updateUI() {
         document.getElementById('ui-floor').innerText = currentFloor;
         document.getElementById('ui-satiety').innerText = player.satiety;
         document.getElementById('ui-hp').innerText = player.hp;
         document.getElementById('ui-max-hp').innerText = growth.maxHp;
+        document.getElementById('ui-level').innerText = growth.level;
         document.getElementById('ui-atk').innerText = growth.atk;
+
+        let expPct = (growth.exp / growth.maxExp) * 100;
+        document.getElementById('ui-exp-bar').style.width = `${Math.min(100, expPct)}%`;
     }
 
     function addLog(txt, dng = false) {
@@ -348,10 +425,9 @@
         if(dng) item.style.color = "#ff4d4d";
         item.innerText = txt;
         win.appendChild(item);
-        if(win.children.length > 3) win.removeChild(win.children[0]);
+        if(win.children.length > 3) win.removeChild(win.children);
     }
 
-    // キーボード
     window.addEventListener('keydown', (e) => {
         if(document.getElementById('view-dungeon').classList.contains('hidden')) return;
         if(e.key === 'ArrowUp' || e.key === 'w') movePlayer(0, -1);
@@ -361,7 +437,6 @@
         if(e.key === ' ') movePlayer(0, 0);
     });
 
-    // 初回起動
     renderTasks();
 </script>
 </body>
