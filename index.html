@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>MiniGame OS</title>
+    <title>MiniGame OS - Perfect Edition</title>
     <style>
-        /* 共通スタイル */
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
         body {
             background-color: #111; color: #fff;
@@ -30,30 +29,43 @@
             background: rgba(255,255,255,0.2); border: none; color: #fff;
             padding: 6px 12px; border-radius: 15px; cursor: pointer; font-size: 12px;
         }
+        /* コイン共通表示 */
+        .coin-hud {
+            position: absolute; top: 15px; right: 15px; z-index: 99;
+            font-size: 14px; color: #ffcc00; font-weight: bold; background: rgba(0,0,0,0.5);
+            padding: 4px 10px; border-radius: 10px;
+        }
 
         /* --- 1. ホーム画面 --- */
         #home-screen {
-            background: linear-gradient(135deg, #1d2671, #c33764);
+            background: linear-gradient(135deg, #1f4068, #162447);
             padding: 60px 20px 20px 20px;
         }
-        .app-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px;
-        }
-        .app-icon {
-            display: flex; flex-direction: column; align-items: center; cursor: pointer;
-        }
+        .app-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
+        .app-icon { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
         .app-img {
             width: 70px; height: 70px; border-radius: 18px; display: flex;
             justify-content: center; align-items: center; font-size: 35px;
             box-shadow: 0 8px 15px rgba(0,0,0,0.3); transition: transform 0.1s;
         }
         .app-icon:active .app-img { transform: scale(0.9); }
-        .app-label { margin-top: 8px; font-size: 12px; text-align: center; text-shadow: 1px 1px 3px #000; }
+        .app-label { margin-top: 8px; font-size: 11px; text-align: center; text-shadow: 1px 1px 3px #000; }
         #icon-reflex { background: linear-gradient(135deg, #ff0055, #5500ff); }
         #icon-idle { background: linear-gradient(135deg, #ffcc00, #ff6600); }
         #icon-tetris { background: linear-gradient(135deg, #00ccff, #0044ff); }
+        #icon-gacha { background: linear-gradient(135deg, #00ffcc, #0099ff); }
+        #icon-shooting { background: linear-gradient(135deg, #32ff7e, #3ae374); }
 
-        /* --- 2. 反射神経ゲーム --- */
+        /* --- 2. ガチャ画面 --- */
+        #gacha-screen { background: #1a1a2e; padding: 60px 20px 20px 20px; align-items: center; }
+        .gacha-machine { width: 100%; background: #162447; border: 2px solid #00ffcc; border-radius: 15px; padding: 20px; text-align: center; margin-bottom: 20px; }
+        .gacha-btn { background: linear-gradient(135deg, #00ffcc, #0099ff); border: none; color: #000; padding: 15px 30px; font-size: 18px; font-weight: bold; border-radius: 30px; cursor: pointer; margin-top: 15px; }
+        .gacha-btn:disabled { background: #555; color: #aaa; cursor: not-allowed; }
+        .buff-list { width: 100%; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; display: flex; flex-direction: column; gap: 8px; }
+        .buff-item { display: flex; justify-content: space-between; font-size: 13px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        #gacha-result-popup { position: absolute; top: 30%; background: rgba(0,255,204,0.95); color: #000; padding: 20px; border-radius: 15px; font-weight: bold; font-size: 20px; text-align: center; z-index: 100; box-shadow: 0 0 20px #00ffcc; }
+
+        /* --- 3. 反射神経ゲーム --- */
         #reflex-screen { background: #0a0000; font-family: 'Impact', sans-serif; }
         #reflex-arena { flex: 1; position: relative; display: flex; flex-direction: column; justify-content: space-between; padding: 60px 20px 40px 20px; }
         #flash-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; opacity: 0; transition: opacity 0.05s; }
@@ -64,34 +76,43 @@
         #r-parry { background: linear-gradient(135deg, #ffaa00, #996600); }
         #r-dodge { background: linear-gradient(135deg, #3399ff, #0044cc); }
         .dmg-popup { position: absolute; font-size: 36px; color: #fff; font-weight: 900; text-shadow: 2px 2px 0 #000; animation: dmgAnim 0.6s forwards; z-index: 6; }
-        @keyframes dmgAnim { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: translateY(-50px); opacity: 0; } }
 
-        /* --- 3. 放置ゲーム --- */
+        /* --- 4. 放置ゲーム --- */
         #idle-screen { background: #151d2a; padding: 60px 15px 20px 15px; }
         .idle-stats { background: rgba(0,0,0,0.4); padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 15px; }
-        .idle-enemy { background: #223147; border-radius: 10px; padding: 20px; text-align: center; margin-bottom: 15px; position: relative; }
+        .idle-enemy { background: #223147; border-radius: 10px; padding: 15px; text-align: center; margin-bottom: 15px; }
         .hp-bar { width: 100%; height: 12px; background: #444; border-radius: 6px; overflow: hidden; margin-top: 10px; }
         .hp-fill { height: 100%; background: #ff4444; width: 100%; transition: width 0.1s; }
-        .shop-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; }
+        .shop-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
         .shop-item { background: #2c3a50; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
         .shop-btn { background: #00cc77; border: none; color: #fff; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .shop-btn:disabled { background: #555; cursor: not-allowed; }
 
-        /* --- 4. テトリス --- */
+        /* --- 5. テトリス --- */
         #tetris-screen { background: #111; padding-top: 50px; align-items: center; }
         #tetris-canvas { background: #000; border: 2px solid #444; }
-        #tetris-score { font-size: 20px; margin: 10px 0; color: #00ccff; }
-        .tetris-controls { width: 100%; max-width: 300px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; }
-        .t-btn { background: #333; border: none; color: #fff; padding: 15px; border-radius: 8px; font-size: 18px; cursor: pointer; text-align: center;}
-        .t-btn:active { background: #555; }
+        .tetris-controls { width: 100%; max-width: 320px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 10px; }
+        .t-btn { background: #333; border: none; color: #fff; padding: 12px 5px; border-radius: 8px; font-size: 14px; cursor: pointer; text-align: center;}
+
+        /* --- 6. シューティング --- */
+        #shooting-screen { background: #050510; padding-top: 50px; align-items: center; }
+        #shooting-canvas { background: #000; border: 2px solid #3399ff; }
+        .st-controls { width: 100%; max-width: 300px; display: flex; gap: 20px; padding: 15px; }
+        .st-btn { flex: 1; background: #222; border: 2px solid #555; color: #fff; padding: 15px; border-radius: 10px; font-size: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="phone-shell">
+    <!-- 共通コイン表示 -->
+    <div class="coin-hud">🪙 コイン: <span id="global-coin-count">0</span></div>
 
     <!-- ================= 1. ホーム画面 ================= -->
     <div id="home-screen" class="screen">
+        <div style="text-align: center; margin-bottom: 30px; margin-top: 20px;">
+            <h2 style="font-size: 24px; letter-spacing: 2px;">MiniGame OS</h2>
+            <p style="font-size: 12px; color: #aaa; margin-top: 5px;">ガチャバフで全ゲームを支配せよ</p>
+        </div>
         <div class="app-grid">
             <div class="app-icon" onclick="switchScreen('reflex-screen')">
                 <div class="app-img" id="icon-reflex">👺</div>
@@ -103,112 +124,194 @@
             </div>
             <div class="app-icon" onclick="switchScreen('tetris-screen')">
                 <div class="app-img" id="icon-tetris">🧱</div>
-                <div class="app-label">テトリス</div>
+                <div class="app-label">拡張テトリス</div>
+            </div>
+            <div class="app-icon" onclick="switchScreen('shooting-screen')">
+                <div class="app-img" id="icon-shooting">🚀</div>
+                <div class="app-label">宇宙防衛戦</div>
+            </div>
+            <div class="app-icon" onclick="switchScreen('gacha-screen')">
+                <div class="app-img" id="icon-gacha">🔮</div>
+                <div class="app-label">バフ・ガチャ</div>
             </div>
         </div>
     </div>
 
-    <!-- ================= 2. 反射神経ゲーム ================= -->
+    <!-- ================= 2. ガチャ画面 ================= -->
+    <div id="gacha-screen" class="screen hidden">
+        <button class="back-home-btn" onclick="exitToHome()">ホーム</button>
+        <div style="font-size: 20px; font-weight: bold; margin-bottom: 20px; margin-top: 10px;">永久強化ガチャ</div>
+        
+        <div class="gacha-machine">
+            <div style="font-size: 50px; margin-bottom: 10px; animation: pulse 2s infinite;">🔮</div>
+            <p style="font-size: 13px; color: #aaa;">1回引くとランダムな能力が永続Lvアップ！</p>
+            <button id="gacha-pull-btn" class="gacha-btn" onclick="pullGacha()">ガチャを引く (🪙10)</button>
+        </div>
+
+        <div class="buff-list">
+            <div style="font-weight: bold; color: #00ffcc; margin-bottom: 5px;">現在の永久バフ状況</div>
+            <div class="buff-item"><span>🧱 テトリス: スコア倍率</span><span id="buff-txt-tetris">Lv.0 (x1.0)</span></div>
+            <div class="buff-item"><span>👺 反射神経: 敵の油断(猶予延長)</span><span id="buff-txt-reflex">Lv.0 (+0ms)</span></div>
+            <div class="buff-item"><span>💰 放置ゲーム: オフライン(他画面)自動化</span><span id="buff-txt-idle">Lv.0 (0%)</span></div>
+            <div class="buff-item"><span>🚀 シューティング: 連射速度</span><span id="buff-txt-shoot">Lv.0 (通常)</span></div>
+        </div>
+
+        <div id="gacha-result-popup" class="hidden"></div>
+    </div>
+
+    <!-- ================= 3. 反射神経ゲーム ================= -->
     <div id="reflex-screen" class="screen hidden">
         <button class="back-home-btn" onclick="exitToHome()">ホーム</button>
         <div id="reflex-arena">
             <div id="r-streak" style="text-align: center; font-size: 32px; color: #ffcc00;">0 KILL</div>
             <div id="flash-overlay"></div>
-            
             <div style="text-align:center;">
                 <div id="r-boss-name" style="color:#ff3333; margin-bottom:5px;">第1層</div>
                 <div id="r-boss-visual" style="font-size:70px; transition: transform 0.05s;">👺</div>
             </div>
-
             <div style="text-align:center; font-size:50px;">⚔️</div>
         </div>
         <div id="reflex-action-panel">
             <button id="r-parry" class="reflex-btn" onclick="playerReflexAction('PARRY')">弾く</button>
             <button id="r-dodge" class="reflex-btn" onclick="playerReflexAction('DODGE')">避ける</button>
         </div>
-
-        <!-- リザルト被せ -->
-        <div id="r-result" class="screen hidden" style="background:rgba(0,0,0,0.95); justify-content:center; align-items:center; padding:20px; text-align:center;">
+        <div id="r-result" class="screen hidden" style="background:rgba(0,0,0,0.95); justify-content:center; align-items:center; padding:20px; text-align:center; z-index:101;">
             <h1 style="color:#ff3333; font-size:40px; margin-bottom:10px;">消 滅</h1>
-            <p id="r-death-reason" style="color:#ccc; margin-bottom:20px; font-size:14px; line-height:1.5;"></p>
+            <p id="r-death-reason" style="color:#ccc; margin-bottom:10px; font-size:14px; line-height:1.5;"></p>
+            <p id="r-reward-coin" style="color:#ffcc00; font-weight:bold; margin-bottom:20px;"></p>
             <button onclick="initReflexGame()" style="background:#ff3333; border:none; color:#fff; padding:12px 30px; font-size:18px; border-radius:5px; cursor:pointer;">再挑戦</button>
         </div>
     </div>
 
-    <!-- ================= 3. 放置ゲーム ================= -->
+    <!-- ================= 4. 放置ゲーム ================= -->
     <div id="idle-screen" class="screen hidden">
         <button class="back-home-btn" onclick="exitToHome()">ホーム</button>
         <div class="idle-stats">
-            <div style="font-size:14px; color:#aaa;">所持金</div>
-            <div id="idle-gold" style="font-size:28px; color:#ffd700; font-weight:bold;">$ 0</div>
+            <div style="font-size:13px; color:#aaa;">所持金</div>
+            <div id="idle-gold" style="font-size:26px; color:#ffd700; font-weight:bold;">$ 0</div>
             <div id="idle-gps" style="font-size:12px; color:#00cc77;">秒間: +$0</div>
         </div>
-
         <div class="idle-enemy">
             <div id="idle-enemy-name" style="font-weight:bold;">スライム</div>
             <div id="idle-enemy-visual" style="font-size:45px; margin:10px 0;">💧</div>
             <div class="hp-bar"><div id="idle-hp-fill" class="hp-fill"></div></div>
         </div>
-
         <div class="shop-list">
             <div class="shop-item">
-                <div><div>タップ攻撃力 (Lv.<span id="lvl-atk">1</span>)</div><div style="font-size:12px; color:#aaa;">威力: +<span id="val-atk">1</span></div></div>
+                <div><div>タップ攻撃力 (Lv.<span id="lvl-atk">1</span>)</div></div>
                 <button id="btn-up-atk" class="shop-btn" onclick="buyUpgrade('atk')">$ 10</button>
             </div>
             <div class="shop-item">
-                <div><div>自動採掘ドリル (Lv.<span id="lvl-auto">0</span>)</div><div style="font-size:12px; color:#aaa;">毎秒: +<span id="val-auto">0</span></div></div>
+                <div><div>自動ドリル (Lv.<span id="lvl-auto">0</span>)</div></div>
                 <button id="btn-up-auto" class="shop-btn" onclick="buyUpgrade('auto')">$ 50</button>
             </div>
         </div>
     </div>
 
-    <!-- ================= 4. テトリス ================= -->
+    <!-- ================= 5. テトリス ================= -->
     <div id="tetris-screen" class="screen hidden">
         <button class="back-home-btn" onclick="exitToHome()">ホーム</button>
-        <div id="tetris-score">SCORE: 0</div>
+        <div id="tetris-score" style="font-size: 18px; margin: 55px 0 5px 0; color: #00ccff; font-weight: bold;">SCORE: 0</div>
         <canvas id="tetris-canvas" width="200" height="400"></canvas>
         <div class="tetris-controls">
             <button class="t-btn" onclick="moveTetro(-1)">←</button>
-            <button class="t-btn" onclick="rotateTetro()">回転</button>
+            <button class="t-btn" onclick="rotateTetro(false)">左回転</button>
+            <button class="t-btn" onclick="rotateTetro(true)">右回転</button>
             <button class="t-btn" onclick="moveTetro(1)">→</button>
-            <div></div>
-            <button class="t-btn" onclick="dropTetro()" style="grid-column: span 3; background:#0044ff;">落とす</button>
+            <button class="t-btn" onclick="dropTetro()" style="grid-column: span 4; background:#0044ff;">一気に落とす</button>
+        </div>
+    </div>
+
+    <!-- ================= 6. シューティング ================= -->
+    <div id="shooting-screen" class="screen hidden">
+        <button class="back-home-btn" onclick="exitToHome()">ホーム</button>
+        <div id="st-score" style="font-size: 18px; margin: 55px 0 5px 0; color: #32ff7e; font-weight: bold;">SCORE: 0</div>
+        <canvas id="shooting-canvas" width="300" height="420"></canvas>
+        <div class="st-controls">
+            <button class="st-btn" id="st-left-btn">← 左</button>
+            <button class="st-btn" id="st-right-btn">右 →</button>
         </div>
     </div>
 
 </div>
 
 <script>
-    // --- 画面切り替えシステム ---
+    // --- グローバルシステムデータ ---
+    let globalCoins = 0;
+    let lastTickTime = Date.now(); // オフライン時間計算用
+
+    // ガチャ永久バフデータ (最大Lv.5)
+    let buffLevels = { tetris: 0, reflex: 0, idle: 0, shoot: 0 };
+
+    function updateGlobalCoinUI() {
+        document.getElementById('global-coin-count').innerText = globalCoins;
+        document.getElementById('gacha-pull-btn').disabled = globalCoins < 10;
+        
+        // ガチャバフテキスト更新
+        document.getElementById('buff-txt-tetris').innerText = `Lv.${buffLevels.tetris} (x${(1 + buffLevels.tetris * 0.5).toFixed(1)})`;
+        document.getElementById('buff-txt-reflex').innerText = `Lv.${buffLevels.reflex} (+${buffLevels.reflex * 60}ms)`;
+        document.getElementById('buff-txt-idle').innerText = `Lv.${buffLevels.idle} (${buffLevels.idle * 20}%)`;
+        document.getElementById('buff-txt-shoot').innerText = `Lv.${buffLevels.shoot} (${buffLevels.shoot === 0 ? '通常' : '連射+' + buffLevels.shoot})`;
+    }
+
     function switchScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
         document.getElementById(screenId).classList.remove('hidden');
         
-        // 各ゲームの初期化起動
+        // 各ゲーム初期化
+        if (screenId === 'gacha-screen') updateGlobalCoinUI();
         if (screenId === 'reflex-screen') initReflexGame();
-        if (screenId === 'idle-screen') startIdleGame();
         if (screenId === 'tetris-screen') initTetrisGame();
+        if (screenId === 'shooting-screen') initShootingGame();
     }
+
     function exitToHome() {
-        // 全ゲームのタイマーやループを停止
         clearTimeout(reflexTimer);
-        clearInterval(idleInterval);
         clearInterval(tetrisInterval);
+        clearInterval(shootingInterval);
         document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
         document.getElementById('home-screen').classList.remove('hidden');
+        updateGlobalCoinUI();
+    }
+
+    // --- ガチャロジック ---
+    function pullGacha() {
+        if (globalCoins < 10) return;
+        globalCoins -= 10;
+        
+        const keys = Object.keys(buffLevels);
+        // レベル5未満のバフを抽出
+        const availableKeys = keys.filter(k => buffLevels[k] < 5);
+        
+        if (availableKeys.length === 0) {
+            alert("すべての永久バフが最大レベルに達しています！");
+            globalCoins += 10;
+            updateGlobalCoinUI();
+            return;
+        }
+
+        const pickedKey = availableKeys[Math.floor(Math.random() * availableKeys.length)];
+        buffLevels[pickedKey]++;
+
+        const names = { tetris: "テトリススコア倍率UP", reflex: "反射神経・敵の油断延長", idle: "放置・バックグラウンド自動化", shoot: "シューティング連射速度UP" };
+        
+        const popup = document.getElementById('gacha-result-popup');
+        popup.innerHTML = `✨ ガチャ獲得 ✨<br><span style="color:#fff;">${names[pickedKey]}</span><br>Lv.${buffLevels[pickedKey]} に上昇！`;
+        popup.classList.remove('hidden');
+        
+        setTimeout(() => popup.classList.add('hidden'), 2000);
+        updateGlobalCoinUI();
     }
 
 
-    // ================= 2. 反射神経ゲーム ロジック =================
+    // ================= 3. 反射神経ゲーム ロジック =================
     let reflexStreak = 0;
     let reflexActive = false;
     let reflexTimer = null;
     let reflexAttackType = '';
     let reflexWindowStart = 0;
     let reflexWindowDuration = 600;
-    
-    // 待機時間計測用
-    let reflexElapsedTime = 0; 
+    let reflexElapsedTime = 0;
 
     function initReflexGame() {
         reflexStreak = 0;
@@ -225,74 +328,47 @@
         reflexWindowStart = 0;
         reflexElapsedTime = 0;
 
-        // 最初の基本待機：2秒、3秒、5秒からランダム（ミリ秒換算）
-        const baseDelays = [2000, 3000, 5000];
+        const baseDelays =;
         let initialWait = baseDelays[Math.floor(Math.random() * baseDelays.length)];
-        
         reflexElapsedTime += initialWait;
         
-        // 最初のタイマーセット
-        reflexTimer = setTimeout(() => {
-            evaluateReflexWaitLoop();
-        }, initialWait);
+        reflexTimer = setTimeout(evaluateReflexWaitLoop, initialWait);
     }
 
-    // 確率判定とループ
     function evaluateReflexWaitLoop() {
         if (!reflexActive) return;
 
-        // 基本確率の定義
-        let p3 = 10; // 0.3秒追加の確率
-        let p2 = 25; // 0.2秒追加の確率
-        let p5 = 33; // 0.5秒追加の確率
-        let p7 = 15; // 0.7秒追加の確率
-
-        // 秒数超過による減算処理
+        let p3 = 10, p2 = 25, p5 = 33, p7 = 15;
         let currentSeconds = reflexElapsedTime / 1000;
+        
         if (currentSeconds > 9) {
-            // 9秒超越：合計30%分ダウン
-            p3 = Math.max(0, p3 - 30); p2 = Math.max(0, p2 - 30); p5 = Math.max(0, p5 - 30); p7 = Math.max(0, p7 - 30);
+            let deduction = 30 + Math.floor(currentSeconds - 9) * 10;
+            p3 = Math.max(0, p3 - deduction); p2 = Math.max(0, p2 - deduction); p5 = Math.max(0, p5 - deduction); p7 = Math.max(0, p7 - deduction);
         } else if (currentSeconds > 6) {
-            // 6秒超越：10%分ダウン
             p3 = Math.max(0, p3 - 10); p2 = Math.max(0, p2 - 10); p5 = Math.max(0, p5 - 10); p7 = Math.max(0, p7 - 10);
         }
-        
-        // 9秒越え以降、1秒経過するごとに現在の確率からさらに10%分ずつダウン
-        if (currentSeconds > 9) {
-            let overSeconds = Math.floor(currentSeconds - 9);
-            let deduction = overSeconds * 10;
-            p3 = Math.max(0, p3 - deduction); p2 = Math.max(0, p2 - deduction); p5 = Math.max(0, p5 - deduction); p7 = Math.max(0, p7 - deduction);
-        }
 
-        // 乱数ロール (0〜100)
         let roll = Math.random() * 100;
         let nextWait = 0;
 
-        if (roll < p3) {
-            nextWait = 300; // 0.3秒
-        } else if (roll < p3 + p2) {
-            nextWait = 200; // 0.2秒
-        } else if (roll < p3 + p2 + p5) {
-            nextWait = 500; // 0.5秒
-        } else if (roll < p3 + p2 + p5 + p7) {
-            nextWait = 700; // 0.7秒
-        }
+        if (roll < p3) nextWait = 300;
+        else if (roll < p3 + p2) nextWait = 200;
+        else if (roll < p3 + p2 + p5) nextWait = 500;
+        else if (roll < p3 + p2 + p5 + p7) nextWait = 700;
 
-        // どの確率にも属さない、または次の待機が0の場合 ＝ 敵の攻撃を行う
         if (nextWait === 0) {
             triggerReflexAttack();
         } else {
-            // 待機時間を加算して再ループ
             reflexElapsedTime += nextWait;
-            reflexTimer = setTimeout(() => {
-                evaluateReflexWaitLoop();
-            }, nextWait);
+            reflexTimer = setTimeout(evaluateReflexWaitLoop, nextWait);
         }
     }
 
     function triggerReflexAttack() {
         reflexAttackType = Math.random() > 0.5 ? 'PARRY' : 'DODGE';
-        reflexWindowDuration = Math.max(150, 550 - (reflexStreak * 25));
+        // ガチャバフ適用：Lvごとに猶予時間を60ms延長
+        let buffBonus = buffLevels.reflex * 60;
+        reflexWindowDuration = Math.max(150, 550 - (reflexStreak * 25)) + buffBonus;
 
         const flash = document.getElementById('flash-overlay');
         flash.className = '';
@@ -302,266 +378,82 @@
 
         reflexWindowStart = performance.now();
 
-        // 制限時間内に押せないと死亡
         reflexTimer = setTimeout(() => {
-            reflexDie(`敵の容赦ない一撃！\n(溜め時間: ${(reflexElapsedTime/1000).toFixed(2)}秒に対応できず遅れた)`);
+            reflexDie("敵の神速の剣が直撃した！");
         }, reflexWindowDuration);
     }
 
     function playerReflexAction(type) {
         if (!reflexActive) return;
-
         if (reflexWindowStart === 0) {
-            reflexDie("フライングお手付き！\n敵がまだ攻撃を繰り出す前のフェイントに引っかかった。");
+            reflexDie("フェイントに引っかかりフライング自滅！");
             return;
         }
 
         clearTimeout(reflexTimer);
-        const reaction = (performance.now() - reflexWindowStart).toFixed(0);
-
         if (type === reflexAttackType) {
             reflexActive = false;
             reflexStreak++;
             document.getElementById('r-streak').innerText = `${reflexStreak} KILL`;
             
-            // ポップアップ演出
+            // ポップアップ
             const p = document.createElement('div');
-            p.classList.add('dmg-popup');
-            p.innerText = "CRITICAL!!";
+            p.classList.add('dmg-popup'); p.innerText = "PARRY!";
             p.style.left = "40%"; p.style.top = "40%";
             document.getElementById('reflex-arena').appendChild(p);
-            setTimeout(() => p.remove(), 600);
+            setTimeout(() => p.remove(), 500);
 
             setTimeout(spawnReflexBoss, 1000);
         } else {
-            reflexDie(`対応ミス！\nボタンの選択を間違えた。\n(反応速度: ${reaction}ms)`);
+            reflexDie("防御の選択を誤った！");
         }
     }
 
     function reflexDie(reason) {
         reflexActive = false;
         clearTimeout(reflexTimer);
-        document.getElementById('r-death-reason').innerText = `${reason}\n\n戦績: ${reflexStreak} KILL`;
+        
+        // コイン獲得システム：プレイで1枚、1撃破ごとに+1枚
+        let earned = 1 + reflexStreak;
+        globalCoins += earned;
+        
+        document.getElementById('r-death-reason').innerText = reason;
+        document.getElementById('r-reward-coin').innerText = `獲得報酬 🪙 コイン +${earned}枚`;
         document.getElementById('r-result').classList.remove('hidden');
+        updateGlobalCoinUI();
     }
 
 
-    // ================= 3. 放置ゲーム ロジック =================
-    let idleGold = 0;
-    let idleAtkLvl = 1;
-    let idleAutoLvl = 0;
-    let enemyMaxHp = 10;
-    let enemyHp = 10;
-    let idleInterval = null;
+    // ================= 4. 放置ゲーム ロジック =================
+    let idleGold = 0; let idleAtkLvl = 1; let idleAutoLvl = 0;
+    let enemyMaxHp = 10; let enemyHp = 10;
+    const idleEnemies = [{name:"銅鉱石", emo:"🪨"}, {name:"銀原石", emo:"🪙"}, {name:"金鉱塊", emo:"👑"}];
+    let idleEnemyIdx = 0;
 
-    const idleEnemies = [
-        { name: "ブロンズ鉱石", emoji: "🪨" },
-        { name: "シルバー原石", emoji: "🪙" },
-        { name: "ゴールド金塊", emoji: "👑" },
-        { name: "クリスタル大結晶", emoji: "💎" }
-    ];
-    let currentEnemyIdx = 0;
+    // 常時コアシステムループ（アプリ全域・バックグラウンドオフライン用）
+    setInterval(() => {
+        let now = Date.now();
+        let dt = (now - lastTickTime) / 1000;
+        lastTickTime = now;
 
-    function startIdleGame() {
-        clearInterval(idleInterval);
-        updateIdleUI();
-        
-        // 1秒に1回の自動処理ループ
-        idleInterval = setInterval(() => {
-            let gps = idleAutoLvl * 2; // レベルごとに毎秒2ゴールド
-            if (gps > 0) {
-                damageEnemy(gps);
-            }
-            updateIdleUI();
-        }, 1000);
-
-        // タップによる攻撃判定を敵エリアに付与
-        document.getElementById('idle-enemy-visual').onclick = () => {
-            damageEnemy(idleAtkLvl);
-            updateIdleUI();
-        };
-    }
-
-    function damageEnemy(amount) {
-        enemyHp -= amount;
-        if (enemyHp <= 0) {
-            // 敵討伐、報酬獲得
-            let reward = enemyMaxHp * 0.5;
-            idleGold += reward;
+        let baseGps = idleAutoLvl * 2;
+        if (baseGps > 0) {
+            // 現在放置画面にいない場合、ガチャバフの効率(Lv*20%)を適用
+            let isCurrentScreen = !document.getElementById('idle-screen').classList.contains('hidden');
+            let efficiency = isCurrentScreen ? 1.0 : (buffLevels.idle * 0.20);
             
-            // 次の敵へ
-            currentEnemyIdx = (currentEnemyIdx + 1) % idleEnemies.length;
-            enemyMaxHp = Math.floor(enemyMaxHp * 1.4) + 5;
-            enemyHp = enemyMaxHp;
-            
-            document.getElementById('idle-enemy-name').innerText = idleEnemies[currentEnemyIdx].name;
-            document.getElementById('idle-enemy-visual').innerText = idleEnemies[currentEnemyIdx].emoji;
-        }
-    }
-
-    function buyUpgrade(type) {
-        if (type === 'atk') {
-            let cost = idleAtkLvl * 10;
-            if (idleGold >= cost) {
-                idleGold -= cost;
-                idleAtkLvl++;
-            }
-        } else {
-            let cost = (idleAutoLvl + 1) * 50;
-            if (idleGold >= cost) {
-                idleGold -= cost;
-                idleAutoLvl++;
-            }
-        }
-        updateIdleUI();
-    }
-
-    function updateIdleUI() {
-        document.getElementById('idle-gold').innerText = `$ ${Math.floor(idleGold)}`;
-        document.getElementById('idle-gps').innerText = `秒間自動: +$${idleAutoLvl * 2}`;
-        
-        document.getElementById('lvl-atk').innerText = idleAtkLvl;
-        document.getElementById('val-atk').innerText = idleAtkLvl;
-        document.getElementById('btn-up-atk').innerText = `$ ${idleAtkLvl * 10}`;
-        document.getElementById('btn-up-atk').disabled = idleGold < (idleAtkLvl * 10);
-
-        document.getElementById('lvl-auto').innerText = idleAutoLvl;
-        document.getElementById('val-auto').innerText = idleAutoLvl * 2;
-        document.getElementById('btn-up-auto').innerText = `$ ${(idleAutoLvl + 1) * 50}`;
-        document.getElementById('btn-up-auto').disabled = idleGold < ((idleAutoLvl + 1) * 50);
-
-        let hpPercent = Math.max(0, (enemyHp / enemyMaxHp) * 100);
-        document.getElementById('idle-hp-fill').style.width = `${hpPercent}%`;
-    }
-
-
-    // ================= 4. テトリス ロジック =================
-    const tCanvas = document.getElementById('tetris-canvas');
-    const tCtx = tCanvas.getContext('2d');
-    const ROW = 20; const COL = 10; const SQ = 20;
-    let tetrisScore = 0;
-    let tetrisBoard = [];
-    let tetrisInterval = null;
-    let currentPiece = null;
-
-    const PIECES = [
-        [[1,1,1,1]], // I
-        [[1,1,1],[0,1,0]], // T
-        [[1,1,1],[1,0,0]], // L
-        [[1,1,0],[0,1,1]], // Z
-        [[1,1],[1,1]] // O
-    ];
-    const COLORS = ["#00ffff", "#aa00ff", "#ffaa00", "#ff0000", "#00ff00"];
-
-    function initTetrisGame() {
-        tetrisScore = 0;
-        document.getElementById('tetris-score').innerText = "SCORE: 0";
-        tetrisBoard = Array.from({length: ROW}, () => Array(COL).fill(0));
-        clearInterval(tetrisInterval);
-        spawnTetro();
-        drawBoard();
-        
-        tetrisInterval = setInterval(() => {
-            if (!moveTetro(0, 1)) {
-                lockTetro();
-            }
-        }, 800);
-    }
-
-    function drawBoard() {
-        tCtx.fillStyle = "#000"; tCtx.fillRect(0,0,tCanvas.width,tCanvas.height);
-        for(let r=0; r<ROW; r++) {
-            for(let c=0; c<COL; c++) {
-                if(tetrisBoard[r][c]) {
-                    tCtx.fillStyle = tetrisBoard[r][c];
-                    tCtx.fillRect(c*SQ, r*SQ, SQ-1, SQ-1);
+            if (efficiency > 0) {
+                let generatedGold = baseGps * dt * efficiency;
+                idleGold += generatedGold;
+                if (isCurrentScreen) {
+                    enemyHp -= (baseGps * dt);
+                    if(enemyHp <= 0) damageEnemy(0); // 撃破リセット
+                    updateIdleUI();
                 }
             }
         }
-        if(currentPiece) drawPiece();
-    }
+    }, 200);
 
-    function spawnTetro() {
-        let id = Math.floor(Math.random() * PIECES.length);
-        currentPiece = { matrix: PIECES[id], color: COLORS[id], x: 3, y: 0 };
-        // 初期位置で衝突したらゲームオーバー
-        if(checkCollision(0, 0, currentPiece.matrix)) {
-            clearInterval(tetrisInterval);
-            alert("GAME OVER! スコア: " + tetrisScore);
-            exitToHome();
-        }
-    }
-
-    function drawPiece() {
-        tCtx.fillStyle = currentPiece.color;
-        currentPiece.matrix.forEach((row, r) => {
-            row.forEach((v, c) => {
-                if(v) tCtx.fillRect((currentPiece.x + c)*SQ, (currentPiece.y + r)*SQ, SQ-1, SQ-1);
-            });
-        });
-    }
-
-    function checkCollision(dx, dy, matrix) {
-        for(let r=0; r<matrix.length; r++) {
-            for(let c=0; c<matrix[r].length; c++) {
-                if(!matrix[r][c]) continue;
-                let nx = currentPiece.x + c + dx;
-                let ny = currentPiece.y + r + dy;
-                if(nx < 0 || nx >= COL || ny >= ROW) return true;
-                if(ny >= 0 && tetrisBoard[ny][nx]) return true;
-            }
-        }
-        return false;
-    }
-
-    function moveTetro(dx, dy = 0) {
-        if(!checkCollision(dx, dy, currentPiece.matrix)) {
-            currentPiece.x += dx; currentPiece.y += dy;
-            drawBoard();
-            return true;
-        }
-        return false;
-    }
-
-    function rotateTetro() {
-        let m = currentPiece.matrix;
-        let r = m[0].map((_, i) => m.map(row => row[i]).reverse());
-        if(!checkCollision(0, 0, r)) { currentPiece.matrix = r; drawBoard(); }
-    }
-
-    function dropTetro() {
-        while(moveTetro(0, 1)) {}
-        lockTetro();
-    }
-
-    function lockTetro() {
-        currentPiece.matrix.forEach((row, r) => {
-            row.forEach((v, c) => {
-                if(v) tetrisBoard[currentPiece.y + r][currentPiece.x + c] = currentPiece.color;
-            });
-        });
-        // ライン消去
-        for(let r=ROW-1; r>=0; r--) {
-            if(tetrisBoard[r].every(v => v !== 0)) {
-                tetrisBoard.splice(r, 1);
-                tetrisBoard.unshift(Array(COL).fill(0));
-                tetrisScore += 100; r++;
-            }
-        }
-        document.getElementById('tetris-score').innerText = "SCORE: " + tetrisScore;
-        spawnTetro();
-        drawBoard();
-    }
-
-    // パソコンのキーボード操作対応
-    window.addEventListener('keydown', (e) => {
-        if (document.getElementById('tetris-screen').classList.contains('hidden')) return;
-        if(e.key === 'ArrowLeft') moveTetro(-1);
-        if(e.key === 'ArrowRight') moveTetro(1);
-        if(e.key === 'ArrowUp') rotateTetro();
-        if(e.key === 'ArrowDown') moveTetro(0, 1);
-    });
-</script>
-
-</body>
-</html>
+    function startIdleGame() {
+        updateIdleUI();
+        document.getElementById('idle-enemy-visual
