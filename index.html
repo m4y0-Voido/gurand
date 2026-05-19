@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>オート電撃サバイバー: 極限ビルド(最終調整版)</title>
+    <title>オート電撃サバイバー: 極限ビルド(振れ幅調整版)</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
         body {
@@ -170,9 +170,14 @@
 
     function spawnEnemies() {
         if (frameCount % 65 === 0) { 
-            let spawnCount = 1 + Math.floor(gameTime / 25);
+            // 【振れ幅50%抑制調整】
+            // 従来の乱数計算（1 + Math.floor(gameTime / 25)）による急激な増加の振れ幅をマイルドに。
+            // 基礎値となる安定した湧き数（baseSpawn）をメインにし、ランダムに増減するブレ幅を半分にカット。
+            let baseSpawn = 1 + (gameTime * 0.035); 
+            let randomRange = (Math.random() - 0.5) * 1.0; // ブレ幅の範囲をこれまでの半分程度に縮小
+            let spawnCount = Math.max(1, Math.round(baseSpawn + randomRange));
             
-            // 初期の敵出現数を抑える調整
+            // 初期の極端な湧きを抑えるフィルター
             if (gameTime < 30 && Math.random() < 0.4) {
                 return; 
             }
@@ -185,7 +190,6 @@
                     radius: isBoss ? 18 : 7,
                     hp: isBoss ? 40 + (gameTime * 2) : 2 + Math.floor(gameTime / 15),
                     maxHp: isBoss ? 40 + (gameTime * 2) : 2 + Math.floor(gameTime / 15),
-                    // 【さらに敵の移動速度を20%低下】前回の0.7からさらに0.8倍（0.7 * 0.8 = 0.56倍）に減速
                     speed: (isBoss ? 0.7 : 1.3 + (Math.random() * 0.5)) * 0.56,
                     isBoss: isBoss
                 });
@@ -196,14 +200,12 @@
     // オートターゲット＆貫通連鎖攻撃
     function autoAttack() {
         let now = performance.now();
-        // 【攻撃速度を30%低下調整】ベースのクールダウン時間を約1.43倍に引き伸ばす（600 ➔ 860）
         let attackCooldown = Math.max(150, 860 / player.atkSpdMultiplier);
 
         if (now - lastAttackTime > attackCooldown) {
             if (enemies.length === 0) return;
 
             lastAttackTime = now;
-            // 【攻撃力を40%低下調整】基本威力を4から2.4（4 * 0.6）に変更
             let damage = Math.ceil(2.4 * player.atkPowerMultiplier);
 
             // プレイヤーに近い敵順にソート
@@ -244,7 +246,6 @@
             currentTarget.hp -= damage;
             visited.add(currentTarget);
 
-            // ビームの軌跡を登録（ゆっくりなテンポに合わせてビームの消えゆく時間も調整）
             beams.push({
                 sx: lastX, sy: lastY,
                 tx: currentTarget.x, ty: currentTarget.y,
@@ -299,7 +300,7 @@
             }
         });
 
-        // 経験値オーブの完全自動吸い寄せ回収（敵や連射の減速に合わせてマイルドに）
+        // 経験値オーブの完全自動吸い寄せ回収
         gems.forEach(g => {
             let dx = player.x - g.x; let dy = player.y - g.y;
             let dist = Math.sqrt(dx*dx + dy*dy);
@@ -329,12 +330,11 @@
             // レベルアップ時の自動永久成長システム
             player.maxHp += 5;
             player.hp = Math.min(player.maxHp, player.hp + 5); 
-            player.atkPowerMultiplier += 0.02; // 攻撃力基礎値 +2%
-            player.atkSpdMultiplier += 0.02;   // 攻撃速度基礎値 +2%
+            player.atkPowerMultiplier += 0.02; 
+            player.atkSpdMultiplier += 0.02;   
             
             isPaused = true;
             
-            // 5の倍数のレベルのときは「神器化」、それ以外は「通常ビルド」
             if (player.level % 5 === 0) {
                 showShingiSelection();
             } else {
@@ -352,7 +352,6 @@
         const container = document.getElementById('options-container');
         container.innerHTML = "";
 
-        // シャッフルして3つ選出
         let choices = [...BUILDS].sort(() => Math.random() - 0.5).slice(0, 3);
 
         choices.forEach(b => {
@@ -376,8 +375,8 @@
         if (type === 'pierce') player.pierceCount += 1;
         if (type === 'heal') {
             let lostHp = player.maxHp - player.hp;
-            let randomHeal = Math.floor(Math.random() * 71) + 30; // 30~100
-            let bonusHeal = Math.floor(lostHp * 0.05); // 減少体力の5%
+            let randomHeal = Math.floor(Math.random() * 71) + 30; 
+            let bonusHeal = Math.floor(lostHp * 0.05); 
             player.hp = Math.min(player.maxHp, player.hp + randomHeal + bonusHeal);
         }
     }
@@ -390,7 +389,6 @@
         const container = document.getElementById('options-container');
         container.innerHTML = "";
 
-        // シャッフルして2つ選出
         let choices = [...SHINGI].sort(() => Math.random() - 0.5).slice(0, 2);
 
         choices.forEach(s => {
