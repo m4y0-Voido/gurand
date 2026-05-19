@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>オート電撃サバイバー: 極限ビルド</title>
+    <title>オート電撃サバイバー: 極限ビルド(調整版)</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
         body {
@@ -111,10 +111,10 @@
         level: 1, exp: 0, maxExp: 10,
         
         // 進化ビルドパラメータ
-        atkSpdMultiplier: 1.0, // 攻撃速度倍率
+        atkSpdMultiplier: 1.0,   // 攻撃速度倍率
         atkPowerMultiplier: 1.0, // 攻撃力倍率
-        shootCount: 1,           // 同時発射数
-        pierceCount: 1,          // 貫通力
+        shootCount: 1,             // 同時発射数
+        pierceCount: 1,            // 貫通力
     };
 
     // 通常ビルドマスター
@@ -169,8 +169,15 @@
     }
 
     function spawnEnemies() {
-        if (frameCount % 45 === 0) { // 時間経過とともに湧きスピードをアップ
-            let spawnCount = 1 + Math.floor(gameTime / 15);
+        // 【出現率40%低下調整】元コードの45フレーム間隔から約65フレームに引き上げ、さらに基礎湧き数をマイルド化
+        if (frameCount % 65 === 0) { 
+            let spawnCount = 1 + Math.floor(gameTime / 25); // 湧き増加のペースも少し緩やかに
+            
+            // 初期の敵出現数を抑える調整（確率的な40%オフフィルター）
+            if (gameTime < 30 && Math.random() < 0.4) {
+                return; 
+            }
+
             for (let i = 0; i < spawnCount; i++) {
                 let isBoss = (gameTime > 0 && gameTime % 30 === 0 && i === 0);
                 enemies.push({
@@ -179,7 +186,8 @@
                     radius: isBoss ? 18 : 7,
                     hp: isBoss ? 50 + (gameTime * 3) : 2 + Math.floor(gameTime / 12),
                     maxHp: isBoss ? 50 + (gameTime * 3) : 2 + Math.floor(gameTime / 12),
-                    speed: isBoss ? 0.7 : 1.3 + (Math.random() * 0.5),
+                    // 【スピード30%低下調整】敵の移動速度を 0.7倍(30%減) に変更
+                    speed: (isBoss ? 0.7 : 1.3 + (Math.random() * 0.5)) * 0.7,
                     isBoss: isBoss
                 });
             }
@@ -189,8 +197,8 @@
     // オートターゲット＆貫通連鎖攻撃
     function autoAttack() {
         let now = performance.now();
-        // 攻撃速度の基本値は 600ms。倍率に応じてクールダウン短縮
-        let attackCooldown = Math.max(80, 600 / player.atkSpdMultiplier);
+        // 攻撃速度の基本値。こちらも全体速度調整に合わせ、クールダウン下限などを調整
+        let attackCooldown = Math.max(110, 600 / player.atkSpdMultiplier);
 
         if (now - lastAttackTime > attackCooldown) {
             if (enemies.length === 0) return;
@@ -236,11 +244,11 @@
             currentTarget.hp -= damage;
             visited.add(currentTarget);
 
-            // ビームの軌跡を登録
+            // ビームの軌跡を登録（全体の速度感に合わせて寿命を少し長めに調整）
             beams.push({
                 sx: lastX, sy: lastY,
                 tx: currentTarget.x, ty: currentTarget.y,
-                life: 6
+                life: 8 
             });
 
             lastX = currentTarget.x;
@@ -251,7 +259,7 @@
 
             // 次の連鎖先（一番近いまだ感電していない敵）を探索
             let nextTarget = null;
-            let minDist = 180; // 連鎖可能な最大射程半径
+            let minDist = 180; 
 
             for (let j = 0; j < enemies.length; j++) {
                 let potential = enemies[j];
@@ -285,7 +293,7 @@
         enemies.forEach(e => {
             e.y += e.speed;
 
-            // 【超重要：変更点】プレイヤーより下（防衛線）を少しでも越えたら即死
+            // プレイヤーより下（防衛線）を少しでも越えたら即死
             if (e.y + e.radius >= player.y + player.radius) {
                 endGame(`敵が防衛デッドラインを突破しました。`);
             }
@@ -296,8 +304,8 @@
             let dx = player.x - g.x; let dy = player.y - g.y;
             let dist = Math.sqrt(dx*dx + dy*dy);
             
-            // どこにいても超高速で手元に自動で集まる
-            let pullSpeed = 7 + (gameTime * 0.05); 
+            // 【スピード30%低下調整】吸い寄せスピードも 0.7倍（30%減）に
+            let pullSpeed = (7 + (gameTime * 0.05)) * 0.7; 
             g.x += (dx / (dist || 1)) * pullSpeed;
             g.y += (dy / (dist || 1)) * pullSpeed;
 
@@ -319,6 +327,12 @@
             player.level++;
             player.maxExp = Math.floor(player.maxExp * 1.25) + 4;
             
+            // 【新機能：レベルアップ時の自動永久成長システム】
+            player.maxHp += 5;
+            player.hp = Math.min(player.maxHp, player.hp + 5); // 最大値と同時にHPも5回復
+            player.atkPowerMultiplier += 0.02; // 攻撃力基礎値 +2%
+            player.atkSpdMultiplier += 0.02;   // 攻撃速度基礎値 +2%
+            
             isPaused = true;
             
             // 5の倍数のレベルのときは「神器化」、それ以外は「通常ビルド」
@@ -333,8 +347,8 @@
 
     // 通常ビルドの3択提示
     function showNormalBuildSelection() {
-        document.getElementById('overlay-main-title').innerText = "LEVEL UP!!";
-        document.getElementById('overlay-sub-title').innerText = "機体強化バフを選択してください";
+        document.getElementById('overlay-main-title').innerText = `LEVEL UP!! (Lv.${player.level})`;
+        document.getElementById('overlay-sub-title').innerText = "機体強化バフを選択してください（Lvアップボーナス付与済）";
         
         const container = document.getElementById('options-container');
         container.innerHTML = "";
@@ -407,7 +421,7 @@
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // デッドライン（防衛線）の赤色発光表示
+        // デッドライン（防衛線）の赤色表示
         ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -463,7 +477,7 @@
         ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
         ctx.fill();
 
-        // プレイヤーの簡易HP表示
+        // プレイヤーのHP表示
         ctx.fillStyle = '#1e293b';
         ctx.fillRect(player.x - 25, player.y + 20, 50, 5);
         ctx.fillStyle = '#00ffff';
@@ -489,8 +503,9 @@
             <span style="font-size:20px; color:#fff; font-weight:bold;">生存時間: ${m}分${s}秒</span><br>
             最終到達レベル: Lv.${player.level}<br><br>
             <span style="font-size:12px; color:#aaa;">[最終ビルドスタッツ]<br>
-            電撃攻撃速度: ×${player.atkSpdMultiplier.toFixed(1)}<br>
-            電撃一撃火力: ×${player.atkPowerMultiplier.toFixed(1)}<br>
+            最大HP上限: ${player.maxHp}<br>
+            電撃攻撃速度: ×${player.atkSpdMultiplier.toFixed(2)}<br>
+            電撃一撃火力: ×${player.atkPowerMultiplier.toFixed(2)}<br>
             同時攻撃本数: ${player.shootCount}本 / 貫通連鎖数: ${player.pierceCount}体</span>
         `;
         document.getElementById('gameover-overlay').classList.remove('hidden');
