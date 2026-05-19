@@ -3,441 +3,341 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Moral Task Rogue (モラル・タスク・ローグライク)</title>
+    <title>Chain Blast (大連鎖爆発パズル)</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
         body {
-            background-color: #0d1117; color: #c9d1d9;
-            font-family: 'Courier New', Courier, monospace;
+            background-color: #080911; color: #fff;
+            font-family: 'Arial Black', sans-serif;
             display: flex; justify-content: center; align-items: center;
             height: 100vh; overflow: hidden;
         }
         #phone-shell {
             position: relative; width: 100%; max-width: 450px;
-            height: 100vh; max-height: 850px; background: #161b22;
-            border: 4px solid #30363d; border-radius: 20px;
+            height: 100vh; max-height: 850px; background: #0e1122;
+            border: 4px solid #1f2344; border-radius: 20px;
             display: flex; flex-direction: column; overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 40px rgba(0,255,255,0.1);
         }
-        
-        /* タブ切り替え */
-        #tab-bar { display: flex; background: #21262d; border-bottom: 2px solid #30363d; }
-        .tab-btn { flex: 1; background: none; border: none; color: #8b949e; padding: 12px; font-weight: bold; cursor: pointer; font-size: 14px; }
-        .tab-btn.active { color: #58a6ff; border-bottom: 3px solid #58a6ff; background: #161b22; }
-
-        .view-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 15px; gap: 12px; }
-        .hidden { display: none !important; }
-
-        /* --- ステータスUI --- */
-        #r-hud {
-            background: #21262d; padding: 10px 15px; font-size: 12px;
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px;
-            border-bottom: 1px solid #30363d;
+        #header {
+            padding: 15px; background: #080911; border-bottom: 2px solid #1f2344;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .stat-growth { color: #7ee787; font-weight: bold; }
+        #score-box { font-size: 28px; color: #00ffff; text-shadow: 0 0 10px rgba(0,255,255,0.5); }
+        #energy-box { font-size: 14px; color: #ff00ff; font-weight: bold; }
         
-        /* 経験値バー */
-        .exp-container { grid-column: span 2; width: 100%; height: 10px; background: #30363d; border-radius: 5px; overflow: hidden; margin-top: 3px; position: relative; }
-        .exp-fill { height: 100%; background: linear-gradient(90deg, #2ea44f, #7ee787); width: 0%; transition: width 0.3s; }
+        #canvas-container { flex: 1; position: relative; background: radial-gradient(circle, #141938 0%, #080911 100%); }
+        canvas { display: block; width: 100%; height: 100%; }
 
-        /* --- ダンジョン画面 --- */
-        #stage-container { flex: 1; background: #050505; display: flex; justify-content: center; align-items: center; position: relative; }
-        #grid { display: grid; grid-template-columns: repeat(12, 1fr); grid-template-rows: repeat(12, 1fr); width: 340px; height: 340px; background: #111; border: 2px solid #333; }
-        .cell { display: flex; justify-content: center; align-items: center; font-size: 18px; font-weight: bold; }
-        .wall { background: #222; color: #444; }
-        .floor { background: #0a0a0a; color: #1a1a1a; }
+        /* コンボ表示 */
+        #combo-ui {
+            position: absolute; top: 20px; left: 0; width: 100%; text-align: center;
+            font-size: 45px; font-weight: 900; color: #ffcc00;
+            text-shadow: 0 0 15px rgba(255,204,0,0.8);
+            pointer-events: none; transform: scale(1); transition: transform 0.05s;
+            opacity: 0;
+        }
+        .combo-active { opacity: 1 !important; animation: pop 0.15s ease-out; }
+        @keyframes pop { 0% { transform: scale(0.8); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
 
-        /* --- コントローラー --- */
-        #controls { padding: 10px; background: #222; display: flex; justify-content: center; }
-        .pad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 150px; }
-        .btn { background: #444; border: none; color: #fff; font-size: 18px; font-weight: bold; padding: 12px 0; border-radius: 6px; cursor: pointer; text-align: center; }
-        .btn:active { background: #555; }
-
-        /* --- タスク管理画面 --- */
-        #task-creator { background: #21262d; padding: 12px; border-radius: 8px; border: 1px solid #30363d; display: flex; flex-direction: column; gap: 8px; }
-        .input-field { background: #0d1117; border: 1px solid #30363d; color: #fff; padding: 8px; border-radius: 6px; font-size: 14px; outline: none; width: 100%; }
-        textarea.input-field { resize: none; height: 60px; font-family: sans-serif; }
-        
-        .task-item { background: #21262d; border: 1px solid #30363d; padding: 12px; border-radius: 8px; display: flex; flex-direction: column; gap: 6px; }
-        .task-header { display: flex; justify-content: space-between; align-items: flex-start; }
-        .task-title { font-size: 15px; font-weight: bold; color: #58a6ff; }
-        .task-desc { font-size: 12px; color: #8b949e; white-space: pre-wrap; }
-        .task-deadline { font-size: 11px; color: #ff79c6; font-weight: bold; }
-        
-        .btn-complete { background: #238636; font-size: 12px; padding: 6px 12px; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; align-self: flex-end; }
-
-        /* メッセージログ */
-        #log-window { height: 60px; background: #0d1117; padding: 5px 10px; font-size: 11px; color: #aaa; overflow-y: hidden; display: flex; flex-direction: column; justify-content: flex-end; border-top: 1px solid #30363d;}
-        #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; }
+        /* ガイド表示 */
+        #guide-msg {
+            position: absolute; bottom: 20px; width: 100%; text-align: center;
+            font-size: 13px; color: #8b949e; pointer-events: none; letter-spacing: 1px;
+        }
     </style>
 </head>
 <body>
 
 <div id="phone-shell">
-    <!-- タブバー -->
-    <div id="tab-bar">
-        <button id="tab-task" class="tab-btn active" onclick="switchTab('task')">📋 モラルタスク</button>
-        <button id="tab-dungeon" class="tab-btn" onclick="switchTab('dungeon')">👺 ダンジョン</button>
+    <div id="header">
+        <div>
+            <div style="font-size: 11px; color: #6e7681; letter-spacing: 1px;">TOTAL SCORE</div>
+            <div id="score-box">0</div>
+        </div>
+        <div id="energy-box">SHRINK BH: <span id="ui-energy">3</span></div>
     </div>
 
-    <!-- ================= タスク画面 ================= -->
-    <div id="view-task" class="view-content">
-        <div style="font-size: 11px; color: #8b949e; line-height: 1.4;">
-            ⚖️ <b>モラル報酬システム</b>：<br>
-            締切から1日以上前なら <b>1000 EXP</b> （計画的！）<br>
-            10時間以内なら <b>100 EXP</b> （普通）<br>
-            1時間以内なら <b>1 EXP</b> （ギリギリすぎ！）
-        </div>
-        
-        <div id="task-creator">
-            <input type="text" id="task-name" class="input-field" placeholder="タスク名を入力..." maxlength="25">
-            <textarea id="task-details" class="input-field" placeholder="タスク内容・詳細を入力..."></textarea>
-            <div style="display: flex; flex-direction: column; gap: 2px;">
-                <span style="font-size: 11px; color: #8b949e;">期限（年月日・時間）：</span>
-                <input type="datetime-local" id="task-date" class="input-field">
-            </div>
-            <button class="btn" style="background:#1f6feb; font-size:14px; padding:8px;" onclick="addTask()">クエストを発行</button>
-        </div>
-
-        <div style="font-weight:bold; font-size:14px; margin-top:5px;">受注中のタスク一覧</div>
-        <div id="task-list" style="display:flex; flex-direction:column; gap:8px;"></div>
-    </div>
-
-    <!-- ================= ダンジョン画面 ================= -->
-    <div id="view-dungeon" class="view-content hidden" style="padding:0;">
-        <!-- HUD -->
-        <div id="r-hud">
-            <div>階層: <span id="ui-floor">1</span> F</div>
-            <div>満腹度: <span id="ui-satiety">100</span> %</div>
-            <div>HP: <span id="ui-hp">20</span> / <span id="ui-max-hp">20</span></div>
-            <div>Lv: <span id="ui-level" class="stat-growth">1</span> (ATK: <span id="ui-atk">3</span>)</div>
-            <div class="exp-container"><div id="ui-exp-bar" class="exp-fill"></div></div>
-        </div>
-
-        <!-- マップ -->
-        <div id="stage-container">
-            <div id="grid"></div>
-            <div id="overlay" class="hidden">
-                <h1 id="over-title" style="color:#ff3333; margin-bottom:10px;">冒険失敗</h1>
-                <p id="over-desc" style="font-size:12px; text-align:center; color:#aaa; margin-bottom:15px;"></p>
-                <button class="btn" style="background:#ff3333; width:120px;" onclick="respawnPlayer()">街へ戻る</button>
-            </div>
-        </div>
-
-        <!-- ログ -->
-        <div id="log-window"></div>
-
-        <!-- パッド -->
-        <div id="controls">
-            <div class="pad-grid">
-                <div></div><button class="btn" onclick="movePlayer(0, -1)">▲</button><div></div>
-                <button class="btn" onclick="movePlayer(-1, 0)">◀</button>
-                <button class="btn" onclick="movePlayer(0, 0)" style="font-size:12px; background:#333;">パス</button>
-                <button class="btn" onclick="movePlayer(1, 0)">▶</button>
-                <div></div><button class="btn" onclick="movePlayer(0, 1)">▼</button><div></div>
-            </div>
-        </div>
+    <div id="canvas-container">
+        <canvas id="gameCanvas"></canvas>
+        <div id="combo-ui">0 COMBO</div>
+        <div id="guide-msg">画面をタップして「重力球」を放て！</div>
     </div>
 </div>
 
 <script>
-    const WIDTH = 12; const HEIGHT = 12;
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreBox = document.getElementById('score-box');
+    const uiEnergy = document.getElementById('ui-energy');
+    const comboUi = document.getElementById('combo-ui');
 
-    // キャラクターの永久成長ステータス
-    let growth = {
-        level: 1,
-        exp: 0,
-        maxExp: 100,
-        maxHp: 20,
-        atk: 3,
-        savedSatiety: 100
-    };
+    let score = 0;
+    let energy = 3;
+    let combo = 0;
+    let comboTimer = 0;
 
-    // ダンジョン内の一時ステータス
-    let player = { x: 1, y: 1, hp: 20, satiety: 100 };
-    let currentFloor = 1;
-    let dungeonMap = [];
-    let enemies = [];
-    let isGameOver = false;
-    let tasks = [];
+    let blocks = [];
+    let particles = [];
+    let blackHole = null; // {x, y, radius, power, life}
 
-    const ICONS = { player: "🤠", wall: "■", floor: "·", stair: "▰", enemy: "🟢" };
+    const COLORS = ['#ff3366', '#00ffff', '#ffcc00', '#00ff66', '#ff00ff'];
+    const BLOCK_SIZE = 14;
 
-    function switchTab(type) {
-        document.getElementById('tab-task').classList.remove('active');
-        document.getElementById('tab-dungeon').classList.remove('active');
-        document.getElementById('view-task').classList.add('hidden');
-        document.getElementById('view-dungeon').classList.add('hidden');
+    function resize() {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
 
-        if(type === 'task') {
-            document.getElementById('tab-task').classList.add('active');
-            document.getElementById('view-task').classList.remove('hidden');
-        } else {
-            document.getElementById('tab-dungeon').classList.add('active');
-            document.getElementById('view-dungeon').classList.remove('hidden');
-            if(dungeonMap.length === 0) { enterDungeon(); }
+    // 初期ブロックを画面いっぱいに敷き詰める（物理的な山を作る）
+    function initGame() {
+        blocks = [];
+        particles = [];
+        score = 0;
+        energy = 3;
+        scoreBox.innerText = score;
+        uiEnergy.innerText = energy;
+
+        // 画面の下半分にランダムな色のブロックを大量配置
+        let rows = 18;
+        let cols = Math.floor(canvas.width / (BLOCK_SIZE * 1.5));
+        let startY = canvas.height - 320;
+
+        for(let r=0; r<rows; r++) {
+            for(let c=0; c<cols; c++) {
+                blocks.push({
+                    x: (canvas.width / cols) * c + (Math.random() * 8) + 10,
+                    y: startY + (r * (BLOCK_SIZE * 1.2)) + (Math.random() * 5),
+                    vx: 0,
+                    vy: 0,
+                    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+                    radius: BLOCK_SIZE / 2 + (Math.random() * 3),
+                    isDead: false
+                });
+            }
         }
     }
 
-    // ================= 現実のタスク管理（モラル仕様） =================
-    function addTask() {
-        const nameInput = document.getElementById('task-name');
-        const detailsInput = document.getElementById('task-details');
-        const dateInput = document.getElementById('task-date');
-
-        if(!nameInput.value.trim() || !dateInput.value) {
-            alert("タスク名と期限（年月日）は必ず入力してください！");
+    // タップでブラックホール（引力球）を発生させる
+    canvas.addEventListener('pointerdown', (e) => {
+        if (energy <= 0 && !blackHole) {
+            // エネルギーが切れたら自動リセット
+            initGame();
             return;
         }
+        if (blackHole) return; // 連続撃ち制限
 
-        tasks.push({
-            id: Date.now(),
-            name: nameInput.value.trim(),
-            details: detailsInput.value.trim(),
-            deadline: new Date(dateInput.value).getTime()
-        });
+        const rect = canvas.getBoundingClientRect();
+        const tx = e.clientX - rect.left;
+        const ty = e.clientY - rect.top;
 
-        nameInput.value = "";
-        detailsInput.value = "";
-        dateInput.value = "";
-        renderTasks();
-    }
-
-    function completeTask(id) {
-        const idx = tasks.findIndex(t => t.id === id);
-        if(idx === -1) return;
-
-        const task = tasks[idx];
-        const now = Date.now();
-        const timeLeft = task.deadline - now; // 締切までの残り時間（ミリ秒）
-
-        let expReward = 0;
-        let moralMessage = "";
-
-        if (timeLeft <= 0) {
-            // 期限切れの場合
-            expReward = 0;
-            moralMessage = "期限切れです！モラル違反のため経験値は 0 EXP です。";
-        } else if (timeLeft <= 60 * 60 * 1000) {
-            // 1時間以内
-            expReward = 1;
-            moralMessage = "ギリギリすぎます！1時間以内の滑り込みのため 1 EXP を獲得。";
-        } else if (timeLeft <= 10 * 60 * 60 * 1000) {
-            // 10時間以内
-            expReward = 100;
-            moralMessage = "10時間以内の完了！通常のモラル行動として 100 EXP を獲得。";
-        } else {
-            // 1日（24時間）以上前、または10時間〜24時間前（条件を網羅するため10時間超はすべて1日以内バフに統合）
-            expReward = 1000;
-            moralMessage = "素晴らしい計画性！余裕を持った完了のため 1000 EXP を獲得！";
-        }
-
-        // プレイヤーに経験値と満腹度ボーナスを付与
-        growth.exp += expReward;
-        growth.savedSatiety = Math.min(200, growth.savedSatiety + 40);
-        player.satiety = Math.min(200, player.satiety + 40);
-
-        // レベルアップ処理（インフレ対応型）
-        let levelUpCount = 0;
-        while (growth.exp >= growth.maxExp) {
-            growth.exp -= growth.maxExp;
-            growth.level++;
-            growth.maxHp += 5;
-            growth.atk += 1;
-            growth.maxExp = Math.floor(growth.maxExp * 1.2);
-            levelUpCount++;
-        }
-
-        let alertTxt = `【タスク討伐完了】\n${moralMessage}`;
-        if(levelUpCount > 0) {
-            alertTxt += `\n\n🎉 レベルが ${levelUpCount} 上がった！\n最大HP: ${growth.maxHp} / 攻撃力: ${growth.atk} に永久パワーアップ！`;
-        }
-        alert(alertTxt);
-
-        // ダンジョン内ステータスも即座に同期
-        player.hp = Math.min(growth.maxHp, player.hp + 10);
-
-        tasks.splice(idx, 1);
-        renderTasks();
-        updateUI();
-    }
-
-    function renderTasks() {
-        const list = document.getElementById('task-list');
-        list.innerHTML = "";
-        if(tasks.length === 0) {
-            list.innerHTML = `<div style="text-align:center; color:#8b949e; font-size:12px; padding:20px;">受注中のタスクはありません。</div>`;
-            return;
-        }
-        tasks.forEach(t => {
-            const item = document.createElement('div');
-            item.classList.add('task-item');
-            
-            const dateStr = new Date(t.deadline).toLocaleString('ja-JP', {year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'});
-            
-            item.innerHTML = `
-                <div class="task-header">
-                    <span class="task-title">${t.name}</span>
-                    <button class="btn-complete" onclick="completeTask(${t.id})">完了</button>
-                </div>
-                ${t.details ? `<div class="task-desc">${t.details}</div>` : ''}
-                <div class="task-deadline">⏳ 期限: ${dateStr}</div>
-            `;
-            list.appendChild(item);
-        });
-    }
-
-    // ================= ローグライクゲームロジック =================
-    function enterDungeon() {
-        player.hp = growth.maxHp;
-        player.satiety = growth.savedSatiety;
-        currentFloor = 1;
-        isGameOver = false;
-        document.getElementById('overlay').classList.add('hidden');
-        addLog("--- ダンジョンへ侵入した ---");
-        generateFloor();
-    }
-
-    function generateFloor() {
-        dungeonMap = []; enemies = [];
-        for (let y = 0; y < HEIGHT; y++) {
-            dungeonMap[y] = [];
-            for (let x = 0; x < WIDTH; x++) {
-                if (x === 0 || x === WIDTH - 1 || y === 0 || y === HEIGHT - 1) dungeonMap[y][x] = 'wall';
-                else dungeonMap[y][x] = (Math.random() < 0.18) ? 'wall' : 'floor';
-            }
-        }
-        player.x = 1; player.y = 1;
-        dungeonMap = 'floor';
-        dungeonMap[HEIGHT - 2][WIDTH - 2] = 'stair';
-
-        let count = 1 + Math.floor(currentFloor / 2);
-        for(let i=0; i<count; i++) {
-            let rx = Math.floor(Math.random() * (WIDTH-2))+1;
-            let ry = Math.floor(Math.random() * (HEIGHT-2))+1;
-            if(dungeonMap[ry][rx] === 'floor' && !(rx===1 && ry===1)) {
-                enemies.push({ x: rx, y: ry, hp: 3 + currentFloor, atk: 1 + currentFloor });
-            }
-        }
-        updateUI(); drawMap();
-    }
-
-    function drawMap() {
-        const grid = document.getElementById('grid'); grid.innerHTML = '';
-        for (let y = 0; y < HEIGHT; y++) {
-            for (let x = 0; x < WIDTH; x++) {
-                const cell = document.createElement('div'); cell.classList.add('cell');
-                if (dungeonMap[y][x] === 'wall') { cell.classList.add('wall'); cell.innerText = ICONS.wall; }
-                else { cell.classList.add('floor'); cell.innerText = ICONS.floor; }
-                if (dungeonMap[y][x] === 'stair') cell.innerText = ICONS.stair;
-
-                let e = enemies.find(en => en.x === x && en.y === y);
-                if (e) cell.innerText = ICONS.enemy;
-                if (player.x === x && player.y === y) cell.innerText = ICONS.player;
-
-                grid.appendChild(cell);
-            }
-        }
-    }
-
-    function movePlayer(dx, dy) {
-        if(isGameOver) return;
-        let nx = player.x + dx; let ny = player.y + dy;
-        if(dungeonMap[ny][nx] === 'wall') return;
-
-        if(dx !== 0 || dy !== 0) {
-            player.satiety = Math.max(0, player.satiety - 1);
-            growth.savedSatiety = player.satiety;
-            if(player.satiety <= 0) {
-                player.hp = Math.max(0, player.hp - 1);
-                addLog("飢えでダメージ！計画的にタスクを消化せよ！", true);
-            }
-        }
-
-        let enemy = enemies.find(e => e.x === nx && e.y === ny);
-        if(enemy) {
-            enemy.hp -= growth.atk;
-            addLog(`敵に ${growth.atk} のダメージ！`);
-            if(enemy.hp <= 0) {
-                addLog("敵を撃破した！");
-                enemies = enemies.filter(e => e !== enemy);
-            }
-            enemyTurn(); checkDeath(); updateUI(); drawMap();
-            return;
-        }
-
-        player.x = nx; player.y = ny;
-
-        if(dungeonMap[player.y][player.x] === 'stair') {
-            currentFloor++;
-            addLog(`下り階段を通過、${currentFloor}Fへ`);
-            generateFloor();
-            return;
-        }
-
-        enemyTurn(); checkDeath(); updateUI(); drawMap();
-    }
-
-    function enemyTurn() {
-        enemies.forEach(e => {
-            let dx = player.x - e.x; let dy = player.y - e.y;
-            if(Math.abs(dx) <= 1 && Math.abs(dy) <= 1 && (Math.abs(dx)+Math.abs(dy)===1)) {
-                player.hp = Math.max(0, player.hp - e.atk);
-                addLog(`敵から ${e.atk} のダメージ！`, true);
-            } else {
-                let mx = dx > 0 ? 1 : (dx < 0 ? -1 : 0);
-                let my = dy > 0 ? 1 : (dy < 0 ? -1 : 0);
-                let tx = e.x + (Math.abs(dx) > Math.abs(dy) ? mx : 0);
-                let ty = e.y + (Math.abs(dx) > Math.abs(dy) ? 0 : my);
-                if(dungeonMap[ty][tx] !== 'wall' && !enemies.some(en => en.x === tx && en.y === ty)) {
-                    e.x = tx; e.y = ty;
-                }
-            }
-        });
-    }
-
-    function checkDeath() {
-        if(player.hp <= 0) {
-            isGameOver = true;
-            document.getElementById('overlay').classList.remove('hidden');
-            document.getElementById('over-title').innerText = "冒険失敗";
-            document.getElementById('over-desc').innerText = `到達: ${currentFloor}F\nダンジョン進行度は戻りますが、\n現実のモラルで育てたステータス（Lv.${growth.level}）は失われません！`;
-        }
-    }
-
-    function respawnPlayer() { enterDungeon(); }
-
-    function updateUI() {
-        document.getElementById('ui-floor').innerText = currentFloor;
-        document.getElementById('ui-satiety').innerText = player.satiety;
-        document.getElementById('ui-hp').innerText = player.hp;
-        document.getElementById('ui-max-hp').innerText = growth.maxHp;
-        document.getElementById('ui-level').innerText = growth.level;
-        document.getElementById('ui-atk').innerText = growth.atk;
-
-        let expPct = (growth.exp / growth.maxExp) * 100;
-        document.getElementById('ui-exp-bar').style.width = `${Math.min(100, expPct)}%`;
-    }
-
-    function addLog(txt, dng = false) {
-        const win = document.getElementById('log-window');
-        const item = document.createElement('div');
-        if(dng) item.style.color = "#ff4d4d";
-        item.innerText = txt;
-        win.appendChild(item);
-        if(win.children.length > 3) win.removeChild(win.children);
-    }
-
-    window.addEventListener('keydown', (e) => {
-        if(document.getElementById('view-dungeon').classList.contains('hidden')) return;
-        if(e.key === 'ArrowUp' || e.key === 'w') movePlayer(0, -1);
-        if(e.key === 'ArrowDown' || e.key === 's') movePlayer(0, 1);
-        if(e.key === 'ArrowLeft' || e.key === 'a') movePlayer(-1, 0);
-        if(e.key === 'ArrowRight' || e.key === 'd') movePlayer(1, 0);
-        if(e.key === ' ') movePlayer(0, 0);
+        // ブラックホール生成
+        blackHole = { x: tx, y: ty, radius: 10, maxRadius: 75, life: 60, mode: 'pull' };
+        energy--;
+        uiEnergy.innerText = energy <= 0 ? "RESET TAP" : energy;
+        combo = 0;
     });
 
-    renderTasks();
+    // 爆発エフェクトの散布
+    function spawnParticles(x, y, color) {
+        for(let i=0; i<12; i++) {
+            let angle = Math.random() * Math.PI * 2;
+            let speed = Math.random() * 5 + 3;
+            particles.push({
+                x: x, y: y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                color: color,
+                alpha: 1,
+                size: Math.random() * 4 + 2
+            });
+        }
+    }
+
+    function update() {
+        // --- 1. ブラックホールの物理演算 ---
+        if (blackHole) {
+            if (blackHole.mode === 'pull') {
+                blackHole.radius += (blackHole.maxRadius - blackHole.radius) * 0.1;
+                blackHole.life--;
+
+                // すべてのブロックを中心へ吸い寄せる
+                blocks.forEach(b => {
+                    let dx = blackHole.x - b.x;
+                    let dy = blackHole.y - b.y;
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < 280 && dist > 5) {
+                        let force = (280 - dist) * 0.015; // 近いほど強く
+                        b.vx += (dx / dist) * force;
+                        b.vy += (dy / dist) * force;
+                    }
+                });
+
+                if (blackHole.life <= 0) {
+                    blackHole.mode = 'push'; // 収縮の反動でちょっと弾く
+                    blackHole.life = 10;
+                }
+            } else {
+                blackHole.radius *= 0.7;
+                blackHole.life--;
+                if (blackHole.life <= 0) blackHole = null;
+            }
+        }
+
+        // --- 2. ブロックの移動と摩擦・重力・壁衝突 ---
+        blocks.forEach(b => {
+            b.vy += 0.25; // 擬似重力
+            b.vx *= 0.96; // 空気抵抗
+            b.vy *= 0.96;
+
+            b.x += b.vx;
+            b.y += b.vy;
+
+            // 画面の壁・床との当たり判定
+            if (b.x < b.radius) { b.x = b.radius; b.vx *= -0.5; }
+            if (b.x > canvas.width - b.radius) { b.x = canvas.width - b.radius; b.vx *= -0.5; }
+            if (b.y > canvas.height - b.radius) { b.y = canvas.height - b.radius; b.vy *= -0.3; b.vx *= 0.8; }
+        });
+
+        // --- 3. ブロック同士の衝突・連鎖爆発チェック ---
+        // 高速化のため簡易的な全探索
+        for(let i=0; i<blocks.length; i++) {
+            let b1 = blocks[i];
+            if (b1.isDead) continue;
+
+            for(let j=i+1; j<blocks.length; j++) {
+                let b2 = blocks[j];
+                if (b2.isDead) continue;
+
+                let dx = b2.x - b1.x;
+                let dy = b2.y - b1.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                let minDist = b1.radius + b2.radius;
+
+                if (dist < minDist) {
+                    // めり込み防止の押し出し
+                    let overlap = minDist - dist;
+                    let nx = dx / (dist || 1);
+                    let ny = dy / (dist || 1);
+                    b1.x -= nx * overlap * 0.5;
+                    b1.y -= ny * overlap * 0.5;
+                    b2.x += nx * overlap * 0.5;
+                    b2.y += ny * overlap * 0.5;
+
+                    // 反発速度の計算
+                    let kx = b1.vx - b2.vx;
+                    let ky = b1.vy - b2.vy;
+                    let p = 2 * (nx * kx + ny * ky) / 2;
+                    b1.vx -= nx * p * 0.5;
+                    b1.vy -= ny * p * 0.5;
+                    b2.vx += nx * p * 0.5;
+                    b2.vy += ny * p * 0.5;
+
+                    // 【超重要：バズ要素】同じ色同士がぶつかったら大爆発連鎖！
+                    if (b1.color === b2.color) {
+                        b1.isDead = true;
+                        b2.isDead = true;
+                        
+                        combo++;
+                        comboTimer = 45; // コンボ受付時間
+                        score += combo * 10;
+                        scoreBox.innerText = score;
+
+                        // 周囲への爆風衝撃波
+                        let boomX = (b1.x + b2.x) / 2;
+                        let boomY = (b1.y + b2.y) / 2;
+                        spawnParticles(boomX, boomY, b1.color);
+
+                        blocks.forEach(other => {
+                            if (!other.isDead) {
+                                let odx = other.x - boomX;
+                                let ody = other.y - boomY;
+                                let odist = Math.sqrt(odx*odx + ody*ody);
+                                if (odist < 90) {
+                                    let force = (90 - odist) * 0.15;
+                                    other.vx += (odx / (odist || 1)) * force;
+                                    other.vy += (ody / (odist || 1)) * force;
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+        }
+
+        // 死亡フラグの立ったブロックを削除
+        blocks = blocks.filter(b => !b.isDead);
+
+        // --- 4. エフェクト粒子の更新 ---
+        particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.alpha -= 0.02;
+        });
+        particles = particles.filter(p => p.alpha > 0);
+
+        // --- 5. コンボUIの制御 ---
+        if (comboTimer > 0) {
+            comboTimer--;
+            comboUi.innerText = `${combo} COMBO`;
+            comboUi.className = "combo-active";
+            if (comboTimer === 0) comboUi.className = "";
+        }
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // ブロックの描画（滑らかな円形ネオン調）
+        blocks.forEach(b => {
+            ctx.fillStyle = b.color;
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        // パーティクルの描画
+        particles.forEach(p => {
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.alpha;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        ctx.globalAlpha = 1.0; // リセット
+
+        // ブラックホールの視覚エフェクト
+        if (blackHole) {
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.4)';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(blackHole.x, blackHole.y, blackHole.radius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.fillStyle = 'rgba(255, 0, 255, 0.2)';
+            ctx.beginPath();
+            ctx.arc(blackHole.x, blackHole.y, blackHole.radius * 0.6, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(blackHole.x, blackHole.y, blackHole.radius * 0.2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    function loop() {
+        update();
+        draw();
+        requestAnimationFrame(loop);
+    }
+
+    // 初回スタート
+    initGame();
+    loop();
 </script>
+
 </body>
 </html>
