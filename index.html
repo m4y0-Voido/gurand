@@ -3,379 +3,265 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ギリギリ・プラネット (GiriGiri Planet)</title>
+    <title>ギリギリ採掘職人 (Gold Rush Dig)</title>
     <style>
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-        }
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
         body {
-            margin: 0;
-            padding: 0;
-            background-color: #0b0e14;
+            margin: 0; padding: 0;
+            background-color: #1a1105;
             color: #ffffff;
             font-family: 'Helvetica Neue', Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden;
         }
         #game-container {
-            position: relative;
-            width: 100%;
-            max-width: 450px;
-            height: 100vh;
-            max-height: 800px;
-            background: radial-gradient(circle, #1a233a 0%, #0b0e14 100%);
-            overflow: hidden;
+            position: relative; width: 100%; max-width: 450px;
+            height: 100vh; max-height: 800px;
+            background: #2c1d0b; overflow: hidden;
             box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            display: flex; flex-direction: column;
         }
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
+        /* 上部ステータス */
+        #header {
+            padding: 15px; background: #110b04;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 3px solid #ffd700;
         }
-        /* UIレイヤー */
-        .ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            pointer-events: none;
+        #score-box { font-size: 24px; font-weight: bold; color: #ffd700; font-family: monospace; }
+        #risk-box { font-size: 14px; color: #ff4444; }
+
+        /* 採掘エリア（グリッド） */
+        #grid-container {
+            flex: 1; display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 8px; padding: 15px;
+            background: #221608;
         }
-        .interactive {
-            pointer-events: auto;
+        .tile {
+            background: #5c3a21; border-radius: 8px;
+            border-bottom: 5px solid #3d2616;
+            cursor: pointer; display: flex; justify-content: center;
+            align-items: center; font-size: 28px;
+            transition: all 0.1s;
         }
-        #hud {
-            position: absolute;
-            top: 20px;
-            width: 100%;
-            text-align: center;
-            font-size: 32px;
-            font-weight: bold;
-            text-shadow: 0 0 10px rgba(0,255,255,0.5);
-            font-family: monospace;
-        }
-        #start-screen, #gameover-screen {
-            background: rgba(11, 14, 20, 0.85);
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            border: 2px solid #00ffff;
-            box-shadow: 0 0 20px rgba(0,255,255,0.3);
-            width: 85%;
-        }
-        h1 {
-            font-size: 28px;
-            margin-top: 0;
-            color: #00ffff;
-            text-shadow: 0 0 10px rgba(0,255,255,0.5);
-        }
-        p {
-            font-size: 14px;
-            line-height: 1.6;
-            color: #ccc;
+        .tile:active { transform: scale(0.95); }
+        .tile.dug { background: #1a1105; border: 1px solid #333; border-bottom: 1px solid #333; cursor: default; }
+
+        /* 下部操作 */
+        #control-panel {
+            padding: 15px; background: #110b04; text-align: center;
+            border-top: 1px solid #333;
         }
         .btn {
-            background: linear-gradient(45deg, #00ffff, #0088ff);
-            color: #fff;
-            border: none;
-            padding: 12px 30px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 25px;
-            cursor: pointer;
-            margin-top: 15px;
-            box-shadow: 0 5px 15px rgba(0,255,255,0.4);
-            transition: transform 0.1s;
+            width: 100%; padding: 15px; font-size: 20px; font-weight: bold;
+            border: none; border-radius: 30px; cursor: pointer; transition: transform 0.1s;
         }
-        .btn:active {
-            transform: scale(0.95);
+        .btn:active { transform: scale(0.98); }
+        #bank-btn {
+            background: linear-gradient(180deg, #ffd700, #ffaa00); color: #000;
+            box-shadow: 0 5px 15px rgba(255,215,0,0.4);
         }
-        #share-btn {
-            background: #1d9bf0;
-            box-shadow: 0 5px 15px rgba(29,155,240,0.4);
-            margin-top: 10px;
+
+        /* リザルト画面 */
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(17, 11, 4, 0.95); display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
+            padding: 30px; text-align: center; z-index: 10;
         }
-        #result-rank {
-            font-size: 24px;
-            color: #ff3366;
-            font-weight: bold;
-            margin: 15px 0;
-            text-shadow: 0 0 10px rgba(255,51,102,0.5);
+        h1 { color: #ffd700; font-size: 28px; margin-bottom: 10px; }
+        .result-card {
+            background: #221608; border: 2px solid #ffd700;
+            padding: 20px; border-radius: 15px; width: 100%; margin-bottom: 20px;
         }
-        .hidden {
-            display: none !important;
-        }
+        .rank-text { font-size: 24px; font-weight: bold; color: #ff4444; margin: 10px 0; }
+        .btn-restart { background: #fff; color: #000; margin-bottom: 10px; }
+        .btn-share { background: #1d9bf0; color: #fff; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<div id-container="game-container" id="game-container">
-    <canvas id="gameCanvas"></canvas>
-    
-    <!-- プレイ中のスコア表示 -->
-    <div id="hud">0.00s</div>
-    
-    <!-- スタート画面 -->
-    <div class="ui-layer">
-        <div id="start-screen" class="interactive">
-            <h1>ギリギリ・プラネット</h1>
-            <p>画面クリックで「重力反転」！<br>内側と外側の軌道を切り替えて、迫り来るデブリ（赤玉）をギリギリで避け続けろ！</p>
-            <button class="btn" id="start-btn">ミッション開始</button>
+<div id="game-container">
+    <!-- ヘッダー -->
+    <div id="header">
+        <div>
+            <div style="font-size:12px; color:#aaa;">現在のキープ額</div>
+            <div id="score-box">$ 0</div>
         </div>
+        <div id="risk-box">爆弾の確率: 0%</div>
     </div>
 
-    <!-- ゲームオーバー画面 -->
-    <div class="ui-layer">
-        <div id="gameover-screen" class="interactive hidden">
-            <h1>大破・ミッション失敗</h1>
-            <p>あなたの生存時間: <span id="result-score" style="font-size:22px; font-weight:bold; color:#fff;">0.00</span> 秒</p>
-            <div id="result-rank">評価: 宇宙の塵</div>
-            <button class="btn" id="restart-btn">もう一度挑戦</button>
-            <button class="btn" id="share-btn">結果をXでポスト</button>
+    <!-- グリッド -->
+    <div id="grid-container"></div>
+
+    <!-- コントロール -->
+    <div id="control-panel">
+        <button id="bank-btn" class="btn">利益を確定して帰還する</button>
+    </div>
+
+    <!-- ゲームオーバー/クリア画面共通 -->
+    <div id="result-overlay" class="overlay hidden">
+        <h1 id="result-title">爆死！強制終了</h1>
+        <div class="result-card">
+            <p id="result-status">獲得賞金: $0</p>
+            <div id="result-analysis" class="rank-text">強欲度: 100%</div>
+            <p id="result-comment" style="font-size:14px; color:#bbb;"></p>
         </div>
+        <button id="restart-btn" class="btn btn-restart">次の山へ突撃</button>
+        <button id="share-btn" class="btn btn-share">結果をXに晒す</button>
     </div>
 </div>
 
 <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const hud = document.getElementById('hud');
-    const startScreen = document.getElementById('start-screen');
-    const gameoverScreen = document.getElementById('gameover-screen');
-    const startBtn = document.getElementById('start-btn');
+    const gridContainer = document.getElementById('grid-container');
+    const scoreBox = document.getElementById('score-box');
+    const riskBox = document.getElementById('risk-box');
+    const bankBtn = document.getElementById('bank-btn');
+    const resultOverlay = document.getElementById('result-overlay');
+    const resultTitle = document.getElementById('result-title');
+    const resultStatus = document.getElementById('result-status');
+    const resultAnalysis = document.getElementById('result-analysis');
+    const resultComment = document.getElementById('result-comment');
     const restartBtn = document.getElementById('restart-btn');
     const shareBtn = document.getElementById('share-btn');
-    const resultScore = document.getElementById('result-score');
-    const resultRank = document.getElementById('result-rank');
 
-    // 画面サイズ合わせ
-    function resizeCanvas() {
-        canvas.width = canvas.offsetWidth;
-        canvas.height = canvas.offsetHeight;
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
+    let currentGold = 0;
+    let dugCount = 0;
+    let bombIndex = -1;
+    let isGameOver = false;
+    let history = []; // プレイヤーの行動ログ
 
-    // ゲーム状態
-    let gameState = 'START'; // START, PLAYING, GAMEOVER
-    let score = 0;
-    let lastTime = 0;
+    // ステージ初期化
+    function initStage() {
+        gridContainer.innerHTML = '';
+        currentGold = 0;
+        dugCount = 0;
+        isGameOver = false;
+        history = [];
+        scoreBox.innerText = `$ ${currentGold}`;
+        
+        // 16マスのうち1つに爆弾を配置
+        bombIndex = Math.floor(Math.random() * 16);
+        updateRisk();
 
-    // ゲームバランス調整用変数
-    const CENTER = { x: 0, y: 0 };
-    const ORBIT_INNER = 60;
-    const ORBIT_OUTER = 110;
-    
-    let player = {
-        angle: 0,
-        speed: 0.04,
-        targetRadius: ORBIT_INNER,
-        currentRadius: ORBIT_INNER,
-        size: 8
-    };
-
-    let obstacles = [];
-    let obstacleSpawnTimer = 0;
-    let obstacleSpeedMultiplier = 1;
-
-    // ランク判定関数
-    function getRank(score) {
-        if (score < 5) return '評価: 宇宙のゴミ';
-        if (score < 15) return '評価: 一般宇宙飛行士';
-        if (score < 30) return '評価: エリートパイロット';
-        if (score < 50) return '評価: ニュータイプ';
-        return '評価: 銀河の救世主';
+        for (let i = 0; i < 16; i++) {
+            const tile = document.createElement('div');
+            tile.classList.add('tile');
+            tile.innerText = '🪓';
+            tile.dataset.index = i;
+            tile.addEventListener('click', () => digTile(tile, i));
+            gridContainer.appendChild(tile);
+        }
     }
 
-    // 初期化
-    function initGame() {
-        score = 0;
-        obstacles = [];
-        obstacleSpawnTimer = 0;
-        obstacleSpeedMultiplier = 1;
-        player.angle = 0;
-        player.targetRadius = ORBIT_INNER;
-        player.currentRadius = ORBIT_INNER;
-        player.speed = 0.04;
-        lastTime = performance.now();
+    // 確率表示の更新
+    function updateRisk() {
+        const remainingTiles = 16 - dugCount;
+        const probability = Math.round((1 / remainingTiles) * 100);
+        riskBox.innerText = `次の一掘りで爆死する確率: ${probability}%`;
     }
 
-    // スタートボタン
-    startBtn.addEventListener('click', () => {
-        startScreen.classList.add('hidden');
-        gameState = 'PLAYING';
-        initGame();
+    // タイルを掘る
+    function digTile(tile, index) {
+        if (isGameOver || tile.classList.contains('dug')) return;
+
+        tile.classList.add('dug');
+        dugCount++;
+
+        if (index === bombIndex) {
+            // 爆弾を踏んだ
+            tile.innerText = '💥';
+            gameOver(false);
+        } else {
+            // 金塊ゲット（掘れば掘るほど1回の価値が跳ね上がる）
+            const earned = dugCount * 100;
+            currentGold += earned;
+            tile.innerText = '💰';
+            scoreBox.innerText = `$ ${currentGold}`;
+            
+            history.push(earned);
+            updateRisk();
+
+            // 全て掘り尽くしたら強制クリア
+            if (dugCount === 15) {
+                gameOver(true);
+            }
+        }
+    }
+
+    // 終了処理
+    function gameOver(isSuccess) {
+        isGameOver = true;
+        resultOverlay.classList.remove('hidden');
+
+        let greedRate = Math.round((dugCount / 15) * 100);
+        
+        if (isSuccess) {
+            resultTitle.innerText = "🎉 伝説の完全発掘！";
+            resultTitle.style.color = "#ffd700";
+            resultStatus.innerText = `無傷で全金塊を回収！: $${currentGold}`;
+            resultAnalysis.innerText = `強欲度: 100% (神の幸運)`;
+            resultComment.innerText = "爆弾を奇跡的にすり抜けました。今すぐ宝くじを買いに行ってください。";
+        } else if (history.length === 0) {
+            // 1ポチ目で死亡
+            resultTitle.innerText = "😭 悲惨な初手爆死";
+            resultTitle.style.color = "#ff4444";
+            resultStatus.innerText = `獲得賞金: $0`;
+            resultAnalysis.innerText = `不運度: 999%`;
+            resultComment.innerText = "最初の１掘りで爆弾を引きました。逆にSNSでウケるレベルの才能です。";
+        } else {
+            // 途中リタイアまたは途中で爆発
+            const isBanked = !gridContainer.querySelector('.tile.dug[data-index="'+bombIndex+'"]')?.innerText.includes('💥');
+            
+            if (isBanked) {
+                resultTitle.innerText = "💰 安全に帰還成功！";
+                resultTitle.style.color = "#00ffcc";
+                resultStatus.innerText = `手堅く利確: $${currentGold}`;
+                
+                if (greedRate < 20) {
+                    resultAnalysis.innerText = `強欲度: ${greedRate}% (超チキン級)`;
+                    resultComment.innerText = "石橋を叩き壊すタイプ。もっと自分を追い込んでも良いのでは？";
+                } else if (greedRate < 60) {
+                    resultAnalysis.innerText = `強欲度: ${greedRate}% (堅実なビジネスマン)`;
+                    resultComment.innerText = "一番賢い引き際を知る人間。一番バズりにくい、普通の良い人です。";
+                } else {
+                    resultAnalysis.innerText = `強欲度: ${greedRate}% (一流のギャンブラー)`;
+                    resultComment.innerText = "ヒリつくスリルを楽しみつつ、絶妙なタイミングで逃げ切りました。見事。";
+                }
+            } else {
+                resultTitle.innerText = "💥 欲望に負けて爆死！";
+                resultTitle.style.color = "#ff4444";
+                resultStatus.innerText = `失った金額: $${currentGold + (dugCount*100)}`;
+                resultAnalysis.innerText = `強欲度: ${greedRate}% (ただの欲張り)`;
+                resultComment.innerText = `あの時やめておけば大金持ちだったのに、あと一歩の欲望に負けましたね。`;
+            }
+        }
+    }
+
+    // 銀行ボタン（利確）
+    bankBtn.addEventListener('click', () => {
+        if (dugCount === 0 || isGameOver) return;
+        gameOver(false); // 爆弾を踏んでない状態でゲーム終了
     });
 
-    // リスタートボタン
+    // リスタート
     restartBtn.addEventListener('click', () => {
-        gameoverScreen.classList.add('hidden');
-        gameState = 'PLAYING';
-        initGame();
+        resultOverlay.classList.add('hidden');
+        initStage();
     });
 
-    // シェアボタン (X / Twitterへの投稿)
+    // SNSシェア
     shareBtn.addEventListener('click', () => {
-        const text = `【ギリギリ・プラネット】で生存時間 ${score.toFixed(2)}秒を記録！\n${getRank(score)}\n#ギリギリプラネット #バズりゲーム`;
-        const url = encodeURIComponent(window.location.href);
+        const titleText = resultTitle.innerText;
+        const analysisText = resultAnalysis.innerText;
+        const text = `【ギリギリ採掘職人】をプレイした！\n結果：${titleText}\nスコア：${scoreBox.innerText}\n${analysisText}\n#ギリギリ採掘職人 #バズりゲーム`;
         window.open(`https://twitter.com{encodeURIComponent(text)}`, '_blank');
     });
 
-    // 画面クリックで重力反転（軌道変更）
-    window.addEventListener('pointerdown', (e) => {
-        if (gameState !== 'PLAYING') return;
-        // UIボタンをクリックした場合は反応させない
-        if (e.target.tagName === 'BUTTON') return;
-
-        if (player.targetRadius === ORBIT_INNER) {
-            player.targetRadius = ORBIT_OUTER;
-        } else {
-            player.targetRadius = ORBIT_INNER;
-        }
-    });
-
-    // 障害物（デブリ）のスポーン
-    function spawnObstacle() {
-        const isOuter = Math.random() > 0.5;
-        const radius = isOuter ? ORBIT_OUTER : ORBIT_INNER;
-        // プレイヤーの進行方向の少し先、またはランダムな角度から出現
-        const angle = player.angle + Math.PI + (Math.random() - 0.5) * 2; 
-        
-        obstacles.push({
-            angle: angle,
-            radius: radius,
-            size: 10,
-            speed: (0.015 + Math.random() * 0.015) * obstacleSpeedMultiplier * (Math.random() > 0.5 ? 1 : -1)
-        });
-    }
-
-    // メインループ
-    function loop(timestamp) {
-        CENTER.x = canvas.width / 2;
-        CENTER.y = canvas.height / 2;
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // 背景のグリッドや装飾
-        drawBackground();
-
-        if (gameState === 'PLAYING') {
-            let dt = (timestamp - lastTime) / 1000;
-            if (dt > 0.1) dt = 0.1; // カクつき対策
-            lastTime = timestamp;
-
-            score += dt;
-            hud.innerText = score.toFixed(2) + 's';
-
-            // 難易度上昇
-            obstacleSpeedMultiplier = 1 + score * 0.02;
-            player.speed = 0.04 + score * 0.0005;
-
-            // プレイヤーの半径移動（なめらかに）
-            player.currentRadius += (player.targetRadius - player.currentRadius) * 0.2;
-            player.angle += player.speed;
-
-            // 障害物生成管理
-            obstacleSpawnTimer += dt;
-            const spawnInterval = Math.max(0.4, 1.2 - score * 0.02);
-            if (obstacleSpawnTimer >= spawnInterval) {
-                spawnObstacle();
-                obstacleSpawnTimer = 0;
-            }
-
-            // 障害物の更新と衝突判定
-            for (let i = obstacles.length - 1; i >= 0; i--) {
-                let obs = obstacles[i];
-                obs.angle += obs.speed;
-
-                // プレイヤーとの衝突判定 (極座標での簡易当たり判定)
-                let angleDiff = Math.abs(player.angle - obs.angle) % (Math.PI * 2);
-                if (angleDiff > Math.PI) angleDiff = Math.PI * 2 - angleDiff;
-
-                // 同じ軌道かつ角度が非常に近い場合
-                if (Math.abs(player.currentRadius - obs.radius) < 15 && angleDiff < 0.15) {
-                    // ゲームオーバー
-                    gameState = 'GAMEOVER';
-                    resultScore.innerText = score.toFixed(2);
-                    resultRank.innerText = getRank(score);
-                    gameoverScreen.classList.remove('hidden');
-                }
-
-                // 画面外（古くなったもの）の削除は今回は簡易的に角度の回転数などで無視
-                if (obstacles.length > 30) {
-                    obstacles.shift();
-                }
-            }
-        }
-
-        // 描画
-        drawGameElements();
-
-        requestAnimationFrame(loop);
-    }
-
-    function drawBackground() {
-        // 軌道線
-        ctx.strokeStyle = 'rgba(0, 255, 255, 0.15)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(CENTER.x, CENTER.y, ORBIT_INNER, 0, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.arc(CENTER.x, CENTER.y, ORBIT_OUTER, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // 中心プラネット
-        ctx.fillStyle = '#0055ff';
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = '#0055ff';
-        ctx.beginPath();
-        ctx.arc(CENTER.x, CENTER.y, 35, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0; // リセット
-    }
-
-    function drawGameElements() {
-        // 障害物の描画
-        obstacles.forEach(obs => {
-            const x = CENTER.x + Math.cos(obs.angle) * obs.radius;
-            const y = CENTER.y + Math.sin(obs.angle) * obs.radius;
-            
-            ctx.fillStyle = '#ff3366';
-            ctx.shadowBlur = 8;
-            ctx.shadowColor = '#ff3366';
-            ctx.beginPath();
-            ctx.arc(x, y, obs.size, 0, Math.PI * 2);
-            ctx.fill();
-        });
-        ctx.shadowBlur = 0;
-
-        // プレイヤーの描画
-        const pX = CENTER.x + Math.cos(player.angle) * player.currentRadius;
-        const pY = CENTER.y + Math.sin(player.angle) * player.currentRadius;
-
-        ctx.fillStyle = '#00ffff';
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = '#00ffff';
-        ctx.beginPath();
-        // 自機っぽく三角形にする
-        ctx.arc(pX, pY, player.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-    }
-
-    // ループ開始
-    requestAnimationFrame(loop);
+    // 初回起動
+    initStage();
 </script>
 
 </body>
