@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>オート電撃サバイバー: 極限ビルド(振れ幅調整版)</title>
+    <title>オート電撃サバイバー: 極限ビルド(超低速版)</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
         body {
@@ -122,8 +122,7 @@
         { type: 'speed', name: "クイックチャージ", desc: "攻撃速度がさらに +10% 加速" },
         { type: 'power', name: "リミットフォース", desc: "攻撃力がさらに +10% 上昇" },
         { type: 'count', name: "追加バレル", desc: "一度に攻撃できる電撃の数が +1 本" },
-        { type: 'pierce', name: "ライトニング連鎖", desc: "電撃の敵を貫通・連鎖する数が +1 体" },
-        { type: 'heal', name: "ナノ修復システム", desc: "体力をランダム(30~100) + 減少HPの5%分 回復" }
+        { type: 'pierce', name: "ライトニング連鎖", desc: "電撃の敵を貫通・連鎖する数が +1 体" }
     ];
 
     // 神器化マスター
@@ -170,11 +169,8 @@
 
     function spawnEnemies() {
         if (frameCount % 65 === 0) { 
-            // 【振れ幅50%抑制調整】
-            // 従来の乱数計算（1 + Math.floor(gameTime / 25)）による急激な増加の振れ幅をマイルドに。
-            // 基礎値となる安定した湧き数（baseSpawn）をメインにし、ランダムに増減するブレ幅を半分にカット。
             let baseSpawn = 1 + (gameTime * 0.035); 
-            let randomRange = (Math.random() - 0.5) * 1.0; // ブレ幅の範囲をこれまでの半分程度に縮小
+            let randomRange = (Math.random() - 0.5) * 1.0; 
             let spawnCount = Math.max(1, Math.round(baseSpawn + randomRange));
             
             // 初期の極端な湧きを抑えるフィルター
@@ -190,7 +186,8 @@
                     radius: isBoss ? 18 : 7,
                     hp: isBoss ? 40 + (gameTime * 2) : 2 + Math.floor(gameTime / 15),
                     maxHp: isBoss ? 40 + (gameTime * 2) : 2 + Math.floor(gameTime / 15),
-                    speed: (isBoss ? 0.7 : 1.3 + (Math.random() * 0.5)) * 0.56,
+                    // 【敵の移動速度をさらに30%低下調整】前回の0.56から、さらに0.7倍（0.56 * 0.7 = 0.392倍）に減速
+                    speed: (isBoss ? 0.7 : 1.3 + (Math.random() * 0.5)) * 0.392,
                     isBoss: isBoss
                 });
             }
@@ -300,12 +297,12 @@
             }
         });
 
-        // 経験値オーブの完全自動吸い寄せ回収
+        // 経験値オーブの完全自動吸い寄せ回収（敵のさらなる減速に合わせ、こちらも少しマイルドな速度に調整）
         gems.forEach(g => {
             let dx = player.x - g.x; let dy = player.y - g.y;
             let dist = Math.sqrt(dx*dx + dy*dy);
             
-            let pullSpeed = (5 + (gameTime * 0.04)) * 0.56; 
+            let pullSpeed = (5 + (gameTime * 0.04)) * 0.392; 
             g.x += (dx / (dist || 1)) * pullSpeed;
             g.y += (dy / (dist || 1)) * pullSpeed;
 
