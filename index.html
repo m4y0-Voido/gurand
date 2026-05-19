@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>オート電撃サバイバー: 極限ビルド(超緩やか微増版)</title>
+    <title>オート電撃サバイバー: 数理アルゴリズム版</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
         body {
@@ -117,19 +117,25 @@
         pierceCount: 1,            // 貫通力
     };
 
+    // アルゴリズム用管理変数
+    let currentLevelSpawned = 0; // 現在のレベルで出現済みの敵の数
+    let currentLevelTarget = 0;   // 現在のレベルの総出現目標数（maxExpの1.12倍）
+    let spawnTimerCounter = 0;   // スポーン間隔判定用フレームカウンター
+
     // 通常ビルドマスター
     const BUILDS = [
         { type: 'speed', name: "クイックチャージ", desc: "攻撃速度がさらに +10% 加速" },
         { type: 'power', name: "リミットフォース", desc: "攻撃力がさらに +10% 上昇" },
         { type: 'count', name: "追加バレル", desc: "一度に攻撃できる電撃の数が +1 本" },
-        { type: 'pierce', name: "ライトニング連鎖", desc: "電撃の敵を貫通・連鎖する数が +1 体" }
+        { type: 'pierce', name: "ライトニング連鎖", desc: "電撃の敵を貫通・連鎖する数が +1 体" },
+        { type: 'heal', name: "ナノ修復システム", desc: "体力をランダム(30~100) + 減少HPの5%分 回復" }
     ];
 
     // 神器化マスター
     const SHINGI = [
         { id: 1, name: "神器：迅雷の極意", desc: "圧倒的な超連射力を得るが、一撃の威力が軽くなる", buff: "攻撃速度 +120%", nerf: "攻撃力 -70%", action: () => { player.atkSpdMultiplier += 1.2; player.atkPowerMultiplier = Math.max(0.1, player.atkPowerMultiplier - 0.7); } },
         { id: 2, name: "神器：爆裂の巨砲", desc: "一撃必殺の超絶火力を得るが、次の装填に時間がかかる", buff: "攻撃力 +100%", nerf: "攻撃速度 -70%", action: () => { player.atkPowerMultiplier += 1.0; player.atkSpdMultiplier = Math.max(0.1, player.atkSpdMultiplier - 0.7); } },
-        { id: 3, name: "神器：千手観音の裁き", desc: "画面全域を覆い尽くす無数の電撃を放つが、全体性能が低下", buff: "攻撃数 +10", nerf: "攻撃力 -30% / 作用速度 -30%", action: () => { player.shootCount += 10; player.atkPowerMultiplier = Math.max(0.1, player.atkPowerMultiplier - 0.3); player.atkSpdMultiplier = Math.max(0.1, player.atkSpdMultiplier - 0.3); } }
+        { id: 3, name: "神器：千手観音の裁き", desc: "画面全域を覆い尽くす無数の電撃を放つが、全体性能が低下", buff: "攻撃数 +10", nerf: "攻撃力 -30% / 攻撃速度 -30%", action: () => { player.shootCount += 10; player.atkPowerMultiplier = Math.max(0.1, player.atkPowerMultiplier - 0.3); player.atkSpdMultiplier = Math.max(0.1, player.atkSpdMultiplier - 0.3); } }
     ];
 
     let enemies = [];
@@ -141,7 +147,7 @@
         canvas.width = canvas.parentElement.clientWidth;
         canvas.height = canvas.parentElement.clientHeight;
         player.x = canvas.width / 2;
-        player.y = canvas.height - 40; // 防衛ライン付近
+        player.y = canvas.height - 40; 
     }
     window.addEventListener('resize', resize);
     resize();
@@ -162,51 +168,64 @@
         player.shootCount = 1;
         player.pierceCount = 1;
 
+        // レベル1の出現パラメータの初期設定
+        calculateLevelSpawnNorma();
+
         document.getElementById('gameover-overlay').classList.add('hidden');
         document.getElementById('overlay').classList.add('hidden');
         updateUI();
     }
 
-    function spawnEnemies() {
-        if (frameCount % 65 === 0) { 
-            // 【出現増加数を現在の約5%に抑制調整】
-            // 係数を 0.028 から 0.0015 に超絶引き下げ。
-            // 乱数のブレ（randomRange）も 0.25 に抑え、時間が数分経っても、
-            // 1回の湧き数が1〜2体程度でなだらかに推移する超・緩やか設計にしました。
-            let baseSpawn = 1 + (gameTime * 0.000015); 
-            let randomRange = (Math.random() - 0.5) * 0.25; 
-            let spawnCount = Math.max(1, Math.round(baseSpawn + randomRange));
-            
-            // 初期の湧きをマイルドに抑えるフィルター
-            if (gameTime < 30 && Math.random() < 0.4) {
-                return; 
-            }
+    // アルゴリズムに基づく出現数の再計算
+    function calculateLevelSpawnNorma() {
+        currentLevelSpawned = 0;
+        // 1. レベルクリアに必要な経験値に対しての1.12倍（四捨五入）
+        currentLevelTarget = Math.round(player.maxExp * 1.12);
+        spawnTimerCounter = 0;
+    }
 
-            for (let i = 0; i < spawnCount; i++) {
-                let isBoss = (gameTime > 0 && gameTime % 30 === 0 && i === 0);
-                enemies.push({
-                    x: Math.random() * (canvas.width - 30) + 15,
-                    y: -20 - (Math.random() * 60),
-                    radius: isBoss ? 18 : 7,
-                    hp: isBoss ? 40 + (gameTime * 1.05) : 2 + Math.floor(gameTime / 33), // 敵の耐久上昇も合わせて緩やかに
-                    maxHp: isBoss ? 40 + (gameTime * 1.05) : 2 + Math.floor(gameTime / 33),
-                    speed: (isBoss ? 0.7 : 1.3 + (Math.random() * 0.5)) * 0.177,
-                    isBoss: isBoss
-                });
-            }
+    // アルゴリズムに基づく敵の出現管理
+    function spawnEnemies() {
+        // 現在のレベルの目標出現数に達している場合は、レベルアップまで追加スポーンを停止
+        if (currentLevelSpawned >= currentLevelTarget) return;
+
+        // 2. 数式 (1.10 + 0.01 * Lv) の時間(秒)をかけて均等に出現させる計算
+        let totalWaitSeconds = 1.10 + 0.01 * player.level;
+        let totalWaitFrames = totalWaitSeconds * 60; // フレーム換算 (60fps)
+
+        // 目標数を指定時間内に等間隔で割った「1体あたりの出現フレーム間隔（ディレイ）」
+        let spawnIntervalFrames = totalWaitFrames / currentLevelTarget;
+
+        spawnTimerCounter++;
+
+        if (spawnTimerCounter >= spawnIntervalFrames) {
+            spawnTimerCounter = 0; // カウンターリセット
+            currentLevelSpawned++;
+
+            // 敵の生成（ボス判定は30秒ごと、または総ターゲットの最後の1体などお好みで調整可。今回は30秒ごとを維持）
+            let isBoss = (gameTime > 0 && gameTime % 30 === 0 && currentLevelSpawned === 1);
+            enemies.push({
+                x: Math.random() * (canvas.width - 30) + 15,
+                y: -20 - (Math.random() * 60),
+                radius: isBoss ? 18 : 7,
+                hp: isBoss ? 40 + (gameTime * 1.0) : 2 + Math.floor(gameTime / 35),
+                maxHp: isBoss ? 40 + (gameTime * 1.0) : 2 + Math.floor(gameTime / 35),
+                speed: (isBoss ? 0.7 : 1.3 + (Math.random() * 0.5)) * 0.196, // 超低速設定を維持
+                isBoss: isBoss
+            });
         }
     }
 
     // オートターゲット＆貫通連鎖攻撃
     function autoAttack() {
         let now = performance.now();
-        let attackCooldown = Math.max(200, 1230 / player.atkSpdMultiplier);
+        let attackCooldown = Math.max(200, 1230 / player.atkSpdMultiplier); // 30%低下設定を維持
 
         if (now - lastAttackTime > attackCooldown) {
             if (enemies.length === 0) return;
 
             lastAttackTime = now;
-            let damage = Math.ceil(2.4 * player.atkPowerMultiplier);
+            let damage = Math.ceil(2.4 * player.atkPowerMultiplier); // 40%低下設定を維持
 
             let targets = [...enemies].map(e => {
                 let dx = e.x - player.x; let dy = e.y - player.y;
@@ -316,10 +335,14 @@
             player.level++;
             player.maxExp = Math.floor(player.maxExp * 1.25) + 4;
             
+            // レベルアップ時の自動成長
             player.maxHp += 5;
             player.hp = Math.min(player.maxHp, player.hp + 5); 
             player.atkPowerMultiplier += 0.02; 
             player.atkSpdMultiplier += 0.02;   
+
+            // 次のレベルの出現数ノルマと速度の再計算
+            calculateLevelSpawnNorma();
             
             isPaused = true;
             
