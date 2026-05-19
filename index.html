@@ -3,265 +3,299 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ギリギリ採掘職人 (Gold Rush Dig)</title>
+    <title>インフレ秒殺コロシアム (Instant Slay Colosseum)</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
         body {
             margin: 0; padding: 0;
-            background-color: #1a1105;
-            color: #ffffff;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #050000; color: #ffffff;
+            font-family: 'Impact', 'Arial Black', sans-serif;
             display: flex; justify-content: center; align-items: center;
             height: 100vh; overflow: hidden;
         }
         #game-container {
             position: relative; width: 100%; max-width: 450px;
             height: 100vh; max-height: 800px;
-            background: #2c1d0b; overflow: hidden;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            background: linear-gradient(180deg, #1a0505 0%, #050000 100%);
+            overflow: hidden; box-shadow: 0 0 30px rgba(255,0,0,0.5);
             display: flex; flex-direction: column;
         }
-        /* 上部ステータス */
-        #header {
-            padding: 15px; background: #110b04;
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 3px solid #ffd700;
+        /* バトル画面エリア */
+        #battle-arena {
+            flex: 1; position: relative; display: flex;
+            flex-direction: column; justify-content: space-between; padding: 40px 20px;
         }
-        #score-box { font-size: 24px; font-weight: bold; color: #ffd700; font-family: monospace; }
-        #risk-box { font-size: 14px; color: #ff4444; }
+        #streak-box { text-align: center; font-size: 36px; color: #ffcc00; text-shadow: 0 0 10px rgba(255,204,0,0.6); }
+        
+        /* キャラクター表現 */
+        .character-zone { display: flex; flex-direction: column; align-items: center; width: 100%; }
+        .boss-name { font-size: 18px; color: #ff3333; margin-bottom: 5px; }
+        .hp-bar-outer { width: 80%; height: 10px; background: #333; border-radius: 5px; overflow: hidden; }
+        .hp-bar-inner { width: 100%; height: 100%; background: #ff3333; transition: width 0.1s; }
+        
+        #boss-visual { font-size: 70px; margin: 20px 0; transition: transform 0.05s; position: relative; }
+        #player-visual { font-size: 60px; transition: transform 0.05s; }
 
-        /* 採掘エリア（グリッド） */
-        #grid-container {
-            flex: 1; display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: repeat(4, 1fr);
-            gap: 8px; padding: 15px;
-            background: #221608;
+        /* 警告エフェクト */
+        #flash-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 5; opacity: 0; transition: opacity 0.05s;
         }
-        .tile {
-            background: #5c3a21; border-radius: 8px;
-            border-bottom: 5px solid #3d2616;
-            cursor: pointer; display: flex; justify-content: center;
-            align-items: center; font-size: 28px;
-            transition: all 0.1s;
-        }
-        .tile:active { transform: scale(0.95); }
-        .tile.dug { background: #1a1105; border: 1px solid #333; border-bottom: 1px solid #333; cursor: default; }
+        .warn-parry { border: 8px solid #ffcc00; box-shadow: inset 0 0 50px rgba(255,204,0,0.5); }
+        .warn-dodge { border: 8px solid #ff3333; box-shadow: inset 0 0 50px rgba(255,51,51,0.5); }
 
-        /* 下部操作 */
-        #control-panel {
-            padding: 15px; background: #110b04; text-align: center;
-            border-top: 1px solid #333;
+        /* 操作ボタン */
+        #action-panel { display: flex; width: 100%; height: 100px; background: #111; border-top: 2px solid #333; }
+        .action-btn {
+            flex: 1; border: none; font-size: 24px; font-weight: bold; color: #fff; cursor: pointer;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
-        .btn {
-            width: 100%; padding: 15px; font-size: 20px; font-weight: bold;
-            border: none; border-radius: 30px; cursor: pointer; transition: transform 0.1s;
+        #parry-btn { background: linear-gradient(135deg, #ffaa00, #996600); border-right: 1px solid #333; }
+        #dodge-btn { background: linear-gradient(135deg, #3399ff, #0044cc); }
+        .action-btn span { font-size: 12px; margin-top: 5px; opacity: 0.8; }
+
+        /* ダメージ数字ポップアップ */
+        .dmg-popup {
+            position: absolute; font-size: 40px; color: #fff; font-weight: 900;
+            text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+            animation: dmgAnim 0.6s forwards ease-out; pointer-events: none; z-index: 6;
         }
-        .btn:active { transform: scale(0.98); }
-        #bank-btn {
-            background: linear-gradient(180deg, #ffd700, #ffaa00); color: #000;
-            box-shadow: 0 5px 15px rgba(255,215,0,0.4);
+        @keyframes dmgAnim {
+            0% { transform: scale(0.3) translateY(0); opacity: 1; }
+            50% { transform: scale(1.3) translateY(-40px); }
+            100% { transform: scale(1) translateY(-60px); opacity: 0; }
         }
 
-        /* リザルト画面 */
+        /* リザルト */
         .overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(17, 11, 4, 0.95); display: flex;
+            background: rgba(10, 0, 0, 0.95); display: flex;
             flex-direction: column; justify-content: center; align-items: center;
             padding: 30px; text-align: center; z-index: 10;
         }
-        h1 { color: #ffd700; font-size: 28px; margin-bottom: 10px; }
-        .result-card {
-            background: #221608; border: 2px solid #ffd700;
-            padding: 20px; border-radius: 15px; width: 100%; margin-bottom: 20px;
-        }
-        .rank-text { font-size: 24px; font-weight: bold; color: #ff4444; margin: 10px 0; }
-        .btn-restart { background: #fff; color: #000; margin-bottom: 10px; }
-        .btn-share { background: #1d9bf0; color: #fff; }
+        .btn-restart { background: #ff3333; color: #fff; width: 100%; padding: 15px; font-size: 20px; border: none; border-radius: 5px; margin-top: 20px; cursor: pointer; }
+        .btn-share { background: #1d9bf0; color: #fff; width: 100%; padding: 15px; font-size: 20px; border: none; border-radius: 5px; margin-top: 10px; cursor: pointer; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <!-- ヘッダー -->
-    <div id="header">
-        <div>
-            <div style="font-size:12px; color:#aaa;">現在のキープ額</div>
-            <div id="score-box">$ 0</div>
+    <div id="battle-arena">
+        <!-- 討伐数 -->
+        <div id="streak-box">0 KILL</div>
+
+        <!-- 敵の警告画面被せ -->
+        <div id="flash-overlay"></div>
+
+        <!-- ボスゾーン -->
+        <div class="character-zone">
+            <div id="boss-name" class="boss-name">第1層：名もなき門番</div>
+            <div class="hp-bar-outer"><div id="boss-hp" class="hp-bar-inner"></div></div>
+            <div id="boss-visual">👺</div>
         </div>
-        <div id="risk-box">爆弾の確率: 0%</div>
+
+        <!-- プレイヤーゾーン -->
+        <div class="character-zone">
+            <div id="player-visual">⚔️</div>
+            <div style="font-size: 14px; color: #aaa; margin-top: 5px;">あなた</div>
+        </div>
     </div>
 
-    <!-- グリッド -->
-    <div id="grid-container"></div>
-
-    <!-- コントロール -->
-    <div id="control-panel">
-        <button id="bank-btn" class="btn">利益を確定して帰還する</button>
+    <!-- 操作パネル -->
+    <div id="action-panel">
+        <button id="parry-btn" class="action-btn">弾く (PARRY)<span>黄色い攻撃をカウンター</span></button>
+        <button id="dodge-btn" class="action-btn">避ける (DODGE)<span>赤い攻撃を回避</span></button>
     </div>
 
-    <!-- ゲームオーバー/クリア画面共通 -->
+    <!-- リザルト -->
     <div id="result-overlay" class="overlay hidden">
-        <h1 id="result-title">爆死！強制終了</h1>
-        <div class="result-card">
-            <p id="result-status">獲得賞金: $0</p>
-            <div id="result-analysis" class="rank-text">強欲度: 100%</div>
-            <p id="result-comment" style="font-size:14px; color:#bbb;"></p>
+        <h1 style="color:#ff3333; font-size: 36px; margin: 0;">消 滅</h1>
+        <p id="death-reason" style="font-size: 16px; color: #ccc; line-height: 1.6;"></p>
+        <div style="background:#220a0a; padding: 20px; border-radius: 5px; width: 100%; border: 1px solid #ff3333;">
+            <div style="font-size:14px; color:#aaa;">最終戦績</div>
+            <div id="final-streak" style="font-size: 48px; color: #ffcc00;">0 KILL</div>
         </div>
-        <button id="restart-btn" class="btn btn-restart">次の山へ突撃</button>
-        <button id="share-btn" class="btn btn-share">結果をXに晒す</button>
+        <button id="restart-btn" class="btn-restart">絶望の輪廻へ戻る</button>
+        <button id="share-btn" class="btn-share">爆死ログをXに晒す</button>
     </div>
 </div>
 
 <script>
-    const gridContainer = document.getElementById('grid-container');
-    const scoreBox = document.getElementById('score-box');
-    const riskBox = document.getElementById('risk-box');
-    const bankBtn = document.getElementById('bank-btn');
+    const streakBox = document.getElementById('streak-box');
+    const flashOverlay = document.getElementById('flash-overlay');
+    const bossNameText = document.getElementById('boss-name');
+    const bossHpBar = document.getElementById('boss-hp');
+    const bossVisual = document.getElementById('boss-visual');
+    const playerVisual = document.getElementById('player-visual');
+    const parryBtn = document.getElementById('parry-btn');
+    const dodgeBtn = document.getElementById('dodge-btn');
     const resultOverlay = document.getElementById('result-overlay');
-    const resultTitle = document.getElementById('result-title');
-    const resultStatus = document.getElementById('result-status');
-    const resultAnalysis = document.getElementById('result-analysis');
-    const resultComment = document.getElementById('result-comment');
+    const deathReason = document.getElementById('death-reason');
+    const finalStreak = document.getElementById('final-streak');
     const restartBtn = document.getElementById('restart-btn');
     const shareBtn = document.getElementById('share-btn');
+    const arena = document.getElementById('battle-arena');
 
-    let currentGold = 0;
-    let dugCount = 0;
-    let bombIndex = -1;
-    let isGameOver = false;
-    let history = []; // プレイヤーの行動ログ
+    let killStreak = 0;
+    let battleActive = false;
+    let bossAttackTimer = null;
+    let attackType = ''; // 'PARRY' (黄) or 'DODGE' (赤)
+    let windowStartTime = 0;
+    let attackWindowDuration = 600; // ミリ秒（進むほど短くなる）
 
-    // ステージ初期化
-    function initStage() {
-        gridContainer.innerHTML = '';
-        currentGold = 0;
-        dugCount = 0;
-        isGameOver = false;
-        history = [];
-        scoreBox.innerText = `$ ${currentGold}`;
-        
-        // 16マスのうち1つに爆弾を配置
-        bombIndex = Math.floor(Math.random() * 16);
-        updateRisk();
+    const bosses = [
+        { name: "名もなき門番", emoji: "👺" },
+        { name: "サイバー落武者", emoji: "🤖" },
+        { name: "処刑狂マシーン", emoji: "🤡" },
+        { name: "次元喰らいの獄獣", emoji: "🐺" },
+        { name: "終焉の破壊神", emoji: "👑" }
+    ];
 
-        for (let i = 0; i < 16; i++) {
-            const tile = document.createElement('div');
-            tile.classList.add('tile');
-            tile.innerText = '🪓';
-            tile.dataset.index = i;
-            tile.addEventListener('click', () => digTile(tile, i));
-            gridContainer.appendChild(tile);
-        }
-    }
-
-    // 確率表示の更新
-    function updateRisk() {
-        const remainingTiles = 16 - dugCount;
-        const probability = Math.round((1 / remainingTiles) * 100);
-        riskBox.innerText = `次の一掘りで爆死する確率: ${probability}%`;
-    }
-
-    // タイルを掘る
-    function digTile(tile, index) {
-        if (isGameOver || tile.classList.contains('dug')) return;
-
-        tile.classList.add('dug');
-        dugCount++;
-
-        if (index === bombIndex) {
-            // 爆弾を踏んだ
-            tile.innerText = '💥';
-            gameOver(false);
-        } else {
-            // 金塊ゲット（掘れば掘るほど1回の価値が跳ね上がる）
-            const earned = dugCount * 100;
-            currentGold += earned;
-            tile.innerText = '💰';
-            scoreBox.innerText = `$ ${currentGold}`;
-            
-            history.push(earned);
-            updateRisk();
-
-            // 全て掘り尽くしたら強制クリア
-            if (dugCount === 15) {
-                gameOver(true);
-            }
-        }
-    }
-
-    // 終了処理
-    function gameOver(isSuccess) {
-        isGameOver = true;
-        resultOverlay.classList.remove('hidden');
-
-        let greedRate = Math.round((dugCount / 15) * 100);
-        
-        if (isSuccess) {
-            resultTitle.innerText = "🎉 伝説の完全発掘！";
-            resultTitle.style.color = "#ffd700";
-            resultStatus.innerText = `無傷で全金塊を回収！: $${currentGold}`;
-            resultAnalysis.innerText = `強欲度: 100% (神の幸運)`;
-            resultComment.innerText = "爆弾を奇跡的にすり抜けました。今すぐ宝くじを買いに行ってください。";
-        } else if (history.length === 0) {
-            // 1ポチ目で死亡
-            resultTitle.innerText = "😭 悲惨な初手爆死";
-            resultTitle.style.color = "#ff4444";
-            resultStatus.innerText = `獲得賞金: $0`;
-            resultAnalysis.innerText = `不運度: 999%`;
-            resultComment.innerText = "最初の１掘りで爆弾を引きました。逆にSNSでウケるレベルの才能です。";
-        } else {
-            // 途中リタイアまたは途中で爆発
-            const isBanked = !gridContainer.querySelector('.tile.dug[data-index="'+bombIndex+'"]')?.innerText.includes('💥');
-            
-            if (isBanked) {
-                resultTitle.innerText = "💰 安全に帰還成功！";
-                resultTitle.style.color = "#00ffcc";
-                resultStatus.innerText = `手堅く利確: $${currentGold}`;
-                
-                if (greedRate < 20) {
-                    resultAnalysis.innerText = `強欲度: ${greedRate}% (超チキン級)`;
-                    resultComment.innerText = "石橋を叩き壊すタイプ。もっと自分を追い込んでも良いのでは？";
-                } else if (greedRate < 60) {
-                    resultAnalysis.innerText = `強欲度: ${greedRate}% (堅実なビジネスマン)`;
-                    resultComment.innerText = "一番賢い引き際を知る人間。一番バズりにくい、普通の良い人です。";
-                } else {
-                    resultAnalysis.innerText = `強欲度: ${greedRate}% (一流のギャンブラー)`;
-                    resultComment.innerText = "ヒリつくスリルを楽しみつつ、絶妙なタイミングで逃げ切りました。見事。";
-                }
-            } else {
-                resultTitle.innerText = "💥 欲望に負けて爆死！";
-                resultTitle.style.color = "#ff4444";
-                resultStatus.innerText = `失った金額: $${currentGold + (dugCount*100)}`;
-                resultAnalysis.innerText = `強欲度: ${greedRate}% (ただの欲張り)`;
-                resultComment.innerText = `あの時やめておけば大金持ちだったのに、あと一歩の欲望に負けましたね。`;
-            }
-        }
-    }
-
-    // 銀行ボタン（利確）
-    bankBtn.addEventListener('click', () => {
-        if (dugCount === 0 || isGameOver) return;
-        gameOver(false); // 爆弾を踏んでない状態でゲーム終了
-    });
-
-    // リスタート
-    restartBtn.addEventListener('click', () => {
+    function initGame() {
+        killStreak = 0;
+        streakBox.innerText = "0 KILL";
         resultOverlay.classList.add('hidden');
-        initStage();
+        spawnBoss();
+    }
+
+    function spawnBoss() {
+        battleActive = true;
+        bossHpBar.style.width = "100%";
+        
+        // 5戦目以降は名前がランダムに強化
+        let bossData = bosses[Math.min(killStreak, bosses.length - 1)];
+        let title = `第${killStreak + 1}層：${bossData.name}`;
+        if (killStreak >= bosses.length) {
+            title = `第${killStreak + 1}層：超絶凶化・${bosses[Math.floor(Math.random()*bosses.length)].name}`;
+        }
+        bossNameText.innerText = title;
+        bossVisual.innerText = bossData.emoji;
+        bossVisual.style.transform = "scale(1)";
+
+        // 敵の攻撃待機（1.2〜2.5秒後に仕掛けてくる）
+        const delay = 1200 + Math.random() * 1300;
+        bossAttackTimer = setTimeout(() => {
+            triggerBossAttack();
+        }, delay);
+    }
+
+    // 敵が攻撃の予備動作を起こす
+    function triggerBossAttack() {
+        if (!battleActive) return;
+
+        // 50%の確率で黄（パリィ）か赤（回避）
+        attackType = Math.random() > 0.5 ? 'PARRY' : 'DODGE';
+        
+        // 難易度調整：キル数に応じて受付時間が超高速化（下限180ms）
+        attackWindowDuration = Math.max(180, 550 - (killStreak * 25));
+
+        // 警告画面エフェクト
+        flashOverlay.className = ''; 
+        flashOverlay.classList.add(attackType === 'PARRY' ? 'warn-parry' : 'warn-dodge');
+        flashOverlay.style.opacity = '1';
+
+        // ボスが前に乗り出す
+        bossVisual.style.transform = "scale(1.3) translateY(10px)";
+
+        windowStartTime = performance.now();
+
+        // 受付時間内に押せなかったら即死
+        bossAttackTimer = setTimeout(() => {
+            playerDie(`敵の攻撃を見送ってしまった（反応速度が${attackWindowDuration}ms遅い）`);
+        }, attackWindowDuration);
+    }
+
+    // プレイヤーの行動処理
+    function playerAction(type) {
+        if (!battleActive) return;
+
+        // 敵がまだ攻撃していないのに押したらペナルティ即死（お手付き防止）
+        if (windowStartTime === 0) {
+            playerDie("敵が動く前に焦って自滅した（早漏入力）");
+            return;
+        }
+
+        clearTimeout(bossAttackTimer);
+        const reactionTime = (performance.now() - windowStartTime).toFixed(0);
+        flashOverlay.style.opacity = '0';
+
+        if (type === attackType) {
+            // 大成功（カウンター発動）
+            battleActive = false;
+            windowStartTime = 0;
+            
+            // インフレダメージ数字の生成 (桁数を爆発させる)
+            const baseDmg = Math.pow(10, killStreak + 4) * (Math.floor(Math.random() * 9) + 1);
+            showDamage(baseDmg, type === 'PARRY' ? 'CRITICAL!' : 'COUNTER!');
+
+            bossHpBar.style.width = "0%";
+            bossVisual.style.transform = "scale(0) rotate(180deg)";
+            
+            killStreak++;
+            streakBox.innerText = `${killStreak} KILL`;
+
+            // 次のボスへ
+            setTimeout(() => {
+                spawnBoss();
+            }, 1000);
+        } else {
+            // 選択肢を間違えた
+            const wrongReason = type === 'PARRY' ? "「避ける」べき赤攻撃を「弾こう」として盾ごと砕かれた" : "「弾く」べき黄攻撃を「避けよう」として背後から斬られた";
+            playerDie(`${wrongReason} (反応速度: ${reactionTime}ms)`);
+        }
+    }
+
+    // ダメージ演出
+    function showDamage(num, prefix) {
+        const popup = document.createElement('div');
+        popup.classList.add('dmg-popup');
+        
+        // 単位を読みやすく（万、億、兆、京、垓）
+        let formatted = num;
+        if (num >= 1e16) formatted = (num/1e16).toFixed(1) + "🪓垓";
+        else if (num >= 1e12) formatted = (num/1e12).toFixed(1) + "🔥兆";
+        else if (num >= 1e8) formatted = (num/1e8).toFixed(1) + "💥億";
+        else if (num >= 1e4) formatted = (num/1e4).toFixed(1) + "✨万";
+        
+        popup.innerHTML = `<span style="font-size:14px;color:#ffcc00;display:block;">${prefix}</span>${formatted}`;
+        popup.style.left = `calc(50% - 60px)`;
+        popup.style.top = `40%`;
+        arena.appendChild(popup);
+
+        setTimeout(() => popup.remove(), 600);
+    }
+
+    function playerDie(reason) {
+        battleActive = false;
+        clearTimeout(bossAttackTimer);
+        windowStartTime = 0;
+        flashOverlay.style.opacity = '0';
+
+        deathReason.innerText = reason;
+        finalStreak.innerText = `${killStreak} KILL`;
+        resultOverlay.classList.remove('hidden');
+    }
+
+    // イベントリスナー
+    parryBtn.addEventListener('click', () => playerAction('PARRY'));
+    dodgeBtn.addEventListener('click', () => playerAction('DODGE'));
+    
+    // キーボード操作にも対応 (左矢印/右矢印、またはA/D)
+    window.addEventListener('keydown', (e) => {
+        if(e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') playerAction('PARRY');
+        if(e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') playerAction('DODGE');
     });
 
-    // SNSシェア
+    restartBtn.addEventListener('click', initGame);
+
     shareBtn.addEventListener('click', () => {
-        const titleText = resultTitle.innerText;
-        const analysisText = resultAnalysis.innerText;
-        const text = `【ギリギリ採掘職人】をプレイした！\n結果：${titleText}\nスコア：${scoreBox.innerText}\n${analysisText}\n#ギリギリ採掘職人 #バズりゲーム`;
+        const text = `【インフレ秒殺コロシアム】\n結果：${killStreak}人撃破で消滅！\n最期の瞬間：${deathReason.innerText}\n#インフレ秒殺コロシアム #バズりゲーム`;
         window.open(`https://twitter.com{encodeURIComponent(text)}`, '_blank');
     });
 
-    // 初回起動
-    initStage();
+    // ゲーム開始
+    initGame();
 </script>
 
 </body>
