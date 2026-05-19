@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>オート電撃サバイバー: 極限ビルド(戦略スロー版)</title>
+    <title>オート電撃サバイバー: 極限ビルド(超緩やか微増版)</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
         body {
@@ -122,15 +122,14 @@
         { type: 'speed', name: "クイックチャージ", desc: "攻撃速度がさらに +10% 加速" },
         { type: 'power', name: "リミットフォース", desc: "攻撃力がさらに +10% 上昇" },
         { type: 'count', name: "追加バレル", desc: "一度に攻撃できる電撃の数が +1 本" },
-        { type: 'pierce', name: "ライトニング連鎖", desc: "電撃の敵を貫通・連鎖する数が +1 体" },
-        { type: 'heal', name: "ナノ修復システム", desc: "体力をランダム(30~100) + 減少HPの5%分 回復" }
+        { type: 'pierce', name: "ライトニング連鎖", desc: "電撃の敵を貫通・連鎖する数が +1 体" }
     ];
 
     // 神器化マスター
     const SHINGI = [
         { id: 1, name: "神器：迅雷の極意", desc: "圧倒的な超連射力を得るが、一撃の威力が軽くなる", buff: "攻撃速度 +120%", nerf: "攻撃力 -70%", action: () => { player.atkSpdMultiplier += 1.2; player.atkPowerMultiplier = Math.max(0.1, player.atkPowerMultiplier - 0.7); } },
         { id: 2, name: "神器：爆裂の巨砲", desc: "一撃必殺の超絶火力を得るが、次の装填に時間がかかる", buff: "攻撃力 +100%", nerf: "攻撃速度 -70%", action: () => { player.atkPowerMultiplier += 1.0; player.atkSpdMultiplier = Math.max(0.1, player.atkSpdMultiplier - 0.7); } },
-        { id: 3, name: "神器：千手観音の裁き", desc: "画面全域を覆い尽くす無数の電撃を放つが、全体性能が低下", buff: "攻撃数 +10", nerf: "攻撃力 -30% / 攻撃速度 -30%", action: () => { player.shootCount += 10; player.atkPowerMultiplier = Math.max(0.1, player.atkPowerMultiplier - 0.3); player.atkSpdMultiplier = Math.max(0.1, player.atkSpdMultiplier - 0.3); } }
+        { id: 3, name: "神器：千手観音の裁き", desc: "画面全域を覆い尽くす無数の電撃を放つが、全体性能が低下", buff: "攻撃数 +10", nerf: "攻撃力 -30% / 作用速度 -30%", action: () => { player.shootCount += 10; player.atkPowerMultiplier = Math.max(0.1, player.atkPowerMultiplier - 0.3); player.atkSpdMultiplier = Math.max(0.1, player.atkSpdMultiplier - 0.3); } }
     ];
 
     let enemies = [];
@@ -170,14 +169,15 @@
 
     function spawnEnemies() {
         if (frameCount % 65 === 0) { 
-            // 【出現率のレベルアップ増加量を20%カット調整】
-            // 従来のゲーム時間比例の増加係数（0.035）を20%カットし、0.028に引き下げ。
-            // これにより、時間経過・レベル上昇に伴う敵の急激な物量増加がマイルドになります。
-            let baseSpawn = 1 + (gameTime * 0.028); 
-            let randomRange = (Math.random() - 0.5) * 1.0; 
+            // 【出現増加数を現在の約5%に抑制調整】
+            // 係数を 0.028 から 0.0015 に超絶引き下げ。
+            // 乱数のブレ（randomRange）も 0.25 に抑え、時間が数分経っても、
+            // 1回の湧き数が1〜2体程度でなだらかに推移する超・緩やか設計にしました。
+            let baseSpawn = 1 + (gameTime * 0.000015); 
+            let randomRange = (Math.random() - 0.5) * 0.25; 
             let spawnCount = Math.max(1, Math.round(baseSpawn + randomRange));
             
-            // 初期の湧きを抑えるフィルター
+            // 初期の湧きをマイルドに抑えるフィルター
             if (gameTime < 30 && Math.random() < 0.4) {
                 return; 
             }
@@ -188,10 +188,9 @@
                     x: Math.random() * (canvas.width - 30) + 15,
                     y: -20 - (Math.random() * 60),
                     radius: isBoss ? 18 : 7,
-                    hp: isBoss ? 40 + (gameTime * 2) : 2 + Math.floor(gameTime / 15),
-                    maxHp: isBoss ? 40 + (gameTime * 2) : 2 + Math.floor(gameTime / 15),
-                    // 【敵の移動速度をさらに50%低下調整】前回の0.392から、さらに半分（0.392 * 0.5 = 0.196倍）に超減速
-                    speed: (isBoss ? 0.7 : 1.3 + (Math.random() * 0.5)) * 0.196,
+                    hp: isBoss ? 40 + (gameTime * 1.05) : 2 + Math.floor(gameTime / 33), // 敵の耐久上昇も合わせて緩やかに
+                    maxHp: isBoss ? 40 + (gameTime * 1.05) : 2 + Math.floor(gameTime / 33),
+                    speed: (isBoss ? 0.7 : 1.3 + (Math.random() * 0.5)) * 0.177,
                     isBoss: isBoss
                 });
             }
@@ -201,7 +200,6 @@
     // オートターゲット＆貫通連鎖攻撃
     function autoAttack() {
         let now = performance.now();
-        // 【攻撃速度をさらに30%低下調整】ベースのクールダウン時間を約1.43倍に引き伸ばす（860 ➔ 1230）
         let attackCooldown = Math.max(200, 1230 / player.atkSpdMultiplier);
 
         if (now - lastAttackTime > attackCooldown) {
@@ -210,23 +208,18 @@
             lastAttackTime = now;
             let damage = Math.ceil(2.4 * player.atkPowerMultiplier);
 
-            // プレイヤーに近い敵順にソート
             let targets = [...enemies].map(e => {
                 let dx = e.x - player.x; let dy = e.y - player.y;
                 return { enemy: e, dist: Math.sqrt(dx*dx + dy*dy) };
             }).sort((a, b) => a.dist - b.dist);
 
-            // 同時発射数の数だけ、最初の「起点ターゲット」を決定
             let shootNum = Math.min(player.shootCount, targets.length);
 
             for (let i = 0; i < shootNum; i++) {
                 let rootEnemy = targets[i].enemy;
-                
-                // 貫通（連鎖）処理の実行
                 executeLightningChain(rootEnemy, damage, player.pierceCount);
             }
 
-            // 死亡した敵の除外とオーブドロップ
             enemies.forEach(e => {
                 if (e.hp <= 0) {
                     gems.push({ x: e.x, y: e.y, isCollected: false });
@@ -236,7 +229,6 @@
         }
     }
 
-    // 電撃の貫通・連鎖アルゴリズム
     function executeLightningChain(startEnemy, damage, maxChain) {
         let currentChain = 0;
         let lastX = player.x;
@@ -251,7 +243,7 @@
             beams.push({
                 sx: lastX, sy: lastY,
                 tx: currentTarget.x, ty: currentTarget.y,
-                life: 14 // テンポ低下に合わせて電撃エフェクトの余韻を少し長く保持
+                life: 14 
             });
 
             lastX = currentTarget.x;
@@ -260,7 +252,6 @@
 
             if (currentChain >= maxChain) break;
 
-            // 次の連鎖先（一番近いまだ感電していない敵）を探索
             let nextTarget = null;
             let minDist = 180; 
 
@@ -292,17 +283,13 @@
         spawnEnemies();
         autoAttack();
 
-        // 敵の移動と最下部デッドライン判定
         enemies.forEach(e => {
             e.y += e.speed;
-
-            // プレイヤーより下（防衛線）を少しでも越えたら即死
             if (e.y + e.radius >= player.y + player.radius) {
                 endGame(`敵が防衛デッドラインを突破しました。`);
             }
         });
 
-        // 経験値オーブの完全自動吸い寄せ回収
         gems.forEach(g => {
             let dx = player.x - g.x; let dy = player.y - g.y;
             let dist = Math.sqrt(dx*dx + dy*dy);
@@ -329,7 +316,6 @@
             player.level++;
             player.maxExp = Math.floor(player.maxExp * 1.25) + 4;
             
-            // レベルアップ時の自動永久成長システム
             player.maxHp += 5;
             player.hp = Math.min(player.maxHp, player.hp + 5); 
             player.atkPowerMultiplier += 0.02; 
@@ -346,7 +332,6 @@
         updateUI();
     }
 
-    // 通常ビルドの3択提示
     function showNormalBuildSelection() {
         document.getElementById('overlay-main-title').innerText = `LEVEL UP!! (Lv.${player.level})`;
         document.getElementById('overlay-sub-title').innerText = "機体強化バフを選択してください（Lvアップボーナス付与済）";
@@ -383,7 +368,6 @@
         }
     }
 
-    // 神器化の2択提示
     function showShingiSelection() {
         document.getElementById('overlay-main-title').innerText = "✨ 神器化覚醒 ✨";
         document.getElementById('overlay-sub-title').innerText = "破格の力を得るが、代償が伴う（2択から選択）";
@@ -420,7 +404,6 @@
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // デッドライン（防衛線）の赤色表示
         ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -428,7 +411,6 @@
         ctx.lineTo(canvas.width, player.y);
         ctx.stroke();
 
-        // オーブ描画
         gems.forEach(g => {
             ctx.fillStyle = '#00ff66';
             ctx.beginPath();
@@ -436,7 +418,6 @@
             ctx.fill();
         });
 
-        // 敵描画
         enemies.forEach(e => {
             ctx.fillStyle = e.isBoss ? '#f43f5e' : '#3b82f6';
             ctx.beginPath();
@@ -451,7 +432,6 @@
             }
         });
 
-        // バチバチ電撃ビーム描画
         ctx.strokeStyle = '#a855f7';
         ctx.shadowBlur = 8; ctx.shadowColor = '#c084fc';
         beams.forEach(b => {
@@ -470,13 +450,11 @@
         });
         ctx.shadowBlur = 0;
 
-        // プレイヤー基地描画
         ctx.fillStyle = '#00ffff';
         ctx.beginPath();
         ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
         ctx.fill();
 
-        // プレイヤーのHP表示
         ctx.fillStyle = '#1e293b';
         ctx.fillRect(player.x - 25, player.y + 20, 50, 5);
         ctx.fillStyle = '#00ffff';
