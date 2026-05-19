@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>オート電撃サバイバー: 極限ビルド(調整版)</title>
+    <title>オート電撃サバイバー: 極限ビルド(最終調整版)</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
         body {
@@ -169,11 +169,10 @@
     }
 
     function spawnEnemies() {
-        // 【出現率40%低下調整】元コードの45フレーム間隔から約65フレームに引き上げ、さらに基礎湧き数をマイルド化
         if (frameCount % 65 === 0) { 
-            let spawnCount = 1 + Math.floor(gameTime / 25); // 湧き増加のペースも少し緩やかに
+            let spawnCount = 1 + Math.floor(gameTime / 25);
             
-            // 初期の敵出現数を抑える調整（確率的な40%オフフィルター）
+            // 初期の敵出現数を抑える調整
             if (gameTime < 30 && Math.random() < 0.4) {
                 return; 
             }
@@ -184,10 +183,10 @@
                     x: Math.random() * (canvas.width - 30) + 15,
                     y: -20 - (Math.random() * 60),
                     radius: isBoss ? 18 : 7,
-                    hp: isBoss ? 50 + (gameTime * 3) : 2 + Math.floor(gameTime / 12),
-                    maxHp: isBoss ? 50 + (gameTime * 3) : 2 + Math.floor(gameTime / 12),
-                    // 【スピード30%低下調整】敵の移動速度を 0.7倍(30%減) に変更
-                    speed: (isBoss ? 0.7 : 1.3 + (Math.random() * 0.5)) * 0.7,
+                    hp: isBoss ? 40 + (gameTime * 2) : 2 + Math.floor(gameTime / 15),
+                    maxHp: isBoss ? 40 + (gameTime * 2) : 2 + Math.floor(gameTime / 15),
+                    // 【さらに敵の移動速度を20%低下】前回の0.7からさらに0.8倍（0.7 * 0.8 = 0.56倍）に減速
+                    speed: (isBoss ? 0.7 : 1.3 + (Math.random() * 0.5)) * 0.56,
                     isBoss: isBoss
                 });
             }
@@ -197,14 +196,15 @@
     // オートターゲット＆貫通連鎖攻撃
     function autoAttack() {
         let now = performance.now();
-        // 攻撃速度の基本値。こちらも全体速度調整に合わせ、クールダウン下限などを調整
-        let attackCooldown = Math.max(110, 600 / player.atkSpdMultiplier);
+        // 【攻撃速度を30%低下調整】ベースのクールダウン時間を約1.43倍に引き伸ばす（600 ➔ 860）
+        let attackCooldown = Math.max(150, 860 / player.atkSpdMultiplier);
 
         if (now - lastAttackTime > attackCooldown) {
             if (enemies.length === 0) return;
 
             lastAttackTime = now;
-            let damage = Math.ceil(4 * player.atkPowerMultiplier);
+            // 【攻撃力を40%低下調整】基本威力を4から2.4（4 * 0.6）に変更
+            let damage = Math.ceil(2.4 * player.atkPowerMultiplier);
 
             // プレイヤーに近い敵順にソート
             let targets = [...enemies].map(e => {
@@ -244,11 +244,11 @@
             currentTarget.hp -= damage;
             visited.add(currentTarget);
 
-            // ビームの軌跡を登録（全体の速度感に合わせて寿命を少し長めに調整）
+            // ビームの軌跡を登録（ゆっくりなテンポに合わせてビームの消えゆく時間も調整）
             beams.push({
                 sx: lastX, sy: lastY,
                 tx: currentTarget.x, ty: currentTarget.y,
-                life: 8 
+                life: 10 
             });
 
             lastX = currentTarget.x;
@@ -299,13 +299,12 @@
             }
         });
 
-        // 経験値オーブの完全自動吸い寄せ回収
+        // 経験値オーブの完全自動吸い寄せ回収（敵や連射の減速に合わせてマイルドに）
         gems.forEach(g => {
             let dx = player.x - g.x; let dy = player.y - g.y;
             let dist = Math.sqrt(dx*dx + dy*dy);
             
-            // 【スピード30%低下調整】吸い寄せスピードも 0.7倍（30%減）に
-            let pullSpeed = (7 + (gameTime * 0.05)) * 0.7; 
+            let pullSpeed = (5 + (gameTime * 0.04)) * 0.56; 
             g.x += (dx / (dist || 1)) * pullSpeed;
             g.y += (dy / (dist || 1)) * pullSpeed;
 
@@ -327,9 +326,9 @@
             player.level++;
             player.maxExp = Math.floor(player.maxExp * 1.25) + 4;
             
-            // 【新機能：レベルアップ時の自動永久成長システム】
+            // レベルアップ時の自動永久成長システム
             player.maxHp += 5;
-            player.hp = Math.min(player.maxHp, player.hp + 5); // 最大値と同時にHPも5回復
+            player.hp = Math.min(player.maxHp, player.hp + 5); 
             player.atkPowerMultiplier += 0.02; // 攻撃力基礎値 +2%
             player.atkSpdMultiplier += 0.02;   // 攻撃速度基礎値 +2%
             
